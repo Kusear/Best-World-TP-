@@ -118,7 +118,9 @@ mongoose
       console.log("API Working!");
     })
   )
-  .catch((err) => console.log(err));
+  .catch(function (err) {
+    console.log(err);
+  });
 
 /* }
 );*/
