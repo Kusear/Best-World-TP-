@@ -104,13 +104,6 @@ app.post("/api/users/addUser", function (req, res) {
   });
 });
 
-/*db.connect(
-  "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-  function (err) {
-    if (err) {
-      return console.log(err);
-    }*/
-
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
   .then(
@@ -121,10 +114,6 @@ mongoose
   .catch(function (err) {
     console.log(err);
   });
-
-/* }
-);*/
-
 /*
   mongodb+srv://Kusear:<password>@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
   */
