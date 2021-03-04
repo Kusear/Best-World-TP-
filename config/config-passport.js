@@ -14,24 +14,27 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (id, done) {
-  User.findById(id, function(err, user) {
+  User.findById(id, function (err, user) {
     done(err, user);
   });
 });
 
 passport.use(
-  new LocalStrategy( {usernameField: "email", passwordField: "password"}, function (email, password, done) {
-    User.findOne({ email: email }, function (err, user) {
-      if (err) {
-        return done(err);
-      }
-      if (!user) {
-        return done(null, false, { message: "Incorrect username." });
-      }
-      if (!bcrypt.compare(password, user.password)) {
-        return done(null, false, { message: "Incorrect password." });
-      }
-      return done(null, user);
-    });
-  })
+  new LocalStrategy(
+    { usernameField: "email", passwordField: "password" },
+    function (email, password, done) {
+      User.findOne({ email: email }, function (err, user) {
+        if (err) {
+          return done(err);
+        }
+        if (!user) {
+          return done(null, false, { message: "Incorrect username." });
+        }
+        if (!bcrypt.compare(password, user.password)) {
+          return done(null, false, { message: "Incorrect password." });
+        }
+        return done(null, user);
+      });
+    }
+  )
 );

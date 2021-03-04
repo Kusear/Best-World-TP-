@@ -29,8 +29,8 @@ app.use(
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
     },
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
   })
 );
 app.use(passport.initialize());
