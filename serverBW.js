@@ -4,6 +4,7 @@ var FileStore = require("session-file-store")(session);
 var cookieParse = require("cookie-parser");
 var passport = require("passport");
 var mongoose = require("mongoose");
+var bcrypt = require("bcrypt");
 
 var db = require("./db");
 var Users = require("./models/User");
@@ -11,6 +12,7 @@ var app = express();
 require("./config/config-passport");
 
 var collName = "users";
+var saltRounds = 5;
 var MONGO_URL =
   "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
@@ -43,7 +45,7 @@ app.get("/", function (req, res) {
 });
 
 app.post("/login", function (req, res, next) {
-  passport.authenticate("local", function (err, user) {
+  passport.authenticate("local", function (err, user, info) {
     if (err) {
       // произошла ошибка
       return next(err);
@@ -58,7 +60,8 @@ app.post("/login", function (req, res, next) {
       if (err) {
         return next(err);
       }
-      console.log("Session login: ", req.session); //
+      console.log("Flash: ", info);
+      //console.log("Session login: ", req.session); //
       return res.redirect("/admin");
     });
   })(req, res, next);
@@ -95,12 +98,22 @@ app.post("/api/users/addUser", function (req, res) {
     info: req.body.info,
   };
 
-  Users.insertMany(user, function (err, result) {
-    if (err) {
-      console.log(err);
+  bcrypt.hash(user.password, saltRounds, function(err, hash){
+
+    if (err){
+      console.log("crypt err: ", err);
       return res.sendStatus(500);
     }
-    res.send(user);
+
+    user.password = hash;
+
+    Users.insertMany(user, function (err, result) {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500);
+      }
+      res.send(user);
+    });
   });
 });
 

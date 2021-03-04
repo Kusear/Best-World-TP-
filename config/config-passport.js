@@ -2,6 +2,7 @@ var passport = require("passport");
 var LocalStrategy = require("passport-local").Strategy;
 var ObjectID = require("mongodb").ObjectID;
 var User = require("../models/User");
+var bcrypt = require("bcrypt");
 
 var db = require("../db");
 
@@ -27,7 +28,7 @@ passport.use(
       if (!user) {
         return done(null, false, { message: "Incorrect username." });
       }
-      if (user.password !== password) {
+      if (bcrypt.compare(password, user.password)) {
         return done(null, false, { message: "Incorrect password." });
       }
       return done(null, user);
