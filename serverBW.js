@@ -75,6 +75,11 @@ var auth = function (req, res, next) {
   } else res.redirect("/");
 };
 
+app.post("/logout", auth, function (req, res) {
+  req.logOut();
+  res.redirect("/");
+});
+
 app.get("/admin", auth, function (req, res) {
   res.send("Admins page!");
 });
@@ -98,16 +103,12 @@ app.post("/api/users/addUser", function (req, res) {
     password: req.body.password,
     info: req.body.info,
   };
-
-  bcrypt.hash(user.password, saltRounds, function(err, hash){
-
-    if (err){
+  bcrypt.hash(user.password, saltRounds, function (err, hash) {
+    if (err) {
       console.log("crypt err: ", err);
       return res.sendStatus(500);
     }
-
     user.password = hash;
-
     Users.insertMany(user, function (err, result) {
       if (err) {
         console.log(err);
