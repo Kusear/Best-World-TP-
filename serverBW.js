@@ -24,7 +24,7 @@ app.use(
     secret: "secret",
     store: new FileStore(),
     cookie: {
-      secure: true,
+      //secure: true,
       path: "/",
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
@@ -45,7 +45,7 @@ app.get("/", function (req, res) {
 });
 
 app.post("/login", function (req, res, next) {
-  res.header("Access-Control-Allow-Credentials", true);
+  //res.header("Access-Control-Allow-Credentials", true);
   passport.authenticate("local", function (err, user, info) {
     if (err) {
       // произошла ошибка
