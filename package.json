@@ -1,7 +1,7 @@
 {
   "name": "best-world",
   "version": "1.0.0",
-  "main": "serverBW.js",
+  "main": "serverbw.js",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.5",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node serverBW.js"
+    "start": "node serverbw.js"
   },
   "author": "",
   "license": "ISC",
