@@ -51,8 +51,7 @@ app.post("/login", function (req, res, next) {
     }
     if (!user) {
       //пользователь не найден
-      console.log("info: ", info.message);
-      return res.send("Wrong data");
+      return res.send(info.message);
     }
     req.logIn(user, function (err) {
       // пользователь найден
