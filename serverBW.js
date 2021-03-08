@@ -40,12 +40,10 @@ app.get("/", function (req, res) {
   var mes = {
     status: true,
   };
-
   res.send(mes);
 });
 
 app.post("/login", function (req, res, next) {
-  //res.header("Access-Control-Allow-Credentials", true);
   passport.authenticate("local", function (err, user, info) {
     if (err) {
       // произошла ошибка
@@ -53,7 +51,6 @@ app.post("/login", function (req, res, next) {
     }
     if (!user) {
       //пользователь не найден
-      console.log("User find: ", user); //
       return res.send("Wrong data");
     }
     req.logIn(user, function (err) {
@@ -61,8 +58,6 @@ app.post("/login", function (req, res, next) {
       if (err) {
         return next(err);
       }
-      console.log("Flash: ", info);
-      //console.log("Session login: ", req.session); //
       return res.redirect("/admin");
     });
   })(req, res, next);
@@ -70,7 +65,6 @@ app.post("/login", function (req, res, next) {
 
 var auth = function (req, res, next) {
   if (req.isAuthenticated()) {
-    console.log("User find succ: ", req.isAuthenticated()); //
     next();
   } else res.redirect("/");
 };
