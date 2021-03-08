@@ -8,6 +8,7 @@ var bcrypt = require("bcrypt");
 
 var db = require("./db");
 var Users = require("./models/user");
+const { MemoryStore } = require("express-session");
 var app = express();
 require("./config/config-passport");
 
@@ -22,7 +23,7 @@ app.use(cookieParse());
 app.use(
   session({
     secret: "secret",
-    store: new FileStore(),
+    store: new MemoryStore(),
     cookie: {
       //secure: true,
       path: "/",
