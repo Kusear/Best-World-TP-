@@ -1,7 +1,7 @@
 var passport = require("passport");
 var LocalStrategy = require("passport-local").Strategy;
 var ObjectID = require("mongodb").ObjectID;
-var User = require("../models/User");
+var User = require("../models/user");
 var bcrypt = require("bcrypt");
 
 var db = require("../db");
