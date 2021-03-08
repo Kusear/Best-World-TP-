@@ -26,7 +26,7 @@ app.use(
     cookie: {
       //secure: true,
       path: "/",
-      httpOnly: true,
+      httpOnly: false,
       maxAge: 60 * 60 * 1000,
     },
     resave: true,
