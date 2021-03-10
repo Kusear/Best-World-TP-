@@ -7,7 +7,7 @@ var mongoose = require("mongoose");
 var bcrypt = require("bcrypt");
 
 var db = require("./db");
-var Users = require("./models/user");
+var Users = require("./models/user.js");
 const { MemoryStore } = require("express-session");
 var app = express();
 require("./config/config-passport");
