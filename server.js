@@ -25,7 +25,7 @@ app.use(
     secret: "secret",
     store: new MemoryStore(),
     cookie: {
-      //secure: true,
+      secure: true,
       path: "/",
       httpOnly: false,
       maxAge: 60 * 60 * 1000,
