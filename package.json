@@ -22,13 +22,4 @@
   "author": "",
   "license": "ISC",
   "description": "TP project",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Kusear/Best-World-TP-.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Kusear/Best-World-TP-/issues"
-  },
-  "homepage": "https://github.com/Kusear/Best-World-TP-#readme",
-  "keywords": []
 }
