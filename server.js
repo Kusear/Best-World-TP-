@@ -30,7 +30,10 @@ app.use(
   session({
     secret: "secret",
     store: MongoStore.create({
-      mongoUrl: "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/Sessions?retryWrites=true&w=majority",
+      mongoUrl: MONGO_URL,
+      mongoOptions: {
+        autoReconnect: true
+      },
       collectionName: "sessions",
       autoRemove: "interval",
       autoRemoveInterval: 60
