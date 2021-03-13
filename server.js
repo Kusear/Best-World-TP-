@@ -5,6 +5,7 @@ var cookieParse = require("cookie-parser");
 var passport = require("passport");
 var mongoose = require("mongoose");
 var bcrypt = require("bcrypt");
+var cors = require("cors");
 
 var db = require("./db");
 var Users = require("./models/user");
@@ -18,6 +19,10 @@ var MONGO_URL =
   "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
 app.use(express.json());
+app.use(cors(/*{
+  origin: "http://localhost:5000", // restrict calls to those this address
+  methods: "GET" // only allow GET requests
+}*/));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParse());
 app.use(
