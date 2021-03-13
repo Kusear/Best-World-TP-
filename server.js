@@ -19,12 +19,10 @@ var MONGO_URL =
   "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
 app.use(express.json());
-app.use(
-  cors(/*{
+app.use(cors(/*{
   origin: "http://localhost:5000", // restrict calls to those this address
   methods: "GET" // only allow GET requests
-}*/)
-);
+}*/));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParse());
 app.use(
@@ -59,7 +57,7 @@ app.post("/login", function (req, res, next) {
     }
     if (!user) {
       //пользователь не найден
-      return res.send("User not found!");
+      return res.send(info.message);
     }
     req.logIn(user, function (err) {
       // пользователь найден
