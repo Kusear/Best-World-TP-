@@ -44,7 +44,7 @@ app.use(
       httpOnly: false,
       maxAge: 60 * 60 * 1000,
     },
-    resave: false,
+    resave: true,
     saveUninitialized: false,
   })
 );
