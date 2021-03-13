@@ -1,11 +1,12 @@
 var express = require("express");
 var session = require("express-session");
-var FileStore = require("session-file-store")(session);
+//var FileStore = require("session-file-store")(session);
 var cookieParse = require("cookie-parser");
 var passport = require("passport");
 var mongoose = require("mongoose");
 var bcrypt = require("bcrypt");
 var cors = require("cors");
+var MongoStore = require("connect-mongo");
 
 var db = require("./db");
 var Users = require("./models/user");
@@ -28,7 +29,12 @@ app.use(cookieParse());
 app.use(
   session({
     secret: "secret",
-    store: new MemoryStore(),
+    store: MongoStore.create({
+      mongoUrl: "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/Sessions?retryWrites=true&w=majority",
+      collectionName: "sessions",
+      autoRemove: "interval",
+      autoRemoveInterval: 60
+    }),
     cookie: {
       //secure: true,
       path: "/",
