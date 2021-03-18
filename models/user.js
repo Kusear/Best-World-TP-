@@ -1,11 +1,6 @@
 var mongoose = require("mongoose");
 
 var UserSchema = new mongoose.Schema({
-  /*expire_at: {
-    type: Date, 
-    default: Date.now(),
-    expires: 3600
-  },*/
   name: {
     type: String
   },
@@ -20,6 +15,11 @@ var UserSchema = new mongoose.Schema({
   info: {
     type: String
   }
+  /*expire_at: {
+    type: Date, 
+    default: Date.now(),
+    expires: 3600
+  },*/
 });
 
 module.exports = User = mongoose.model("users", UserSchema);
