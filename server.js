@@ -35,14 +35,15 @@ app.use(
         autoReconnect: true
       },
       collectionName: "sessions",
-      autoRemove: "interval",
-      autoRemoveInterval: 60
+      ttl: 60*60
+      /*autoRemove: "interval",
+      autoRemoveInterval: 60*/
     }),
     cookie: {
       //secure: true,
       path: "/",
       httpOnly: false,
-      maxAge: 60 * 60 * 1000,
+      //maxAge: 60 * 60,
     },
     resave: true,
     saveUninitialized: false,

@@ -1,6 +1,11 @@
 var mongoose = require("mongoose");
 
 var UserSchema = new mongoose.Schema({
+  /*expire_at: {
+    type: Date, 
+    default: Date.now(),
+    expires: 3600
+  },*/
   name: {
     type: String
   },
