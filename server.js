@@ -88,39 +88,3 @@ mongoose
   .catch(function (err) {
     console.log("Mongo err: ", err);
   });
-/*
-  mongodb+srv://Kusear:<password>@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
-  */
-
-/*  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  Планируется распределить админов, модеров, пользователей по разным коллекция для большей безопастности.
-  Тип чтобы обычный пользователь не мог изменить модера или админа.
-*/
-
-
-/*
-      Users.findOne({ _id: req.session.passport.user}, function (errF, userF) {
-        if (errF) {
-          return res.send("LogIn err findOne: ", err);
-        }
-        if (!userF) {
-          return res.send("User not found!");
-        }
-        if (userF.)
-        return done(null, userF, { message: password });
-      });
-*/
-
-// console.log("req.passport: ", req); //Авторизованный пользователь
-
-/*app.post("/api/users/userById", function (req, res) {
-  db.get()
-    .collection(Users.User.collectionName)
-    .findOne({ email: req.body.email }, function (err, doc) {
-      if (err) {
-        console.log(err);
-        return res.sendStatus(500).end();
-      }
-      res.send(doc);
-    });
-});*/
