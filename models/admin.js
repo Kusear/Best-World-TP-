@@ -1,7 +1,7 @@
 var mongoose = require("mongoose");
 
-var UserSchema = new mongoose.Schema({
-  username: {
+var AdminSchema = new mongoose.Schema({
+  name: {
     type: String
   },
   email: {
@@ -25,5 +25,4 @@ var UserSchema = new mongoose.Schema({
   }*/ // для удаления через время
 });
 
-exports.userCollection = "users";
-exports.User = mongoose.model("users", UserSchema);
+module.exports = Admin = mongoose.model("users", UserSchema);

@@ -1,6 +1,5 @@
 var express = require("express");
 var session = require("express-session");
-//var FileStore = require("session-file-store")(session);
 var cookieParse = require("cookie-parser");
 var passport = require("passport");
 var mongoose = require("mongoose");
@@ -10,20 +9,26 @@ var MongoStore = require("connect-mongo");
 
 var db = require("./db");
 var Users = require("./models/user");
-const { MemoryStore } = require("express-session");
-var app = express();
+var midleware = require("./midleware/midleware");
+var controllersCommon = require("./controllers/common");
+var controllersUser = require("./controllers/user");
+var controllersAdmin = require("./controllers/admin");
+var controllersModer = require("./controllers/moder");
 require("./config/config-passport");
+var app = express();
 
-var collName = "users";
 var saltRounds = 5;
 var MONGO_URL =
   "mongodb+srv://Kusear:qwer1234@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
+mongoose.set("useFindAndModify", false);
 app.use(express.json());
-app.use(cors(/*{
+app.use(
+  cors(/*{
   origin: "http://localhost:5000", // restrict calls to those this address
   methods: "GET" // only allow GET requests
-}*/));
+}*/)
+);
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParse());
 app.use(
@@ -32,10 +37,10 @@ app.use(
     store: MongoStore.create({
       mongoUrl: MONGO_URL,
       mongoOptions: {
-        autoReconnect: true
+        autoReconnect: true,
       },
       collectionName: "sessions",
-      ttl: 60
+      ttl: 300, // sec
       /*autoRemove: "interval",
       autoRemoveInterval: 60*/
     }),
@@ -52,82 +57,26 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/", function (req, res) {
+
+app.get("/api/", function (req, res) {
   var mes = {
     status: true,
   };
   res.send(mes);
 });
 
-app.post("/login", function (req, res, next) {
-  passport.authenticate("local", function (err, user, info) {
-    if (err) {
-      // произошла ошибка
-      return next(err);
-    }
-    if (!user) {
-      //пользователь не найден
-      return res.send(info.message);
-    }
-    req.logIn(user, function (err) {
-      // пользователь найден
-      if (err) {
-        return next(err);
-      }
-      return res.redirect("/admin");
-    });
-  })(req, res, next);
-});
+app.post("/api/login", controllersCommon.login);
+app.post("/api/logout", midleware.auth, controllersCommon.logout);
 
-var auth = function (req, res, next) {
-  if (req.isAuthenticated()) {
-    next();
-  } else res.redirect("/");
-};
+app.get("/api/admin", midleware.auth, midleware.adminRoleCheck,controllersAdmin.adminPage);
+app.put("/api/adminUpdateUsers", midleware.auth, midleware.adminRoleCheck, controllersAdmin.updateUsers);
 
-app.post("/logout", auth, function (req, res) {
-  req.logOut();
-  res.redirect("/");
-});
+app.get("/api/moder", midleware.auth, midleware.moderRoleCheck, controllersModer.moderPage);
+app.put("/api/moderUpdateUsers", midleware.auth, midleware.moderRoleCheck, controllersModer.moderUpdateUsers);
 
-app.get("/admin", auth, function (req, res) {
-  res.send("Admins page!");
-});
-
-app.post("/api/users/userById", function (req, res) {
-  db.get()
-    .collection(collName)
-    .findOne({ email: req.body.email }, function (err, doc) {
-      if (err) {
-        console.log(err);
-        return res.sendStatus(500);
-      }
-      res.send(doc);
-    });
-});
-
-app.post("/api/users/addUser", function (req, res) {
-  var user = {
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    info: req.body.info,
-  };
-  bcrypt.hash(user.password, saltRounds, function (err, hash) {
-    if (err) {
-      console.log("crypt err: ", err);
-      return res.sendStatus(500);
-    }
-    user.password = hash;
-    Users.insertMany(user, function (err, result) {
-      if (err) {
-        console.log(err);
-        return res.sendStatus(500);
-      }
-      res.send(user);
-    });
-  });
-});
+app.get("/api/user", midleware.auth, midleware.userRoleCheck, controllersUser.userPage);
+app.post("/api/addUser", controllersUser.create);
+app.put("/api/updateUser", midleware.auth, controllersUser.update);
 
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
@@ -137,8 +86,41 @@ mongoose
     })
   )
   .catch(function (err) {
-    console.log(err);
+    console.log("Mongo err: ", err);
   });
 /*
   mongodb+srv://Kusear:<password>@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
   */
+
+/*  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Планируется распределить админов, модеров, пользователей по разным коллекция для большей безопастности.
+  Тип чтобы обычный пользователь не мог изменить модера или админа.
+*/
+
+
+/*
+      Users.findOne({ _id: req.session.passport.user}, function (errF, userF) {
+        if (errF) {
+          return res.send("LogIn err findOne: ", err);
+        }
+        if (!userF) {
+          return res.send("User not found!");
+        }
+        if (userF.)
+        return done(null, userF, { message: password });
+      });
+*/
+
+// console.log("req.passport: ", req); //Авторизованный пользователь
+
+/*app.post("/api/users/userById", function (req, res) {
+  db.get()
+    .collection(Users.User.collectionName)
+    .findOne({ email: req.body.email }, function (err, doc) {
+      if (err) {
+        console.log(err);
+        return res.sendStatus(500).end();
+      }
+      res.send(doc);
+    });
+});*/

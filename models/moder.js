@@ -1,7 +1,7 @@
 var mongoose = require("mongoose");
 
-var UserSchema = new mongoose.Schema({
-  username: {
+var ModerSchema = new mongoose.Schema({
+  name: {
     type: String
   },
   email: {
@@ -25,5 +25,4 @@ var UserSchema = new mongoose.Schema({
   }*/ // для удаления через время
 });
 
-exports.userCollection = "users";
-exports.User = mongoose.model("users", UserSchema);
+module.exports = Moder = mongoose.model("users", UserSchema);
