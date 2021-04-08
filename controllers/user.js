@@ -1,36 +1,6 @@
 var Users = require("../models/user");
 var mongoose = require("mongoose");
 var passport = require("passport");
-var bcrypt = require("bcrypt");
-
-exports.create = function (req, res) {
-  var user = {
-    username: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    info: req.body.info,
-    role: "user",
-  };
-
-  if (!user.email || !user.password || !user.username) {
-    return res.status(400).json({ err: "All fields (email, password, username) must be sent!" }).end();
-  }
-
-  bcrypt.hash(user.password, saltRounds, function (err, hash) {
-    if (err) {
-      console.log("crypt err: ", err);
-      return res.status(500).json({ err: err.message }).end();
-    }
-    user.password = hash;
-    Users.User.insertMany(user, function (err, result) {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ err: err.message }).end();
-      }
-      res.send(user);
-    });
-  });
-};
 
 exports.userPage = function (req, res) {
   res.send("User page!");

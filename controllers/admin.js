@@ -3,7 +3,7 @@ var mongoose = require("mongoose");
 //var passport = require("passport");
 var bcrypt = require("bcrypt");
 
-exports.create = function (req, res) {
+/*exports.create = function (req, res) {
   var user = {
     name: req.body.name,
     email: req.body.email,
@@ -31,20 +31,21 @@ exports.create = function (req, res) {
     });
   });
 };
-
+*/
 exports.adminPage = function (req, res) {
-  res.send("Admin page!");
+  res.send("Moder page!");
 };
 
-exports.updateUsers = function (req, res) {
+exports.adminUpdateUsers = function (req, res) {
   var userToUpdate = req.body.usertoupdate;
+  //var userName = req.body.username;
+  var password = req.body.password;
+  //var newRole = req.body.newrole;
 
   var newData = {
-    username: req.body.newusername,
-    email: req.body.newemail,
-    password: req.body.newpassword,
-    role: req.body.newrole,
-    info: req.body.newinfo,
+    username: req.body.username,
+    password: req.body.password,
+    info: req.body.info,
   };
 
   if (!userToUpdate) {
@@ -58,7 +59,6 @@ exports.updateUsers = function (req, res) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }
-
     if (!user) {
       return res.status(400).json({ err: "User not found" }).end();
     }
@@ -66,13 +66,7 @@ exports.updateUsers = function (req, res) {
     if (newData.username) {
       user.username = newData.username;
     }
-    if (newData.email) {
-      user.email = newData.email;
-    }
     if (newData.password) {
-      user.password = newData.password;
-    }
-    if (newData.role) {
       user.role = newData.role;
     }
     if (newData.info) {

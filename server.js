@@ -12,8 +12,8 @@ var Users = require("./models/user");
 var midleware = require("./midleware/midleware");
 var controllersCommon = require("./controllers/common");
 var controllersUser = require("./controllers/user");
+var controllersSuperAdmin = require("./controllers/superAdmin");
 var controllersAdmin = require("./controllers/admin");
-var controllersModer = require("./controllers/moder");
 require("./config/config-passport");
 var app = express();
 
@@ -57,25 +57,47 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 app.get("/api/", function (req, res) {
-  var mes = {
-    status: true,
-  };
-  res.send(mes);
+  res.status(200).json("main").end();
 });
 
 app.post("/api/login", controllersCommon.login);
 app.post("/api/logout", midleware.auth, controllersCommon.logout);
+app.post("/api/registration", controllersCommon.registration);
 
-app.get("/api/admin", midleware.auth, midleware.adminRoleCheck,controllersAdmin.adminPage);
-app.put("/api/adminUpdateUsers", midleware.auth, midleware.adminRoleCheck, controllersAdmin.updateUsers);
+app.get(
+  "/api/superAdmin",
+  midleware.auth,
+  midleware.adminRoleCheck,
+  controllersSuperAdmin.superAdminPage
+);
+app.put(
+  "/api/superAdminUpdateUsers",
+  midleware.auth,
+  midleware.adminRoleCheck,
+  controllersSuperAdmin.updateUsers
+);
 
-app.get("/api/moder", midleware.auth, midleware.moderRoleCheck, controllersModer.moderPage);
-app.put("/api/moderUpdateUsers", midleware.auth, midleware.moderRoleCheck, controllersModer.moderUpdateUsers);
+app.get(
+  "/api/admin",
+  midleware.auth,
+  midleware.moderRoleCheck,
+  controllersAdmin.adminPage
+);
+app.put(
+  "/api/adminUpdateUsers",
+  midleware.auth,
+  midleware.moderRoleCheck,
+  controllersAdmin.adminUpdateUsers
+);
 
-app.get("/api/user", midleware.auth, midleware.userRoleCheck, controllersUser.userPage);
-app.post("/api/addUser", controllersUser.create);
+app.get(
+  "/api/user",
+  midleware.auth,
+  midleware.userRoleCheck,
+  controllersUser.userPage
+);
+// app.post("/api/addUser", controllersUser.create);
 app.put("/api/updateUser", midleware.auth, controllersUser.update);
 
 mongoose
@@ -91,36 +113,3 @@ mongoose
 /*
   mongodb+srv://Kusear:<password>@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
   */
-
-/*  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  Планируется распределить админов, модеров, пользователей по разным коллекция для большей безопастности.
-  Тип чтобы обычный пользователь не мог изменить модера или админа.
-*/
-
-
-/*
-      Users.findOne({ _id: req.session.passport.user}, function (errF, userF) {
-        if (errF) {
-          return res.send("LogIn err findOne: ", err);
-        }
-        if (!userF) {
-          return res.send("User not found!");
-        }
-        if (userF.)
-        return done(null, userF, { message: password });
-      });
-*/
-
-// console.log("req.passport: ", req); //Авторизованный пользователь
-
-/*app.post("/api/users/userById", function (req, res) {
-  db.get()
-    .collection(Users.User.collectionName)
-    .findOne({ email: req.body.email }, function (err, doc) {
-      if (err) {
-        console.log(err);
-        return res.sendStatus(500).end();
-      }
-      res.send(doc);
-    });
-});*/

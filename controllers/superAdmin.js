@@ -32,20 +32,19 @@ exports.create = function (req, res) {
   });
 };
 
-exports.moderPage = function (req, res) {
-  res.send("Moder page!");
+exports.superAdminPage = function (req, res) {
+  res.send("Sup page!");
 };
 
-exports.moderUpdateUsers = function (req, res) {
+exports.updateUsers = function (req, res) {
   var userToUpdate = req.body.usertoupdate;
-  //var userName = req.body.username;
-  var password = req.body.password;
-  //var newRole = req.body.newrole;
 
   var newData = {
-    username: req.body.username,
-    password: req.body.password,
-    info: req.body.info,
+    username: req.body.newusername,
+    email: req.body.newemail,
+    password: req.body.newpassword,
+    role: req.body.newrole,
+    info: req.body.newinfo,
   };
 
   if (!userToUpdate) {
@@ -59,6 +58,7 @@ exports.moderUpdateUsers = function (req, res) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }
+
     if (!user) {
       return res.status(400).json({ err: "User not found" }).end();
     }
@@ -66,7 +66,13 @@ exports.moderUpdateUsers = function (req, res) {
     if (newData.username) {
       user.username = newData.username;
     }
+    if (newData.email) {
+      user.email = newData.email;
+    }
     if (newData.password) {
+      user.password = newData.password;
+    }
+    if (newData.role) {
       user.role = newData.role;
     }
     if (newData.info) {
