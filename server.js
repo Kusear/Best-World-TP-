@@ -65,6 +65,11 @@ app.post("/api/login", controllersCommon.login);
 app.post("/api/logout", midleware.auth, controllersCommon.logout);
 app.post("/api/registration", controllersCommon.registration);
 
+/////
+app.post("/api/saveFile", controllersCommon.saveFiles);
+app.post("/api/getFile", controllersCommon.getFiles);
+/////
+
 app.get(
   "/api/superAdmin",
   midleware.auth,

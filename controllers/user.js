@@ -9,6 +9,10 @@ exports.userPage = function (req, res) {
 exports.update = function (req, res) {
   var userToUpdate = req.body.usertoupdate;
 
+  /*
+    достать id пользователя из сессии passport чтобы пользователь не мог редктировать других
+  */
+
   var newData = {
     username: req.body.newusername,
     password: req.body.newpassword,
