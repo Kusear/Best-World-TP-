@@ -88,10 +88,13 @@ exports.registration = function (req, res) {
 exports.saveFiles = function (req, res) {
   var gfs = Grid(mongoose.connection.db, mongoose.mongo);
 
+  console.log("req.body: ", req.body);
+  console.log("req.params: ", req.query);
+
   req.pipe(
     gfs
       .createWriteStream({
-        filename: req.body.filename
+        filename: req.query.filename
       })
       .on("close", function (savedFile) {
         console.log("file saved", savedFile);
