@@ -3,6 +3,7 @@ var bcrypt = require("bcrypt");
 var Users = require("../models/user");
 var mongoose = require("mongoose");
 var Grid = require("gridfs-stream");
+var nodemailer = require("../config/nodemailer");
 
 var saltRounds = 5;
 
@@ -69,6 +70,18 @@ exports.registration = function (req, res) {
       .end();
   }
 
+  nodemailer.mailAuthMessage.to = newUser.email;
+  nodemailer.transport.sendMail(
+    nodemailer.mailAuthMessage,
+    function (err, info) {
+      if (err) {
+        return console.log("ERROR send email: ", err.message);
+      }
+      console.log("Message send: ", info.messageId);
+      console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
+    }
+  );
+
   bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
     if (err) {
       console.log("crypt err: ", err);
@@ -85,6 +98,10 @@ exports.registration = function (req, res) {
   });
 };
 
+exports.emailAuth = function (req, res) {
+  res.send("<h1>Completed</h1>");
+};
+
 exports.saveFiles = function (req, res) {
   var gfs = Grid(mongoose.connection.db, mongoose.mongo);
 
@@ -94,7 +111,7 @@ exports.saveFiles = function (req, res) {
   req.pipe(
     gfs
       .createWriteStream({
-        filename: req.query.filename
+        filename: req.query.filename,
       })
       .on("close", function (savedFile) {
         console.log("file saved", savedFile);

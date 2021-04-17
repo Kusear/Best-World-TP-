@@ -64,10 +64,11 @@ app.get("/api/", function (req, res) {
 app.post("/api/login", controllersCommon.login);
 app.post("/api/logout", midleware.auth, controllersCommon.logout);
 app.post("/api/registration", controllersCommon.registration);
+app.post("/api/emailAuth", controllersCommon.emailAuth);
 
 /////
-app.get("/api/saveFile", controllersCommon.saveFiles);
-app.post("/api/getFile", controllersCommon.getFiles);
+app.get("/api/saveFile", midleware.auth, controllersCommon.saveFiles);
+app.post("/api/getFile", midleware.auth, controllersCommon.getFiles);
 /////
 
 app.get(
