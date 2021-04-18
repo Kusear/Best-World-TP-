@@ -40,7 +40,7 @@ app.use(
         autoReconnect: true,
       },
       collectionName: "sessions",
-      ttl: 300, // sec
+      ttl: 3600, // sec
       /*autoRemove: "interval",
       autoRemoveInterval: 60*/
     }),
