@@ -50,7 +50,7 @@ app.use(
       maxAge: 60 * 60,
     },
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
   })
 );
 app.use(passport.initialize());
