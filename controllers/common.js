@@ -9,6 +9,7 @@ var saltRounds = 5;
 
 exports.login = function (req, res, next) {
   passport.authenticate("local", function (err, user, info) {
+    res.header('Access-Control-Allow-Credentials', true);
 
     console.log("info: ", info);
 
