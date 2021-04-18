@@ -93,7 +93,7 @@ exports.registration = function (req, res) {
         console.log(err);
         return res.status(500).json({ err: err.message }).end();
       }
-      res.status(200).json("success").end();
+      return res.status(200).json("success").end();
     });
   });
 };
