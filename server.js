@@ -103,7 +103,6 @@ app.get(
   midleware.userRoleCheck,
   controllersUser.userPage
 );
-
 app.put("/api/updateUser", midleware.auth, controllersUser.update);
 
 mongoose

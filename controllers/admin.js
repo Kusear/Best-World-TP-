@@ -3,37 +3,8 @@ var mongoose = require("mongoose");
 //var passport = require("passport");
 var bcrypt = require("bcrypt");
 
-/*exports.create = function (req, res) {
-  var user = {
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    info: req.body.info,
-    role: req.body.role,
-  };
-
-  if (!user.email || !user.password) {
-    return res.status(400).json({ err: "All fields must be sent!" }).end();
-  }
-
-  bcrypt.hash(user.password, saltRounds, function (err, hash) {
-    if (err) {
-      console.log("crypt err: ", err);
-      return res.status(500).json({ err: err.message }).end();
-    }
-    user.password = hash;
-    Users.insertMany(user, function (err, result) {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ err: err.message }).end();
-      }
-      res.send(user);
-    });
-  });
-};
-*/
 exports.adminPage = function (req, res) {
-  res.send("Moder page!");
+  res.send("admin page!");
 };
 
 exports.adminUpdateUsers = function (req, res) {

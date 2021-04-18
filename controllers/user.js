@@ -7,11 +7,7 @@ exports.userPage = function (req, res) {
 };
 
 exports.update = function (req, res) {
-  var userToUpdate = req.body.usertoupdate;
-
-  /*
-    достать id пользователя из сессии passport чтобы пользователь не мог редктировать других
-  */
+  var userToUpdate = req.session.passport.user;
 
   var newData = {
     username: req.body.newusername,
@@ -25,7 +21,7 @@ exports.update = function (req, res) {
       .json({ err: "field (usertoupdate) are required" })
       .end();
   }
-  Users.User.findOne({ username: userToUpdate }, function (err, user) {
+  Users.User.findById(userToUpdate, function (err, user) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }

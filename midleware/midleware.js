@@ -1,7 +1,7 @@
 exports.auth = function (req, res, next) {
   if (req.isAuthenticated()) {
     next();
-  } else res.redirect("/");
+  } else res.status(400).json("No auth").end();
 };
 
 exports.adminRoleCheck = function (req, res, next) {

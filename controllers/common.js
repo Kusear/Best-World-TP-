@@ -25,13 +25,13 @@ exports.login = function (req, res, next) {
       if (err) {
         return next(err);
       }
+      if (user.role === "superadmin") {
+        return res.redirect("/api/superAdmin");
+      }
       if (user.role === "admin") {
-        return res.redirect("/admin");
+        return res.redirect("/api/admin");
       }
-      if (user.role === "moder") {
-        return res.redirect("/moder");
-      }
-      return res.redirect("/user");
+      return res.redirect("/api/user");
     });
   })(req, res, next);
 };
@@ -70,7 +70,7 @@ exports.registration = function (req, res) {
       .end();
   }
 
-  nodemailer.mailAuthMessage.to = newUser.email;
+ /* nodemailer.mailAuthMessage.to = newUser.email;
   nodemailer.transport.sendMail(
     nodemailer.mailAuthMessage,
     function (err, info) {
@@ -80,7 +80,7 @@ exports.registration = function (req, res) {
       console.log("Message send: ", info.messageId);
       console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
     }
-  );
+  );*/
 
   bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
     if (err) {

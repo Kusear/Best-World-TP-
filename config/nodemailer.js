@@ -28,8 +28,8 @@ exports.transport = nodemailer.createTransport(
     port: 465,
     secure: true,
     auth: {
-      username: "kusear7@gmail.com",
-      password: "Game_on_dota2",
+      username: "MYEMAIL",
+      password: "MYPASS",
     },
   }
 );
