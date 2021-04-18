@@ -24,10 +24,9 @@ var MONGO_URL =
 mongoose.set("useFindAndModify", false);
 app.use(express.json());
 app.use(
-  cors(/*{
-  origin: "http://localhost:5000", // restrict calls to those this address
-  methods: "GET" // only allow GET requests
-}*/)
+  cors({
+    credentials: true,
+  })
 );
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -45,7 +44,7 @@ app.use(
       autoRemoveInterval: 60*/
     }),
     cookie: {
-      //secure: true,
+      secure: true,
       path: "/",
       httpOnly: false,
       maxAge: 60 * 60,
