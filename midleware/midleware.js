@@ -1,5 +1,5 @@
 exports.auth = function (req, res, next) {
-  console.log(req);
+  console.log(req.session);
   if (req.isAuthenticated()) {
     next();
   } else res.status(400).json("No auth").end();
