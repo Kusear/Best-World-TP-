@@ -22,7 +22,7 @@ passport.deserializeUser(function (id, done) {
 
 passport.use(
   new LocalStrategy(
-    { usernameField: "email", passwordField: "password", passReqToCallback : true },
+    { usernameField: "email", passwordField: "password"},
     function (email, password, done) {
       Users.User.findOne({ email: email }, function (err, user) {
         if (err) {
