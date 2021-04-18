@@ -1,6 +1,6 @@
 var express = require("express");
 var session = require("express-session");
-var cookieParse = require("cookie-parser");
+var cookieParser = require("cookie-parser");
 var passport = require("passport");
 var mongoose = require("mongoose");
 var bcrypt = require("bcrypt");
@@ -30,10 +30,12 @@ app.use(
 }*/)
 );
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParse());
+app.use(cookieParser("secret"));
+app.enable('trust proxy');
 app.use(
   session({
     secret: "secret",
+    proxy: true,
     store: MongoStore.create({
       mongoUrl: MONGO_URL,
       mongoOptions: {
@@ -45,13 +47,13 @@ app.use(
       autoRemoveInterval: 60*/
     }),
     cookie: {
-      //secure: true,
+      secure: true,
       path: "/",
       httpOnly: false,
       //maxAge: 60 * 60,
     },
     resave: true,
-    saveUninitialized: false,
+    saveUninitialized: true,
   })
 );
 app.use(passport.initialize());
