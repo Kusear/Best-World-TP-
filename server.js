@@ -30,12 +30,10 @@ app.use(
 }*/)
 );
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser("secret"));
-app.enable('trust proxy');
+app.use(cookieParser());
 app.use(
   session({
     secret: "secret",
-    proxy: true,
     store: MongoStore.create({
       mongoUrl: MONGO_URL,
       mongoOptions: {
@@ -50,7 +48,7 @@ app.use(
       //secure: true,
       path: "/",
       httpOnly: false,
-      //maxAge: 60 * 60,
+      maxAge: 60 * 60,
     },
     resave: true,
     saveUninitialized: false,
