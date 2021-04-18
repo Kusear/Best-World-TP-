@@ -1,5 +1,6 @@
 exports.auth = function (req, res, next) {
   console.log("session: ", req.session);
+  res.header('Access-Control-Allow-Credentials', true);
   if (req.isAuthenticated()) {
     next();
   } else res.status(400).json("No auth").end();

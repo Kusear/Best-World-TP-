@@ -49,11 +49,11 @@ app.use(
     cookie: {
       secure: true,
       path: "/",
-      httpOnly: false,
-      //maxAge: 60 * 60,
+      httpOnly: true,
+      maxAge: 60 * 60,
     },
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
   })
 );
 app.use(passport.initialize());
