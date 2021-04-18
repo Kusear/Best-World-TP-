@@ -103,7 +103,7 @@ app.get(
   midleware.userRoleCheck,
   controllersUser.userPage
 );
-// app.post("/api/addUser", controllersUser.create);
+
 app.put("/api/updateUser", midleware.auth, controllersUser.update);
 
 mongoose
@@ -116,6 +116,7 @@ mongoose
   .catch(function (err) {
     console.log("Mongo err: ", err);
   });
+
 /*
   mongodb+srv://Kusear:<password>@cluster0.71p8k.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
   */
