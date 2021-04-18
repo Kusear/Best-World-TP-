@@ -27,7 +27,6 @@ exports.login = function (req, res, next) {
       }
 
       console.log('is authenticated?: ' + req.isAuthenticated());
-      console.log(req.session);
 
       if (user.role === "superadmin") {
         return res.redirect("/api/superAdmin");

@@ -44,7 +44,7 @@ app.use(
       autoRemoveInterval: 60*/
     }),
     cookie: {
-      secure: true,
+      //secure: true,
       path: "/",
       httpOnly: false,
       maxAge: 60 * 60,
