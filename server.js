@@ -74,26 +74,26 @@ app.post("/api/getFile", midleware.auth, controllersCommon.getFiles);
 app.get(
   "/api/superAdmin",
   midleware.auth,
-  midleware.adminRoleCheck,
+  midleware.supAdminRoleCheck,
   controllersSuperAdmin.superAdminPage
 );
 app.put(
   "/api/superAdminUpdateUsers",
   midleware.auth,
-  midleware.adminRoleCheck,
+  midleware.supAdminRoleCheck,
   controllersSuperAdmin.updateUsers
 );
 
 app.get(
   "/api/admin",
   midleware.auth,
-  midleware.moderRoleCheck,
+  midleware.adminRoleCheck,
   controllersAdmin.adminPage
 );
 app.put(
   "/api/adminUpdateUsers",
   midleware.auth,
-  midleware.moderRoleCheck,
+  midleware.adminRoleCheck,
   controllersAdmin.adminUpdateUsers
 );
 
