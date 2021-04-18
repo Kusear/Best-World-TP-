@@ -9,10 +9,14 @@ var saltRounds = 5;
 
 exports.login = function (req, res, next) {
   passport.authenticate("local", function (err, user, info) {
+
     console.log("info: ", info);
+
     if (err) {
       // произошла ошибка
+
       console.log("ERR p: ", err);////////////////
+
       return res
         .status(500)
         .json({ err: err.message + " ||bruh" })
@@ -20,15 +24,22 @@ exports.login = function (req, res, next) {
     }
     if (!user) {
       //пользователь не найден
+
       console.log("!user"); ///////////
+
       return res.status(400).json({ err: "User not found!" }).end();
     }
     req.logIn(user, function (err) {
       // пользователь найден
       if (err) {
+
         console.log("ERR login: ", err);//////////////////
+        
         return next(err);
       }
+
+      console.log('is authenticated?: ' + req.isAuthenticated());
+
       if (user.role === "superadmin") {
         return res.redirect("/api/superAdmin");
       }

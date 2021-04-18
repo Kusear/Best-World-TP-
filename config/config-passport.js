@@ -26,6 +26,7 @@ passport.use(
     function (email, password, done) {
       Users.User.findOne({ email: email }, function (err, user) {
         if (err) {
+          console.log("Passpor ERR: ", err);
           return done(err);
         }
         if (!user) {
