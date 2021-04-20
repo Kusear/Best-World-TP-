@@ -26,7 +26,7 @@ exports.login = function (req, res, next) {
         return next(err);
       }
 
-      console.log('is authenticated?: ' + req.isAuthenticated());
+      console.log("is authenticated?: " + req.isAuthenticated());
 
       if (user.role === "superadmin") {
         return res.redirect("/api/superAdmin");
@@ -50,7 +50,7 @@ exports.registration = function (req, res) {
       return done(err);
     }
     if (user) {
-      return res.status(400).json("User already exist");
+      return res.status(400).json("User already exist").end();
     }
   });
 
@@ -73,7 +73,7 @@ exports.registration = function (req, res) {
       .end();
   }
 
- /* nodemailer.mailAuthMessage.to = newUser.email;
+  /* nodemailer.mailAuthMessage.to = newUser.email;
   nodemailer.transport.sendMail(
     nodemailer.mailAuthMessage,
     function (err, info) {

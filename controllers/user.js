@@ -9,18 +9,19 @@ exports.userPage = function (req, res) {
 exports.update = function (req, res) {
   var userToUpdate = req.session.passport.user;
 
-  var newData = {
-    username: req.body.newusername,
-    password: req.body.newpassword,
-    info: req.body.info
-  };
-
   if (!userToUpdate) {
     return res
       .status(400)
       .json({ err: "field (usertoupdate) are required" })
       .end();
   }
+
+  var newData = {
+    username: req.body.newusername,
+    password: req.body.newpassword,
+    info: req.body.info
+  };
+
   Users.User.findById(userToUpdate, function (err, user) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();

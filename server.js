@@ -29,7 +29,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser("secret"));
 app.use(
   session({
     secret: "secret",
@@ -47,9 +47,9 @@ app.use(
       //secure: true,
       path: "/",
       httpOnly: false,
-      maxAge: 60 * 60,
+      //maxAge: 60 * 60 * 100,
     },
-    resave: false,
+    resave: true,
     saveUninitialized: false,
   })
 );
@@ -57,7 +57,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/api/", function (req, res) {
-  res.status(200).json("main").end();
+  return res.status(200).json("main").end();
 });
 
 app.post("/api/login", controllersCommon.login);
