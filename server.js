@@ -47,7 +47,7 @@ app.use(
       //secure: true,
       path: "/",
       httpOnly: false,
-      //maxAge: 60 * 60 * 100,
+      maxAge: 60 * 60 * 1000,
     },
     resave: true,
     saveUninitialized: false,
