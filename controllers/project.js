@@ -106,3 +106,28 @@ exports.updateProject = function (req, res) {
     });
   });
 };
+
+exports.deleteProject = function (req, res) {
+  var projectToDelete = req.body.projectID;
+
+  if (!projectToDelete) {
+    return res.status(400).json({ err: "no projectID to edit" }).end();
+  }
+
+  Projects.findById(projectToDelete, function (err, project) {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+
+    if (!project) {
+      return res.status(400).json({ err: "Project not found" }).end();
+    }
+
+    project.delete(function (err, doc) {
+      if (err) {
+        return res.status(400).json({ err: err.message }).end();
+      }
+      return res.status(200).json({ message: "updated" }).end();
+    });
+  });
+};

@@ -28,13 +28,13 @@ exports.login = function (req, res, next) {
 
       console.log("is authenticated?: " + req.isAuthenticated());
 
-      if (user.role === "superadmin") {
+      /*if (user.role === "superadmin") {
         return res.redirect("/api/superAdmin");
       }
       if (user.role === "admin") {
         return res.redirect("/api/admin");
-      }
-      return res.redirect("/api/user");
+      }*/
+      return res.status(200).json(user).end();
     });
   })(req, res, next);
 };
@@ -97,6 +97,34 @@ exports.registration = function (req, res) {
         return res.status(500).json({ err: err.message }).end();
       }
       return res.status(200).json("success").end();
+    });
+  });
+};
+
+exports.deleteUser = function (req, res) {
+  var userToDelete = req.session.passport.user;
+
+  if (!userToDelete) {
+    return res
+      .status(400)
+      .json({ err: "field (usertoupdate) are required" })
+      .end();
+  }
+
+  Users.User.findById(userToDelete, function (err, user) {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+
+    if (!user) {
+      return res.status(400).json({ err: "User not found" }).end();
+    }
+
+    user.delete(function (err, doc) {
+      if (err) {
+        return res.status(400).json({ err: err.message }).end();
+      }
+      return res.status(200).json({ message: "updated" }).end();
     });
   });
 };

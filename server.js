@@ -43,6 +43,7 @@ app.use(
       /*autoRemove: "interval",
       autoRemoveInterval: 60*/
     }),
+    //proxy: true,
     cookie: {
       //secure: true,
       path: "/",
@@ -63,6 +64,7 @@ app.get("/api/", function (req, res) {
 app.post("/api/login", controllersCommon.login);
 app.post("/api/logout", midleware.auth, controllersCommon.logout);
 app.post("/api/registration", controllersCommon.registration);
+app.post("/api/deleteUser", midleware.auth, controllersCommon.deleteUser);
 app.post("/api/emailAuth", controllersCommon.emailAuth);
 
 /////
