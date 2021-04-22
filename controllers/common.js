@@ -132,7 +132,7 @@ exports.getFiles = function (req, res) {
   var stream = bucket.openDownloadStream(new ObjectId(req.body.id));
 
   stream.on("error", function (err) {
-    if (err.code === "ENOENT") {
+    if (err) {
       return res.status(404).send("File not found");
     }
     res.status(500).send(err.message);
