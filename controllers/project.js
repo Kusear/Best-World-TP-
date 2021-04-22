@@ -39,41 +39,36 @@ exports.projectData = async function (req, res, next) {
 };
 
 exports.createProject = async function (req, res, next) {
-  await Projects.findOne(
-    { name: req.query.projectName },
-    function (err, project) {
-      if (err) {
-        return done(err);
-      }
-      if (project) {
-        return res.status(400).json("User already exist");
-      }
-    }
-  );
+  var existProject = await Projects.findOne({ title: req.body.projectTitle });
+  if (existProject) {
+    return res.status(400).json("Project already exist").end();
+  }
   // reconstruct to multipart/form-data
   var newProject = {
-    CreatorID: req.query.creatorid,
-    ManagerID: req.query.managerID,
-    needManager: req.query.neededManager,
-    name: req.query.projectName,
+    IDcreator: req.body.creatorid, //required
+    IDmanager: req.body.managerid,
+    needManager: req.body.neededManager,
+    title: req.body.projectTitle, // required
     // picture
-    description: req.query.projectDescription,
-    subject: req.query.projectSubject,
-    picture: req.query.filename,
-    countMembers: req.query.membersCount,
+    description: req.body.projectDescription,
+    subject: [req.body.projectSubject],
+    picture: req.body.filename,
+    countMembers: req.body.membersCount,
     creationDate: new Date(),
-    endTeamGathering: req.query.endGathering,
-    endProjectDate: req.query.endProject,
-    requareRoles: req.query.requredRoles,
+    endTeamGathering: new Date(req.body.endGathering), // required
+    endProjectDate: new Date(req.body.endProject), // required
+    requareRoles: [req.body.requredRoles],
   };
 
-  if (!newProject.name || !newProject.CreatorID) {
+  if (!newProject.title || !newProject.IDcreator) {
+    console.log(newProject);
     return res.status(400).json({ err: "All fields must be sent!" }).end();
   }
 
   await Projects.insertMany(newProject, function (err, result) {
     if (err) {
       console.log(err);
+      next();
       return res.status(500).json({ err: err.message }).end();
     }
     return res.status(200).json("success").end();
@@ -90,14 +85,14 @@ exports.updateProject = async function (req, res, next) {
 
   var newProjectData = {
     ManagerID: req.body.managerID,
-    name: req.query.projectName,
-    description: req.query.projectDescription,
-    subject: req.query.projectSubject,
-    picture: req.query.filename,
-    countMembers: req.query.membersCount,
-    endTeamGathering: req.query.endGathering,
-    endProjectDate: req.query.endProject,
-    requareRoles: req.query.requredRoles,
+    name: req.body.projectName,
+    description: req.body.projectDescription,
+    subject: req.body.projectSubject,
+    picture: req.body.filename,
+    countMembers: req.body.membersCount,
+    endTeamGathering: req.body.endGathering,
+    endProjectDate: req.body.endProject,
+    requareRoles: req.body.requredRoles,
     projectMembers: req.body.projectMembers,
   };
 
@@ -179,5 +174,11 @@ exports.deleteProject = async function (req, res, next) {
       }
       return res.status(200).json({ message: "updated" }).end();
     });
+  });
+};
+
+exports.allProjects = async function (req, res, next) {
+  Projects.find({}, null, function (err, result) {
+    res.status(200).json(result).end();
   });
 };

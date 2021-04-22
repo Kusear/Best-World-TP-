@@ -41,21 +41,21 @@ exports.registration = async function (req, res, next) {
       username: req.body.username,
       email: req.body.email,
       password: req.body.password,
-      image: req.files[0].fieldname,
+      //image: req.files[0].fieldname,
     }).save();
 
-    var gfs = Grid(mongoose.connection.db, mongoose.mongo);
+    // var gfs = Grid(mongoose.connection.db, mongoose.mongo);
 
-    req.pipe(
-      gfs
-        .createWriteStream({
-          filename: req.files[0].fieldname,
-        })
-        .on("close", function (savedFile) {
-          console.log("file saved", savedFile);
-          return res.json({ file: savedFile });
-        })
-    );
+    // req.pipe(
+    //   gfs
+    //     .createWriteStream({
+    //       filename: req.files[0].fieldname,
+    //     })
+    //     .on("close", function (savedFile) {
+    //       console.log("file saved", savedFile);
+    //       return res.json({ file: savedFile });
+    //     })
+    // );
 
     res
       .status(200)

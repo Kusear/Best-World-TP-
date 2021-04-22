@@ -18,10 +18,12 @@ var controllersCommon = require("./controllers/common");
 var controllersUser = require("./controllers/user");
 var controllersSuperAdmin = require("./controllers/superAdmin");
 var controllersAdmin = require("./controllers/admin");
+var controllersProject = require("./controllers/project");
 require("./config/config-passport");
 var app = express();
 
 var MONGO_URL = process.env.MONGO_URL;
+var api_route = "/api";
 
 mongoose.set("useFindAndModify", false);
 app.use(express.json());
@@ -80,16 +82,18 @@ app.get("/api/", multer({storage: store}).any(), function (req, res) {
   return res.send(req.files).end();
   // return res.status(200).json("main").end();
 });
-app.post("/api/login", controllersCommon.login);
-app.post("/api/logout", midleware.auth, controllersCommon.logout);
-app.post("/api/registration", multer({storage: store}).any(), controllersCommon.registration);
-app.post("/api/deleteUser", midleware.auth, controllersCommon.deleteUser);
-app.post("/api/emailAuth", controllersCommon.emailAuth);
+app.post(api_route + "/login", controllersCommon.login);
+app.post(api_route + "/logout", midleware.auth, controllersCommon.logout);
+app.post(api_route + "/registration", multer({storage: store}).any(), controllersCommon.registration);
+app.post(api_route + "/deleteUser", midleware.auth, controllersCommon.deleteUser);
+app.post(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
+app.post(api_route + "/allProjects", midleware.auth, controllersProject.allProjects);
+app.post(api_route + "/emailAuth", controllersCommon.emailAuth);
 
 /////
-app.get("/api/saveFile", midleware.auth, controllersCommon.saveFiles);
+app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
 app.post(
-  "/api/getFile",
+  api_route + "/getFile",
   midleware.auth,
   multer({storage: store}).any(),
   controllersCommon.getFiles
@@ -97,38 +101,38 @@ app.post(
 /////
 
 app.get(
-  "/api/superAdmin",
+  api_route + "/superAdmin",
   midleware.auth,
   midleware.roleCheck("superadmin"),
   controllersSuperAdmin.superAdminPage
 );
 app.put(
-  "/api/superAdminUpdateUsers",
+  api_route + "/superAdminUpdateUsers",
   midleware.auth,
   midleware.roleCheck("superadmin"),
   controllersSuperAdmin.updateUsers
 );
 
 app.get(
-  "/api/admin",
+  api_route + "/admin",
   midleware.auth,
   midleware.roleCheck("admin"),
   controllersAdmin.adminPage
 );
 app.put(
-  "/api/adminUpdateUsers",
+  api_route + "/adminUpdateUsers",
   midleware.auth,
   midleware.roleCheck("admin"),
   controllersAdmin.adminUpdateUsers
 );
 
 app.get(
-  "/api/user",
+  api_route + "/user",
   midleware.auth,
   midleware.roleCheck("user"),
   controllersUser.userData
 );
-app.put("/api/updateUser", midleware.auth, controllersUser.updateUser);
+app.put(api_route + "/updateUser", midleware.auth, controllersUser.updateUser);
 
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
