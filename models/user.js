@@ -37,11 +37,7 @@ var UserSchema = new mongoose.Schema({
 });
 
 UserSchema.methods.verifyPassword = async function (password) {
-  try {
   return await bcrypt.compare(password, this.password);
-  } catch (err) {
-    console.log(err.message);
-  }
 };
 
 UserSchema.methods.getToken = function () {
