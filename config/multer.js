@@ -11,10 +11,10 @@ var storage = new GridFsStorage({
         bucketName: "contents",
       };
       resolve(fileInfo);
-    })
+    });
   },
 });
-var form_data = multer({ storage: storage});
+var form_data = multer({ storage: storage });
 
 exports = storage;
 exports = form_data;

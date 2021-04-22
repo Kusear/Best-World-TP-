@@ -8,8 +8,8 @@ var opts = {
 var Users = require("../models/user").User;
 
 passport.use(
-  new JwtStrategy(opts, async function (jwt_payload, done) {
-    await Users.findById(jwt_payload.id, function (err, user) {
+  new JwtStrategy(opts, function (jwt_payload, done) {
+    Users.findById(jwt_payload.id, function (err, user) {
       if (err) {
         return done(err, false);
       }

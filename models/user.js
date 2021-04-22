@@ -36,8 +36,8 @@ var UserSchema = new mongoose.Schema({
   },
 });
 
-UserSchema.methods.verifyPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+UserSchema.methods.verifyPassword = /*async*/ function (password) {
+  return /*await*/ bcrypt.compare(password, this.password);
 };
 
 UserSchema.methods.getToken = function () {
@@ -53,8 +53,8 @@ UserSchema.methods.getToken = function () {
   );
 };
 
-UserSchema.pre("save", async function (next) {
-  this.password = await bcrypt.hash(this.password, salt);
+UserSchema.pre("save", /*async*/ function (next) {
+  this.password = /*await*/ bcrypt.hash(this.password, salt);
   next();
 });
 

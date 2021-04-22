@@ -6,9 +6,9 @@ var { GridFsBucket, ObjectId } = require("mongodb");
 var store = require("../config/multer").storage;
 // var nodemailer = require("../config/nodemailer");
 
-exports.login = async function (req, res, next) {
+exports.login = function (req, res, next) {
   // validate
-  await Users.findOne({ email: req.body.email }, function (err, user) {
+  Users.findOne({ email: req.body.email }, function (err, user) {
     var isAuthenticated = user && user.verifyPassword(req.body.password);
     if (!isAuthenticated) {
       next({
@@ -34,10 +34,10 @@ exports.logout = function (req, res) {
   res.status(200).json("logout completed").end();
 };
 
-exports.registration = async function (req, res, next) {
+exports.registration = function (req, res, next) {
   // validate
   try {
-    var newUser = await new Users({
+    var newUser = new Users({
       username: req.body.username,
       email: req.body.email,
       password: req.body.password,
@@ -148,7 +148,7 @@ exports.getFiles = function (req, res) {
   //   .pipe(res);
 };
 
-// await Users.findOne({ email: req.body.email }, function (err, user) {
+//  Users.findOne({ email: req.body.email }, function (err, user) {
 //   if (err) {
 //     return done(err);
 //   }
