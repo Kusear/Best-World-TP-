@@ -15,6 +15,9 @@ exports.userData = async function (req, res, next) {
     .json({
       username: user.username,
       email: user.email,
+      role: user.role,
+      onPreModerate: user.onPreModerate,
+      preferredRole: user.preferredRole,
       info: user.info,
       // picture
     })
@@ -125,7 +128,7 @@ exports.getUsers = async function (req, res) {
 // var userToUpdate = req.body.userID;
 
 // if (!userToUpdate) {
-//   next();
+//   next();  
 //   return res
 //     .status(400)
 //     .json({ err: "field (usertoupdate) are required" })

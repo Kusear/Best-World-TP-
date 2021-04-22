@@ -105,6 +105,12 @@ app.post(
 );
 /////
 
+app.get(api_route + "/userData", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersUser.userData);
+app.post(api_route + "/updateUser",multer({storage: store}).any(), midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersUser.updateUser);
+app.post(api_route + "/deleteUser", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersUser.deleteUser);
+app.post(api_route + "/preModerateUsers", midleware.auth, midleware.roleCheck("admin" || "superadmin"), controllersUser.getUsersOnPreModerate);
+app.get(api_route + "/getUsers", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersUser.getUsers);
+
 app.get(
   api_route + "/superAdmin",
   midleware.auth,

@@ -39,12 +39,12 @@ exports.projectData = async function (req, res, next) {
 };
 
 exports.createProject = async function (req, res, next) {
-  console.log("req: ", req);
+  console.log("req: ", req.body);
   var existProject = await Projects.findOne({ title: req.body.projectTitle });
   if (existProject) {
     return res.status(400).json("Project already exist").end();
   }
-  
+
   var newProject = {
     IDcreator: req.body.creatorid, //required
     IDmanager: req.body.managerid,
@@ -119,7 +119,7 @@ exports.updateProject = async function (req, res, next) {
     }
     if (newProjectData.subject) {
       project.projectSubject = newProjectData.subject;
-    } 
+    }
     if (newProjectData.picture) {
       project.picture = newProjectData.picture;
     }
