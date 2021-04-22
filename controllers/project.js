@@ -1,20 +1,62 @@
 var mongoose = require("mongoose");
 var Projects = require("../models/project").Project;
+var Users = require("../models/user").User;
 
-exports.createProject = function (req, res) {
-  Projects.findOne({ name: req.query.projectName }, function (err, project) {
-    if (err) {
-      return done(err);
-    }
-    if (project) {
-      return res.status(400).json("User already exist");
-    }
-  });
+exports.projectData = async function (req, res, next) {
+  // add pic process
+  await Projects.findOne(
+    { name: req.body.projectName },
+    async function (err, project) {
+      if (err) {
+        next();
+        return res.status(500).json({ message: "Something Wrong" }).end();
+      }
+      if (project) {
+        var creator = await Users.findById(project.CreatorID);
+        var manager = await Users.findById(project.ManagerID);
 
+        return res
+          .status(200)
+          .json({
+            projectData: project,
+            // picture
+            creatorData: {
+              ID: creator._id,
+              username: creator.username,
+            },
+            managerData: {
+              ID: manager._id,
+              username: manager.username,
+            },
+          })
+          .end();
+      } else {
+        next();
+        return res.status(400).json("Project not found").end();
+      }
+    }
+  );
+};
+
+exports.createProject = async function (req, res, next) {
+  await Projects.findOne(
+    { name: req.query.projectName },
+    function (err, project) {
+      if (err) {
+        return done(err);
+      }
+      if (project) {
+        return res.status(400).json("User already exist");
+      }
+    }
+  );
+  // reconstruct to multipart/form-data
   var newProject = {
     CreatorID: req.query.creatorid,
-    ManagerID: CreatorID,
+    ManagerID: req.query.managerID,
+    needManager: req.query.neededManager,
     name: req.query.projectName,
+    // picture
     description: req.query.projectDescription,
     subject: req.query.projectSubject,
     picture: req.query.filename,
@@ -29,7 +71,7 @@ exports.createProject = function (req, res) {
     return res.status(400).json({ err: "All fields must be sent!" }).end();
   }
 
-  Projects.insertMany(newProject, function (err, result) {
+  await Projects.insertMany(newProject, function (err, result) {
     if (err) {
       console.log(err);
       return res.status(500).json({ err: err.message }).end();
@@ -38,10 +80,11 @@ exports.createProject = function (req, res) {
   });
 };
 
-exports.updateProject = function (req, res) {
+exports.updateProject = async function (req, res, next) {
   var projectToUpdate = req.body.projectID;
 
   if (!projectToUpdate) {
+    next();
     return res.status(400).json({ err: "no projectID to edit" }).end();
   }
 
@@ -58,12 +101,14 @@ exports.updateProject = function (req, res) {
     projectMembers: req.body.projectMembers,
   };
 
-  Projects.findById(projectToUpdate, function (err, project) {
+  await Projects.findById(projectToUpdate, async function (err, project) {
     if (err) {
+      next();
       return res.status(500).json({ err: err.message }).end();
     }
 
     if (!project) {
+      next();
       return res.status(400).json({ err: "Project not found" }).end();
     }
 
@@ -98,8 +143,9 @@ exports.updateProject = function (req, res) {
       project.projectMembers = newProjectData.projectMembers;
     }
 
-    project.save(function (err, doc) {
+    await project.save(function (err, doc) {
       if (err) {
+        next();
         return res.status(400).json({ err: err.message }).end();
       }
       return res.status(200).json({ message: "updated" }).end();
@@ -107,25 +153,29 @@ exports.updateProject = function (req, res) {
   });
 };
 
-exports.deleteProject = function (req, res) {
+exports.deleteProject = async function (req, res, next) {
   var projectToDelete = req.body.projectID;
 
   if (!projectToDelete) {
+    next();
     return res.status(400).json({ err: "no projectID to edit" }).end();
   }
 
-  Projects.findById(projectToDelete, function (err, project) {
+  await Projects.findById(projectToDelete, async function (err, project) {
     if (err) {
+      next();
       return res.status(500).json({ err: err.message }).end();
     }
 
     if (!project) {
+      next();
       return res.status(400).json({ err: "Project not found" }).end();
     }
 
-    project.delete(function (err, doc) {
+    await project.remove(function (err, doc) {
       if (err) {
-        return res.status(400).json({ err: err.message }).end();
+        next();
+        return res.status(500).json({ err: err.message }).end();
       }
       return res.status(200).json({ message: "updated" }).end();
     });

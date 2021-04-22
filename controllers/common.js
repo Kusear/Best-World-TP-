@@ -1,42 +1,32 @@
-var passport = require("passport");
-var bcrypt = require("bcrypt");
-var Users = require("../models/user");
+// var passport = require("passport");
+var Users = require("../models/user").User;
 var mongoose = require("mongoose");
 var Grid = require("gridfs-stream");
-var nodemailer = require("../config/nodemailer");
+var { GridFsBucket, ObjectId } = require("mongodb");
+var store = require("../config/multer").storage;
+// var nodemailer = require("../config/nodemailer");
 
-var saltRounds = 5;
-
-exports.login = function (req, res, next) {
-  passport.authenticate("local", function (err, user, info) {
-    if (err) {
-      // произошла ошибка
-      return res
-        .status(500)
-        .json({ err: err.message + " ||bruh" })
-        .end();
+exports.login = async function (req, res, next) {
+  // validate
+  await Users.findOne({ email: req.body.email }, function (err, user) {
+    var isAuthenticated = user && user.verifyPassword(req.body.password);
+    if (!isAuthenticated) {
+      next({
+        status: 400,
+        message: "Wrong data",
+      });
+      return;
     }
-    if (!user) {
-      //пользователь не найден
-      return res.status(400).json({ err: "User not found!" }).end();
-    }
-    req.logIn(user, function (err) {
-      // пользователь найден
-      if (err) {
-        return next(err);
-      }
-
-      console.log("is authenticated?: " + req.isAuthenticated());
-
-      /*if (user.role === "superadmin") {
-        return res.redirect("/api/superAdmin");
-      }
-      if (user.role === "admin") {
-        return res.redirect("/api/admin");
-      }*/
-      return res.status(200).json(user).end();
-    });
-  })(req, res, next);
+    res
+      .status(200)
+      .json({
+        _id: user._id,
+        username: user.username,
+        role: user.role,
+        token: user.getToken(),
+      })
+      .end();
+  });
 };
 
 exports.logout = function (req, res) {
@@ -44,65 +34,51 @@ exports.logout = function (req, res) {
   res.status(200).json("logout completed").end();
 };
 
-exports.registration = function (req, res) {
-  Users.User.findOne({ email: req.body.email }, function (err, user) {
-    if (err) {
-      return done(err);
-    }
-    if (user) {
-      return res.status(400).json("User already exist").end();
-    }
-  });
+exports.registration = async function (req, res, next) {
+  // validate
+  try {
+    var newUser = await new Users({
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password,
+      image: req.files[0].fieldname,
+    }).save();
 
-  /*
-    возможно добавить проверку на уникальность username
-  */
+    var gfs = Grid(mongoose.connection.db, mongoose.mongo);
 
-  var newUser = {
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password,
-    info: req.body.info,
-    role: "user",
-  };
+    req.pipe(
+      gfs
+        .createWriteStream({
+          filename: req.files[0].fieldname,
+        })
+        .on("close", function (savedFile) {
+          console.log("file saved", savedFile);
+          return res.json({ file: savedFile });
+        })
+    );
 
-  if (!newUser.email || !newUser.password || !newUser.username) {
-    return res
-      .status(400)
-      .json({ err: "All fields (email, password, username) must be sent!" })
+    res
+      .status(200)
+      .json({
+        _id: newUser._id,
+        username: newUser.username,
+        role: newUser.role,
+        token: newUser.getToken(),
+      })
       .end();
+  } catch (err) {
+    if (err.code === 11000) {
+      next({
+        status: 400,
+        message: "User already exist",
+      });
+    }
+    next();
   }
-
-  /* nodemailer.mailAuthMessage.to = newUser.email;
-  nodemailer.transport.sendMail(
-    nodemailer.mailAuthMessage,
-    function (err, info) {
-      if (err) {
-        return console.log("ERROR send email: ", err.message);
-      }
-      console.log("Message send: ", info.messageId);
-      console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
-    }
-  );*/
-
-  bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
-    if (err) {
-      console.log("crypt err: ", err);
-      return res.status(500).json({ err: err.message }).end();
-    }
-    newUser.password = hash;
-    Users.User.insertMany(newUser, function (err, result) {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ err: err.message }).end();
-      }
-      return res.status(200).json("success").end();
-    });
-  });
 };
 
 exports.deleteUser = function (req, res) {
-  var userToDelete = req.session.passport.user;
+  var userToDelete = req.body.id;
 
   if (!userToDelete) {
     return res
@@ -111,7 +87,7 @@ exports.deleteUser = function (req, res) {
       .end();
   }
 
-  Users.User.findById(userToDelete, function (err, user) {
+  Users.findById(userToDelete, function (err, user) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }
@@ -120,7 +96,7 @@ exports.deleteUser = function (req, res) {
       return res.status(400).json({ err: "User not found" }).end();
     }
 
-    user.delete(function (err, doc) {
+    user.remove(function (err, doc) {
       if (err) {
         return res.status(400).json({ err: err.message }).end();
       }
@@ -138,7 +114,7 @@ exports.saveFiles = function (req, res) {
 
   console.log("req.body: ", req.body);
   console.log("req.params: ", req.query);
-
+  // install multer-gridfs-storage
   req.pipe(
     gfs
       .createWriteStream({
@@ -152,12 +128,78 @@ exports.saveFiles = function (req, res) {
 };
 
 exports.getFiles = function (req, res) {
-  var gfs = Grid(mongoose.connection.db, mongoose.mongo);
+  var bucket = new GridFsBucket(store);
+  var stream = bucket.openDownloadStream(new ObjectId(req.body.id));
 
-  gfs
-    .createReadStream({ filename: req.body.filename })
-    .on("error", function (err) {
-      res.send("No image found with that title");
-    })
-    .pipe(res);
+  stream.on("error", function (err) {
+    if (err.code === "ENOENT") {
+      return res.status(404).send("File not found");
+    }
+    res.status(500).send(err.message);
+  });
+  stream.pipe(res);
+  // var gfs = Grid(mongoose.connection.db, mongoose.mongo);
+
+  // gfs
+  //   .createReadStream({ filename: req.body.filename })
+  //   .on("error", function (err) {
+  //     res.send("No image found with that title");
+  //   })
+  //   .pipe(res);
 };
+
+// await Users.findOne({ email: req.body.email }, function (err, user) {
+//   if (err) {
+//     return done(err);
+//   }
+//   if (user) {
+//     return res.status(400).json("User already exist").end();
+//   }
+// });
+
+// var newUser = {
+//   username: req.body.username,
+//   email: req.body.email,
+//   password: req.body.password,
+//   info: req.body.info,
+//   role: "user",
+// };
+
+// if (!newUser.email || !newUser.password || !newUser.username) {
+//   next({
+//     status: 400,
+//     message: "All fields (email, password, username) must be sent!",
+//   });
+//   return;
+// }
+
+//  nodemailer.mailAuthMessage.to = newUser.email;
+// nodemailer.transport.sendMail(
+//   nodemailer.mailAuthMessage,
+//   function (err, info) {
+//     if (err) {
+//       return console.log("ERROR send email: ", err.message);
+//     }
+//     console.log("Message send: ", info.messageId);
+//     console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
+//   }
+// );
+
+// bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
+//   if (err) {
+//     console.log("crypt err: ", err);
+//     next({
+//       status: 400,
+//       message: err.message,
+//     });
+//     return;
+//   }
+//   newUser.password = hash;
+//   Users.insertMany(newUser, function (err, result) {
+//     if (err) {
+//       console.log(err);
+//       return res.status(500).json({ err: err.message }).end();
+//     }
+//     return res.status(200).json("success").end();
+//   });
+// });

@@ -1,36 +1,14 @@
-exports.auth = function (req, res, next) {
-  console.log(req.session);
-  if (req.isAuthenticated()) {
-    next();
-  } else res.status(400).json("No auth").end();
-};
+var passport = require("passport");
 
-exports.supAdminRoleCheck = function (req, res, next) {
-  // console.log("role: ", req.user.role);
-  if (req.user.role === "superadmin") {
-    return next();
-  } else {
-    return res.status(400).json({ err: "Not allowed" }).end();
-  }
-  // return res.sendStatus(500).json("No user's role");
-};
+exports.auth = passport.authenticate("jwt", { session: false });
 
-exports.adminRoleCheck = function (req, res, next) {
-  // console.log("role: ", req.user.role);
-  if (req.user.role === "admin") {
-    return next();
-  } else {
-    return res.status(400).json({ err: "Not allowed" }).end();
-  }
-  // return res.sendStatus(500).json("No user's role");
-};
-
-exports.userRoleCheck = function (req, res, next) {
-  // console.log("role: ", req.user.role);
-  if (req.user.role === "user") {
-    return next();
-  } else {
-    return res.status(400).json({ err: "Not allowed" }).end();
-  }
-  // return res.sendStatus(500).json("No user's role");
+exports.roleCheck = function (...allowed) {
+  var isAllowed = (role) => allowed.indexOf(role) > -1;
+  return function (req, res, next) {
+    if (req.user && isAllowed(req.user.role)) {
+      next();
+    } else {
+      res.status(400).json({ message: "Forbidden" });
+    }
+  };
 };

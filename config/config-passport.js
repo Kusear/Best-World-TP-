@@ -1,42 +1,24 @@
 var passport = require("passport");
-var LocalStrategy = require("passport-local").Strategy;
-var ObjectID = require("mongodb").ObjectID;
-var Users = require("../models/user");
-var bcrypt = require("bcrypt");
-
-var db = require("../db");
-
-var collName = "users";
-
-passport.serializeUser(function (user, done) {
-  console.log("Serialize: ", user);
-  done(null, user.id);
-});
-
-passport.deserializeUser(function (id, done) {
-  Users.User.findById(id, function (err, user) {
-    console.log("Deserialize: ", user);
-    done(err, user);
-  });
-});
+var JwtStrategy = require("passport-jwt").Strategy;
+var ExtractJwt = require("passport-jwt").ExtractJwt;
+var opts = {
+  jwtFromRequest: ExtractJwt.fromHeader(process.env.JWT_HEADERAUTHNAME),
+  secretOrKey: process.env.JWT_SECRET,
+};
+var Users = require("../models/user").User;
 
 passport.use(
-  new LocalStrategy(
-    { usernameField: "email", passwordField: "password"},
-    function (email, password, done) {
-      Users.User.findOne({ email: email }, function (err, user) {
-        if (err) {
-          console.log("Passpor ERR: ", err);
-          return done(err);
-        }
-        if (!user) {
-          return done(null, false, { message: "Incorrect email." });
-        }
-        if (!bcrypt.compare(password, user.password) || password !== user.password) {
-          return done(null, false, { message: "Incorrect password." });
-        }
-        return done(null, user, { message: password });
-      });
-    }
-  )
+  new JwtStrategy(opts, async function (jwt_payload, done) {
+    await Users.findById(jwt_payload.id, function (err, user) {
+      if (err) {
+        return done(err, false);
+      }
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false);
+        // or you could create a new account
+      }
+    });
+  })
 );

@@ -26,10 +26,16 @@ var ProjectSchema = new mongoose.Schema({
   },
   IDmanager: {
     type: String,
+    default: IDcreator,
+  },
+  needManager: {
+    type: Boolean,
+    default: false,
   },
   name: {
     type: String,
     required: true,
+    unique: true,
   },
   description: {
     type: String,
