@@ -119,7 +119,7 @@ exports.updateProject = async function (req, res, next) {
     }
     if (newProjectData.subject) {
       project.projectSubject = newProjectData.subject;
-    } 1
+    } 
     if (newProjectData.picture) {
       project.picture = newProjectData.picture;
     }
