@@ -4,7 +4,7 @@ var jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 var  JWT_SECRET  = process.env.JWT_SECRET;
-var salt = 10;
+var salt = 5;
 
 var UserSchema = new mongoose.Schema({
   username: {
