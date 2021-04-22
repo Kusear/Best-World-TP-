@@ -88,9 +88,9 @@ app.post(api_route + "/registration", multer({storage: store}).any(), controller
 app.post(api_route + "/deleteUser", midleware.auth, controllersCommon.deleteUser);
 app.post(api_route + "/emailAuth", controllersCommon.emailAuth);
 
-app.create(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
+app.post(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
 app.get(api_route + "/projectData", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.projectData);
-app.put(api_route + "/updateProject", multer({storage: store}).any(), midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.updateProject);
+app.post(api_route + "/updateProject", multer({storage: store}).any(), midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.updateProject);
 app.delete(api_route + "/deleteProject",midleware.auth, midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.deleteProject)
 app.post(api_route + "/preModerProjects", midleware.auth, midleware.roleCheck("admin" || "superadmin"), controllersProject.preModerProjects);
 app.post(api_route + "/getProjects",  controllersProject.getProjects);
@@ -128,7 +128,7 @@ app.put(
   api_route + "/adminUpdateUsers",
   midleware.auth,
   midleware.roleCheck("admin"),
-  controllersAdmin.adminUpdateUsers
+  controllersAdmin.updateUser
 );
 
 app.get(
