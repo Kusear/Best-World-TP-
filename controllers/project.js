@@ -5,7 +5,7 @@ var Users = require("../models/user").User;
 exports.projectData = async function (req, res, next) {
   // add pic process
   await Projects.findOne(
-    { name: req.body.projectName },
+    { title: req.body.projectName },
     async function (err, project) {
       if (err) {
         next();
@@ -39,11 +39,12 @@ exports.projectData = async function (req, res, next) {
 };
 
 exports.createProject = async function (req, res, next) {
+  console.log("req: ", req);
   var existProject = await Projects.findOne({ title: req.body.projectTitle });
   if (existProject) {
     return res.status(400).json("Project already exist").end();
   }
-  // reconstruct to multipart/form-data
+  
   var newProject = {
     IDcreator: req.body.creatorid, //required
     IDmanager: req.body.managerid,
@@ -76,7 +77,7 @@ exports.createProject = async function (req, res, next) {
 };
 
 exports.updateProject = async function (req, res, next) {
-  var projectToUpdate = req.body.projectID;
+  var projectToUpdate = req.body.projectTitleToUpdate;
 
   if (!projectToUpdate) {
     next();
@@ -85,7 +86,7 @@ exports.updateProject = async function (req, res, next) {
 
   var newProjectData = {
     ManagerID: req.body.managerID,
-    name: req.body.projectName,
+    title: req.body.projectTitle,
     description: req.body.projectDescription,
     subject: req.body.projectSubject,
     picture: req.body.filename,
@@ -110,15 +111,15 @@ exports.updateProject = async function (req, res, next) {
     if (newProjectData.ManagerID) {
       project.ManagerID = newProjectData.ManagerID;
     }
-    if (newProjectData.name) {
-      project.name = newProjectData.name;
+    if (newProjectData.title) {
+      project.title = newProjectData.title;
     }
     if (newProjectData.description) {
       project.description = newProjectData.description;
     }
     if (newProjectData.subject) {
       project.projectSubject = newProjectData.subject;
-    }
+    } 1
     if (newProjectData.picture) {
       project.picture = newProjectData.picture;
     }
@@ -138,7 +139,7 @@ exports.updateProject = async function (req, res, next) {
       project.projectMembers = newProjectData.projectMembers;
     }
 
-    await project.save(function (err, doc) {
+    await project.update(function (err, doc) {
       if (err) {
         next();
         return res.status(400).json({ err: err.message }).end();
@@ -177,8 +178,22 @@ exports.deleteProject = async function (req, res, next) {
   });
 };
 
-exports.allProjects = async function (req, res, next) {
-  Projects.find({}, null, function (err, result) {
-    res.status(200).json(result).end();
+exports.getProjects = async function (req, res, next) {
+  Projects.find({ onPreModerate: false }, null, function (err, result) {
+    if (err) {
+      next();
+      return res.status(400).json({ err: err.message }).end();
+    }
+    return res.status(200).json(result).end();
+  });
+};
+
+exports.preModerProjects = async function (req, res, next) {
+  Projects.find({ onPreModerate: true }, null, function (err, result) {
+    if (err) {
+      next();
+      return res.status(400).json({ err: err.message }).end();
+    }
+    return res.status(200).json(result).end();
   });
 };

@@ -11,11 +11,14 @@ passport.use(
   new JwtStrategy(opts, async function (jwt_payload, done) {
     await Users.findById(jwt_payload.id, function (err, user) {
       if (err) {
+        console.log("err JWT_STRATEGY");
         return done(err, false);
       }
       if (user) {
+        console.log("token: ", jwt_payload);
         return done(null, user);
       } else {
+        console.log("err else");
         return done(null, false);
         // or you could create a new account
       }

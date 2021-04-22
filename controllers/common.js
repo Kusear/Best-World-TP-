@@ -9,6 +9,13 @@ var store = require("../config/multer").storage;
 exports.login = async function (req, res, next) {
   // validate
   await Users.findOne({ email: req.body.email }, function (err, user) {
+    if (user.onPreModerate) {
+      next();
+      return res
+        .status(400)
+        .json({ message: "accont on pre moderation" })
+        .end();
+    }
     var isAuthenticated = user && user.verifyPassword(req.body.password);
     if (!isAuthenticated) {
       next({
@@ -17,7 +24,7 @@ exports.login = async function (req, res, next) {
       });
       return;
     }
-    res
+    return res
       .status(200)
       .json({
         _id: user._id,
@@ -77,7 +84,7 @@ exports.registration = async function (req, res, next) {
   }
 };
 
-exports.deleteUser = function (req, res) {
+exports.deleteUser = async function (req, res, next) {
   var userToDelete = req.body.id;
 
   if (!userToDelete) {
@@ -87,17 +94,20 @@ exports.deleteUser = function (req, res) {
       .end();
   }
 
-  Users.findById(userToDelete, function (err, user) {
+  await Users.findById(userToDelete, async function (err, user) {
     if (err) {
+      next();
       return res.status(500).json({ err: err.message }).end();
     }
 
     if (!user) {
+      next();
       return res.status(400).json({ err: "User not found" }).end();
     }
 
-    user.remove(function (err, doc) {
+    await user.remove(function (err, doc) {
       if (err) {
+        next();
         return res.status(400).json({ err: err.message }).end();
       }
       return res.status(200).json({ message: "updated" }).end();
@@ -147,31 +157,6 @@ exports.getFiles = function (req, res) {
   //   })
   //   .pipe(res);
 };
-
-// await Users.findOne({ email: req.body.email }, function (err, user) {
-//   if (err) {
-//     return done(err);
-//   }
-//   if (user) {
-//     return res.status(400).json("User already exist").end();
-//   }
-// });
-
-// var newUser = {
-//   username: req.body.username,
-//   email: req.body.email,
-//   password: req.body.password,
-//   info: req.body.info,
-//   role: "user",
-// };
-
-// if (!newUser.email || !newUser.password || !newUser.username) {
-//   next({
-//     status: 400,
-//     message: "All fields (email, password, username) must be sent!",
-//   });
-//   return;
-// }
 
 //  nodemailer.mailAuthMessage.to = newUser.email;
 // nodemailer.transport.sendMail(

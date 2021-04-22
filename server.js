@@ -80,15 +80,20 @@ app.get("/api/", multer({storage: store}).any(), function (req, res) {
   //   );
 
   return res.send(req.files).end();
-  // return res.status(200).json("main").end();
 });
+
 app.post(api_route + "/login", controllersCommon.login);
 app.post(api_route + "/logout", midleware.auth, controllersCommon.logout);
 app.post(api_route + "/registration", multer({storage: store}).any(), controllersCommon.registration);
 app.post(api_route + "/deleteUser", midleware.auth, controllersCommon.deleteUser);
-app.post(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
-app.post(api_route + "/allProjects", midleware.auth, controllersProject.allProjects);
 app.post(api_route + "/emailAuth", controllersCommon.emailAuth);
+
+app.create(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
+app.get(api_route + "/projectData", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.projectData);
+app.put(api_route + "/updateProject", multer({storage: store}).any(), midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.updateProject);
+app.delete(api_route + "/deleteProject",midleware.auth, midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.deleteProject)
+app.post(api_route + "/preModerProjects", midleware.auth, midleware.roleCheck("admin" || "superadmin"), controllersProject.preModerProjects);
+app.post(api_route + "/getProjects",  controllersProject.getProjects);
 
 /////
 app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);

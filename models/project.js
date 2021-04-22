@@ -1,23 +1,23 @@
 var mongoose = require("mongoose");
 var User = require("./user");
 
-var ProjectMembers = new mongoose.Schema({
-  IDuser: {
-    type: mongoose.Types.ObjectId,
-  },
-  roleName: {
-    type: String,
-  },
-});
+// var ProjectMembers = new mongoose.Schema({
+//   IDuser: {
+//     type: mongoose.Types.ObjectId,
+//   },
+//   roleName: {
+//     type: String,
+//   },
+// });
 
-var RequiredRoles = new mongoose.Schema({
-  name: {
-    type: String,
-  },
-  countOfMembers: {
-    type: Number,
-  },
-});
+// var RequiredRoles = new mongoose.Schema({
+//   name: {
+//     type: String,
+//   },
+//   countOfMembers: {
+//     type: Number,
+//   },
+// });
 
 var ProjectSchema = new mongoose.Schema({
   IDcreator: {
@@ -30,6 +30,10 @@ var ProjectSchema = new mongoose.Schema({
   needManager: {
     type: Boolean,
     default: false,
+  },
+  onPreModerate: {
+    type: Boolean,
+    default: true,
   },
   title: {
     type: String,
@@ -61,10 +65,10 @@ var ProjectSchema = new mongoose.Schema({
     required: true,
   },
   requiredRoles: {
-    type: [RequiredRoles],
+    type: [],
   },
   projectMembers: {
-    type: [ProjectMembers],
+    type: [],
   },
 });
 

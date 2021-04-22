@@ -3,46 +3,17 @@ var mongoose = require("mongoose");
 //var passport = require("passport");
 var bcrypt = require("bcrypt");
 
-exports.create = function (req, res) {
-  var user = {
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    info: req.body.info,
-    role: req.body.role,
-  };
-
-  if (!user.email || !user.password) {
-    return res.status(400).json({ err: "All fields must be sent!" }).end();
-  }
-
-  bcrypt.hash(user.password, saltRounds, function (err, hash) {
-    if (err) {
-      console.log("crypt err: ", err);
-      return res.status(500).json({ err: err.message }).end();
-    }
-    user.password = hash;
-    Users.insertMany(user, function (err, result) {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ err: err.message }).end();
-      }
-      res.send(user);
-    });
-  });
-};
-
 exports.superAdminPage = function (req, res) {
   res.send("Sup page!");
 };
 
 exports.updateUsers = function (req, res) {
-  var userToUpdate = req.body.usertoupdate;
+  var userToUpdate = req.body.userIdToUpdate;
 
   var newData = {
     username: req.body.newusername,
     email: req.body.newemail,
-    password: req.body.newpassword,
+    onPreModerate: req.body.onPreModerate,
     role: req.body.newrole,
     info: req.body.newinfo,
   };
@@ -68,9 +39,6 @@ exports.updateUsers = function (req, res) {
     }
     if (newData.email) {
       user.email = newData.email;
-    }
-    if (newData.password) {
-      user.password = newData.password;
     }
     if (newData.role) {
       user.role = newData.role;

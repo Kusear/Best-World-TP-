@@ -3,7 +3,7 @@ var bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-var  JWT_SECRET  = process.env.JWT_SECRET;
+var JWT_SECRET = process.env.JWT_SECRET;
 var salt = 5;
 
 var UserSchema = new mongoose.Schema({
@@ -22,6 +22,13 @@ var UserSchema = new mongoose.Schema({
     required: true,
     select: false,
   },
+  onPreModerate: {
+    type: Boolean,
+    default: true,
+  },
+  preferredRole: {
+    type: String,
+  },
   info: {
     type: String,
   },
@@ -38,6 +45,10 @@ var UserSchema = new mongoose.Schema({
 
 UserSchema.methods.verifyPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
+};
+
+UserSchema.method.hashPassword = async function (newpassword) {
+  return await bcrypt.hash(newpassword, salt);
 };
 
 UserSchema.methods.getToken = function () {
