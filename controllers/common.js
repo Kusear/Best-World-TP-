@@ -6,9 +6,9 @@ var { GridFsBucket, ObjectId } = require("mongodb");
 var store = require("../config/multer").storage;
 // var nodemailer = require("../config/nodemailer");
 
-exports.login = function (req, res, next) {
+exports.login = async function (req, res, next) {
   // validate
-  Users.findOne({ email: req.body.email }, function (err, user) {
+  await Users.findOne({ email: req.body.email }, function (err, user) {
     var isAuthenticated = user && user.verifyPassword(req.body.password);
     if (!isAuthenticated) {
       next({
@@ -34,10 +34,10 @@ exports.logout = function (req, res) {
   res.status(200).json("logout completed").end();
 };
 
-exports.registration = function (req, res, next) {
+exports.registration = async function (req, res, next) {
   // validate
   try {
-    var newUser = new Users({
+    var newUser = await new Users({
       username: req.body.username,
       email: req.body.email,
       password: req.body.password,
@@ -132,7 +132,7 @@ exports.getFiles = function (req, res) {
   var stream = bucket.openDownloadStream(new ObjectId(req.body.id));
 
   stream.on("error", function (err) {
-    if (err) {
+    if (err.code === "ENOENT") {
       return res.status(404).send("File not found");
     }
     res.status(500).send(err.message);
@@ -148,7 +148,7 @@ exports.getFiles = function (req, res) {
   //   .pipe(res);
 };
 
-//  Users.findOne({ email: req.body.email }, function (err, user) {
+// await Users.findOne({ email: req.body.email }, function (err, user) {
 //   if (err) {
 //     return done(err);
 //   }
