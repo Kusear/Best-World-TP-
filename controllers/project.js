@@ -5,7 +5,7 @@ var Users = require("../models/user").User;
 exports.projectData = async function (req, res, next) {
   // add pic process
   await Projects.findOne(
-    { title: req.body.projectName },
+    { slug: req.body.projectSlug },
     async function (err, project) {
       if (err) {
         next();
