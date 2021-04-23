@@ -107,25 +107,11 @@ exports.deleteUser = async function (req, res) {
   });
 };
 
-exports.getUsersOnPreModerate = async function (req, res) {
-  await Users.find({ onPreModerate: true }, function (err, result) {
+exports.getUsers = async function (req, res) {
+  await Users.find({}, function (err, result) {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }
     return res.status(200).json(result).end();
   });
-};
-
-exports.getUsers = async function (req, res) {
-  await Users.find(
-    {
-      /*onPreModerate: false*/
-    },
-    function (err, result) {
-      if (err) {
-        return res.status(400).json({ err: err.message }).end();
-      }
-      return res.status(200).json(result).end();
-    }
-  );
 };

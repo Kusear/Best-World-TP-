@@ -6,12 +6,6 @@ var Grid = require("gridfs-stream");
 exports.login = async function (req, res) {
   // validate
   await Users.findOne({ email: req.body.email }, function (err, user) {
-    if (user.onPreModerate) {  // убрать премодерацию
-      return res
-        .status(400)
-        .json({ message: "accont on pre moderation" })
-        .end();
-    }
     var isAuthenticated = user && user.verifyPassword(req.body.password);
     if (!isAuthenticated) {
       return res.status(400).json({ err: "no auth" }).end();

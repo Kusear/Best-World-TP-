@@ -11,23 +11,26 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
   },
   email: {
     type: String,
     required: true,
     unique: true,
+    trim: true,
   },
   password: {
     type: String,
     required: true,
     select: false,
-  },
-  onPreModerate: {
-    type: Boolean,
-    default: true,
+    trim: true,
   },
   preferredRole: {
     type: String,
+  },
+  needChanges: {
+    type: Boolean,
+    default: false,
   },
   info: {
     type: String,

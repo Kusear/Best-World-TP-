@@ -1,8 +1,9 @@
 var mongoose = require("mongoose");
 var User = require("./user");
+var slugify = require("slugify");
 
 var ProjectSchema = new mongoose.Schema({
-  IDcreator: {  
+  IDcreator: {
     type: String,
     required: true,
   },
@@ -19,21 +20,18 @@ var ProjectSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  onPreModerate: {
-    type: Boolean,
-    default: true,
-  },
   title: {
     type: String,
     required: true,
     unique: true,
+    trim: true,
   },
   description: {
     type: String,
   },
   projectSubject: {
     type: String,
-    default: "no subject"
+    default: "no subject",
   },
   picture: {
     type: String,
@@ -61,6 +59,27 @@ var ProjectSchema = new mongoose.Schema({
     type: Array,
     default: [],
   },
+  needChanges: {
+    type: Boolean,
+    default: false,
+  },
+  slug: {
+    type: String,
+  },
+});
+
+ProjectSchema.pre("save", async function (next) {
+  this.slug =
+    slugify(this.title, {
+      replacement: "-", // replace spaces with replacement character, defaults to `-`
+      remove: undefined, // remove characters that match regex, defaults to `undefined`
+      lower: false, // convert to lower case, defaults to `false`
+      strict: false, // strip special characters except replacement, defaults to `false`
+      locale: "ru", // language code of the locale to use
+    }) +
+    "-" +
+    this._id;
+  next();
 });
 
 exports.projectCollection = "project";

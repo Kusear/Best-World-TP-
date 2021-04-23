@@ -8,15 +8,13 @@ var cors = require("cors");
 var MongoStore = require("connect-mongo");
 require("dotenv").config();
 //////
-var store = require("./config/multer").storage;
+
 //////
 var Grid = require("gridfs-stream");
 
 var midleware = require("./midleware/midleware");
 var controllersCommon = require("./controllers/common");
 var controllersUser = require("./controllers/user");
-var controllersSuperAdmin = require("./controllers/superAdmin");
-var controllersAdmin = require("./controllers/admin");
 var controllersProject = require("./controllers/project");
 require("./config/config-passport");
 var app = express();
@@ -61,35 +59,101 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/api/", function (req, res) {
-  return res.send(req.files).end();
+  var test = "https://www.npmjs.com/package/s{}[@!#$%^^&*№;%:?*]()/\\//lugify ";
+
+  return res.status(200).json({slug: "9845165"}).end();
 });
 
 app.post(api_route + "/login", midleware.routeLog, controllersCommon.login);
-app.post(api_route + "/logout", midleware.auth, midleware.routeLog, controllersCommon.logout);
-app.post(api_route + "/registration", midleware.routeLog, controllersCommon.registration);
-app.post(api_route + "/emailAuth", midleware.routeLog, controllersCommon.emailAuth);
+app.post(
+  api_route + "/logout",
+  midleware.auth,
+  midleware.routeLog,
+  controllersCommon.logout
+);
+app.post(
+  api_route + "/registration",
+  midleware.routeLog,
+  controllersCommon.registration
+);
+app.post(
+  api_route + "/emailAuth",
+  midleware.routeLog,
+  controllersCommon.emailAuth
+);
 
-app.post(api_route + "/createProject", midleware.auth, midleware.routeLog, controllersProject.createProject);
-app.post(api_route + "/projectData", midleware.routeLog, controllersProject.projectData);
-app.post(api_route + "/updateProject", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersProject.updateProject);
-app.delete(api_route + "/deleteProject", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersProject.deleteProject);
-app.post(api_route + "/preModerProjects", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersProject.preModerProjects);
-app.get(api_route + "/getProjects", midleware.routeLog, controllersProject.getProjects);
+app.post(
+  api_route + "/createProject",
+  midleware.auth,
+  midleware.routeLog,
+  controllersProject.createProject
+);
+app.post(
+  api_route + "/projectData",
+  midleware.routeLog,
+  controllersProject.projectData
+);
+app.post(
+  api_route + "/updateProject",
+  midleware.auth,
+  midleware.routeLog,
+  midleware.roleCheck("user", "admin", "superadmin"),
+  controllersProject.updateProject
+);
+app.delete(
+  api_route + "/deleteProject",
+  midleware.auth,
+  midleware.routeLog,
+  midleware.roleCheck("admin", "superadmin"),
+  controllersProject.deleteProject
+);
+app.post(
+  api_route + "/preModerProjects",
+  midleware.auth,
+  midleware.routeLog,
+  midleware.roleCheck("admin", "superadmin"),
+  controllersProject.preModerProjects
+);
+app.get(
+  api_route + "/getProjects",
+  midleware.routeLog,
+  controllersProject.getProjects
+);
 
 /////
 app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
-app.post(
-  api_route + "/getFile",
-  midleware.auth,
-  controllersCommon.getFiles
-);
+app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
 /////
 
 app.post(api_route + "/userData", midleware.routeLog, controllersUser.userData);
-app.post(api_route + "/updateUser", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersUser.updateUser);
-app.delete(api_route + "/deleteUser", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersUser.deleteUser);
-app.post(api_route + "/preModerateUsers", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersUser.getUsersOnPreModerate);
-app.get(api_route + "/getUsers", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersUser.getUsers);
+app.post(
+  api_route + "/updateUser",
+  midleware.auth,
+  midleware.routeLog,
+  midleware.roleCheck("user", "admin", "superadmin"),
+  controllersUser.updateUser
+);
+app.delete(
+  api_route + "/deleteUser",
+  midleware.auth,
+  midleware.routeLog,
+  midleware.roleCheck("user", "admin", "superadmin"),
+  controllersUser.deleteUser
+);
+// app.post(
+//   api_route + "/preModerateUsers",
+//   midleware.auth,
+//   midleware.routeLog,
+//   midleware.roleCheck("admin", "superadmin"),
+//   controllersUser.getUsersOnPreModerate
+// );
+app.get(
+  api_route + "/getUsers",
+  midleware.auth,
+  midleware.routeLog,
+  midleware.roleCheck("admin", "superadmin"),
+  controllersUser.getUsers
+);
 
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
