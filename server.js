@@ -33,6 +33,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: false }));
+// app.use(multer({storage: store}).any());
 app.use(cookieParser("secret"));
 app.use(
   session({
@@ -61,10 +62,10 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/api/", multer({storage: store}).any(), function (req, res) {
+app.get("/api/", multer({storage: store}).fields(), function (req, res) {
   //console.log(req.body.a);
   //console.log(req.body.b);
-  // console.log(req.files[0].fieldname);
+  console.log(req);
 
   // var gfs = Grid(mongoose.connection.db, mongoose.mongo);
 
@@ -88,7 +89,7 @@ app.post(api_route + "/registration", multer({storage: store}).any(), controller
 app.post(api_route + "/deleteUser", midleware.auth, controllersCommon.deleteUser);
 app.post(api_route + "/emailAuth", controllersCommon.emailAuth);
 
-app.post(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
+app.post(api_route + "/createProject", /*multer({storage: store}).any(),*/ midleware.auth, controllersProject.createProject);
 app.get(api_route + "/projectData", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.projectData);
 app.post(api_route + "/updateProject", multer({storage: store}).any(), midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.updateProject);
 app.delete(api_route + "/deleteProject", midleware.auth, midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.deleteProject)

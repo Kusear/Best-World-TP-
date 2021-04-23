@@ -39,43 +39,79 @@ exports.projectData = async function (req, res, next) {
 };
 
 exports.createProject = async function (req, res, next) {
-  console.log("req: ", req.body);
-  var existProject = await Projects.findOne({ title: req.body.projectTitle });
-  if (existProject) {
-    next();
-    return res.status(400).json("Project already exist").end();
-  }
+  //console.log("req: ", req.body);
 
-  var newProject = {
-    IDcreator: req.body.creatorid, //required
-    IDmanager: req.body.managerid,
-    needManager: req.body.neededManager,
-    title: req.body.projectTitle, // required
-    // picture
-    description: req.body.projectDescription,
-    subject: [req.body.projectSubject],
-    picture: req.body.filename,
-    countMembers: req.body.membersCount,
-    creationDate: new Date(),
-    endTeamGathering: new Date(req.body.endGathering), // required
-    endProjectDate: new Date(req.body.endProject), // required
-    requareRoles: [req.body.requredRoles],
-  };
+  // var existProject = await Projects.findOne({ title: req.body.projectTitle });
+  // if (existProject) {
+  //   next({
+  //     status: 400,
+  //     message: "Project already exist",
+  //   });
+  //   return;
+  //   // return res.status(400).json("Project already exist").end();
+  // }
 
-  if (!newProject.title || !newProject.IDcreator) {
-    console.log(newProject);
-    next();
-    return res.status(400).json({ err: "All fields must be sent!" }).end();
-  }
-
-  await Projects.insertMany(newProject, function (err, result) {
+  try {
+    var newProject = await new Projects({
+      IDcreator: req.body.creatorid, //required
+      IDmanager: req.body.managerid,
+      needManager: req.body.neededManager,
+      title: req.body.projectTitle, // required
+      // picture
+      description: req.body.projectDescription,
+      subject: [req.body.projectSubject],
+      picture: req.body.filename,
+      countMembers: req.body.membersCount,
+      creationDate: new Date(),
+      endTeamGathering: new Date(req.body.endGathering), // required
+      endProjectDate: new Date(req.body.endProject), // required
+      requareRoles: [req.body.requredRoles],
+    }).save();
+    return res.status(200).json(newProject).end();
+  } catch (err) {
     if (err) {
-      console.log(err);
-      next();
-      //return res.status(500).json({ err: err.message }).end();
+      next({
+        status: 400,
+        message: "User already exist",
+      });
+      return;
     }
-    return res.status(200).json("success").end();
-  });
+    next({
+      status: 400,
+      message: "Project already exist",
+    });
+  }
+
+  // var newProject = {
+  //   IDcreator: req.body.creatorid, //required
+  //   IDmanager: req.body.managerid,
+  //   needManager: req.body.neededManager,
+  //   title: req.body.projectTitle, // required
+  //   // picture
+  //   description: req.body.projectDescription,
+  //   subject: [req.body.projectSubject],
+  //   picture: req.body.filename,
+  //   countMembers: req.body.membersCount,
+  //   creationDate: new Date(),
+  //   endTeamGathering: new Date(req.body.endGathering), // required
+  //   endProjectDate: new Date(req.body.endProject), // required
+  //   requareRoles: [req.body.requredRoles],
+  // };
+
+  // if (!newProject.title || !newProject.IDcreator) {
+  //   console.log(newProject);
+  //   next();
+  //   return res.status(400).json({ err: "All fields must be sent!" }).end();
+  // }
+
+  // await Projects.insertMany(newProject, function (err, result) {
+  //   if (err) {
+  //     console.log(err);
+  //     next();
+  //     //return res.status(500).json({ err: err.message }).end();
+  //   }
+  //   return res.status(200).json("success").end();
+  // });
 };
 
 exports.updateProject = async function (req, res, next) {
@@ -181,13 +217,19 @@ exports.deleteProject = async function (req, res, next) {
 };
 
 exports.getProjects = async function (req, res, next) {
-  Projects.find({ /*onPreModerate: false*/ }, null, function (err, result) {
-    if (err) {
-      next();
-      return res.status(400).json({ err: err.message }).end();
+  Projects.find(
+    {
+      /*onPreModerate: false*/
+    },
+    null,
+    function (err, result) {
+      if (err) {
+        next();
+        return res.status(400).json({ err: err.message }).end();
+      }
+      return res.status(200).json(result).end();
     }
-    return res.status(200).json(result).end();
-  });
+  );
 };
 
 exports.preModerProjects = async function (req, res, next) {
