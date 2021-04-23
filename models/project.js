@@ -37,7 +37,7 @@ var ProjectSchema = new mongoose.Schema({
     type: String,
   },
   countOfMembers: {
-    type: String,
+    type: Number,
   },
   creationDate: {
     type: Date,

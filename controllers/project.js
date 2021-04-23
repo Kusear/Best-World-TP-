@@ -34,7 +34,7 @@ exports.createProject = async function (req, res, next) {
       description: req.body.projectDescription,
       projectSubject: req.body.projectSubject,
       picture: req.body.filename,
-      countMembers: req.body.membersCount,
+      countOfMembers: req.body.membersCount,
       creationDate: new Date(),
       endTeamGathering: new Date(req.body.endGathering), // required
       endProjectDate: new Date(req.body.endProject), // required
