@@ -43,10 +43,10 @@ exports.createProject = async function (req, res, next) {
     // var user = await Users.findById(req.body.creatorid);
     // var manager = await Users.findById(req.body.managerid);
     var newProject = await new Projects({
-      IDcreator: req.body.creatorid, //required 
-      //creatorName: user.username,
+      IDcreator: req.body.creatorid, //required
+      creatorName: req.body.creatorUsername,
       IDmanager: req.body.managerid,
-      //managerName: manager.username,
+      managerName: req.body.creatorUsername,
       needManager: req.body.neededManager,
       title: req.body.projectTitle, // required
       // picture
