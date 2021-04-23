@@ -31,10 +31,10 @@ var ProjectSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  onPreModerate: {
-    type: Boolean,
-    default: true,
-  },
+  // onPreModerate: {
+  //   type: Boolean,
+  //   default: true,
+  // },
   title: {
     type: String,
     required: true,

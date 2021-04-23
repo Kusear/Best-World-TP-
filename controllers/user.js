@@ -122,13 +122,13 @@ exports.getUsers = async function (req, res) {
       return res.status(400).json({ err: err.message }).end();
     }
     return res.status(200).json(result).end();
-  })
-}
+  });
+};
 
 // var userToUpdate = req.body.userID;
 
 // if (!userToUpdate) {
-//   next();  
+//   next();
 //   return res
 //     .status(400)
 //     .json({ err: "field (usertoupdate) are required" })

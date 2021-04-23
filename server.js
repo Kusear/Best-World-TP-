@@ -91,7 +91,7 @@ app.post(api_route + "/emailAuth", controllersCommon.emailAuth);
 app.post(api_route + "/createProject", multer({storage: store}).any(), midleware.auth, controllersProject.createProject);
 app.get(api_route + "/projectData", midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.projectData);
 app.post(api_route + "/updateProject", multer({storage: store}).any(), midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.updateProject);
-app.delete(api_route + "/deleteProject",midleware.auth, midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.deleteProject)
+app.delete(api_route + "/deleteProject", midleware.auth, midleware.auth, midleware.roleCheck("user" || "admin" || "superadmin"), controllersProject.deleteProject)
 app.post(api_route + "/preModerProjects", midleware.auth, midleware.roleCheck("admin" || "superadmin"), controllersProject.preModerProjects);
 app.post(api_route + "/getProjects",  controllersProject.getProjects);
 

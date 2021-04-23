@@ -42,6 +42,7 @@ exports.createProject = async function (req, res, next) {
   console.log("req: ", req.body);
   var existProject = await Projects.findOne({ title: req.body.projectTitle });
   if (existProject) {
+    next();
     return res.status(400).json("Project already exist").end();
   }
 
@@ -63,6 +64,7 @@ exports.createProject = async function (req, res, next) {
 
   if (!newProject.title || !newProject.IDcreator) {
     console.log(newProject);
+    next();
     return res.status(400).json({ err: "All fields must be sent!" }).end();
   }
 
@@ -70,7 +72,7 @@ exports.createProject = async function (req, res, next) {
     if (err) {
       console.log(err);
       next();
-      return res.status(500).json({ err: err.message }).end();
+      //return res.status(500).json({ err: err.message }).end();
     }
     return res.status(200).json("success").end();
   });
@@ -179,7 +181,7 @@ exports.deleteProject = async function (req, res, next) {
 };
 
 exports.getProjects = async function (req, res, next) {
-  Projects.find({ onPreModerate: false }, null, function (err, result) {
+  Projects.find({ /*onPreModerate: false*/ }, null, function (err, result) {
     if (err) {
       next();
       return res.status(400).json({ err: err.message }).end();
