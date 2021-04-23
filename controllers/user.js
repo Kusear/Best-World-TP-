@@ -117,53 +117,10 @@ exports.getUsersOnPreModerate = async function (req, res) {
 };
 
 exports.getUsers = async function (req, res) {
-  await Users.find({ onPreModerate: false }, function (err, result) {
+  await Users.find({ /*onPreModerate: false*/ }, function (err, result) {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }
     return res.status(200).json(result).end();
   });
 };
-
-// var userToUpdate = req.body.userID;
-
-// if (!userToUpdate) {
-//   next();
-//   return res
-//     .status(400)
-//     .json({ err: "field (usertoupdate) are required" })
-//     .end();
-// }
-
-// var newData = {
-//   username: req.body.newusername,
-//   password: req.body.newpassword,
-//   info: req.body.info,
-// };
-
-// await Users.findById(userToUpdate, async function (err, user) {
-//   if (err) {
-//     return res.status(500).json({ err: err.message }).end();
-//   }
-
-//   if (!user) {
-//     return res.status(400).json({ err: "User not found" }).end();
-//   }
-
-//   if (newData.username) {
-//     user.username = newData.username;
-//   }
-//   if (newData.password) {
-//     user.password = newData.password;
-//   }
-//   if (newData.info) {
-//     user.info = newData.info;
-//   }
-
-//   await user.save(function (err, doc) {
-//     if (err) {
-//       return res.status(400).json({ err: err.message }).end();
-//     }
-//     return res.status(200).json({ message: "updated" }).end();
-//   });
-// });

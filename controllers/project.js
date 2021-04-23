@@ -39,17 +39,6 @@ exports.projectData = async function (req, res, next) {
 };
 
 exports.createProject = async function (req, res, next) {
-  //console.log("req: ", req.body);
-
-  // var existProject = await Projects.findOne({ title: req.body.projectTitle });
-  // if (existProject) {
-  //   next({
-  //     status: 400,
-  //     message: "Project already exist",
-  //   });
-  //   return;
-  //   // return res.status(400).json("Project already exist").end();
-  // }
 
   try {
     var newProject = await new Projects({
@@ -67,6 +56,7 @@ exports.createProject = async function (req, res, next) {
       endProjectDate: new Date(req.body.endProject), // required
       requareRoles: [req.body.requredRoles],
     }).save();
+
     return res.status(200).json(newProject).end();
   } catch (err) {
     if (err) {
@@ -81,44 +71,12 @@ exports.createProject = async function (req, res, next) {
       message: "Project already exist",
     });
   }
-
-  // var newProject = {
-  //   IDcreator: req.body.creatorid, //required
-  //   IDmanager: req.body.managerid,
-  //   needManager: req.body.neededManager,
-  //   title: req.body.projectTitle, // required
-  //   // picture
-  //   description: req.body.projectDescription,
-  //   subject: [req.body.projectSubject],
-  //   picture: req.body.filename,
-  //   countMembers: req.body.membersCount,
-  //   creationDate: new Date(),
-  //   endTeamGathering: new Date(req.body.endGathering), // required
-  //   endProjectDate: new Date(req.body.endProject), // required
-  //   requareRoles: [req.body.requredRoles],
-  // };
-
-  // if (!newProject.title || !newProject.IDcreator) {
-  //   console.log(newProject);
-  //   next();
-  //   return res.status(400).json({ err: "All fields must be sent!" }).end();
-  // }
-
-  // await Projects.insertMany(newProject, function (err, result) {
-  //   if (err) {
-  //     console.log(err);
-  //     next();
-  //     //return res.status(500).json({ err: err.message }).end();
-  //   }
-  //   return res.status(200).json("success").end();
-  // });
 };
 
-exports.updateProject = async function (req, res, next) {
+exports.updateProject = async function (req, res) {
   var projectToUpdate = req.body.projectTitleToUpdate;
 
   if (!projectToUpdate) {
-    next();
     return res.status(400).json({ err: "no projectID to edit" }).end();
   }
 
@@ -137,12 +95,10 @@ exports.updateProject = async function (req, res, next) {
 
   await Projects.findById(projectToUpdate, async function (err, project) {
     if (err) {
-      next();
       return res.status(500).json({ err: err.message }).end();
     }
 
     if (!project) {
-      next();
       return res.status(400).json({ err: "Project not found" }).end();
     }
 
@@ -179,7 +135,6 @@ exports.updateProject = async function (req, res, next) {
 
     await project.update(function (err, doc) {
       if (err) {
-        next();
         return res.status(400).json({ err: err.message }).end();
       }
       return res.status(200).json({ message: "updated" }).end();
@@ -187,36 +142,32 @@ exports.updateProject = async function (req, res, next) {
   });
 };
 
-exports.deleteProject = async function (req, res, next) {
+exports.deleteProject = async function (req, res) {
   var projectToDelete = req.body.projectID;
 
   if (!projectToDelete) {
-    next();
     return res.status(400).json({ err: "no projectID to edit" }).end();
   }
 
   await Projects.findById(projectToDelete, async function (err, project) {
     if (err) {
-      next();
       return res.status(500).json({ err: err.message }).end();
     }
 
     if (!project) {
-      next();
       return res.status(400).json({ err: "Project not found" }).end();
     }
 
     await project.remove(function (err, doc) {
       if (err) {
-        next();
         return res.status(500).json({ err: err.message }).end();
       }
-      return res.status(200).json({ message: "updated" }).end();
+      return res.status(200).json({ message: "deleted" }).end();
     });
   });
 };
 
-exports.getProjects = async function (req, res, next) {
+exports.getProjects = async function (req, res) {
   Projects.find(
     {
       /*onPreModerate: false*/
@@ -224,7 +175,6 @@ exports.getProjects = async function (req, res, next) {
     null,
     function (err, result) {
       if (err) {
-        next();
         return res.status(400).json({ err: err.message }).end();
       }
       return res.status(200).json(result).end();
@@ -232,10 +182,9 @@ exports.getProjects = async function (req, res, next) {
   );
 };
 
-exports.preModerProjects = async function (req, res, next) {
+exports.preModerProjects = async function (req, res) {
   Projects.find({ onPreModerate: true }, null, function (err, result) {
     if (err) {
-      next();
       return res.status(400).json({ err: err.message }).end();
     }
     return res.status(200).json(result).end();

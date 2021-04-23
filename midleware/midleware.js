@@ -12,3 +12,9 @@ exports.roleCheck = function (...allowed) {
     }
   };
 };
+
+exports.routeLog = function (req, res, next) {
+  console.log("Route: ", req.route.path);
+  console.log("Headers: ", req.headers);
+  next();
+};
