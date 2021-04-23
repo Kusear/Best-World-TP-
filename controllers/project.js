@@ -11,24 +11,7 @@ exports.projectData = async function (req, res) {
         return res.status(500).json({ message: "Something Wrong" }).end();
       }
       if (project) {
-        var creator = await Users.findById(project.CreatorID);
-        var manager = await Users.findById(project.ManagerID);
-
-        return res
-          .status(200)
-          .json({
-            projectData: project,
-            // picture
-            creatorData: {
-              ID: creator._id,
-              username: creator.username,
-            },
-            managerData: {
-              ID: manager._id,
-              username: manager.username,
-            },
-          })
-          .end();
+        return res.status(200).json(project).end();
       } else {
         return res.status(400).json("Project not found").end();
       }
