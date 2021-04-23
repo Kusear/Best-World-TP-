@@ -51,6 +51,9 @@ exports.registration = async function (req, res) {
       })
       .end();
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({err: "User already exist"}).end();
+    }
     return res.status(400).json({err: err.message}).end();
   }
 };
