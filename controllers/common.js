@@ -31,7 +31,7 @@ exports.logout = function (req, res) {
   res.status(200).json("logout completed").end();
 };
 
-exports.registration = async function (req, res, next) {
+exports.registration = async function (req, res) {
   // validate
   try {
     var newUser = await new Users({
@@ -51,13 +51,7 @@ exports.registration = async function (req, res, next) {
       })
       .end();
   } catch (err) {
-    if (err.code === 11000) {
-      next({
-        status: 400,
-        message: "User already exist",
-      });
-    }
-    next();
+    return res.status(400).json({err: err.message}).end();
   }
 };
 
