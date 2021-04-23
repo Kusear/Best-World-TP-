@@ -2,13 +2,12 @@ var mongoose = require("mongoose");
 var Projects = require("../models/project").Project;
 var Users = require("../models/user").User;
 
-exports.projectData = async function (req, res, next) {
+exports.projectData = async function (req, res) {
   // add pic process
   await Projects.findOne(
     { slug: req.body.projectSlug },
     async function (err, project) {
       if (err) {
-        next();
         return res.status(500).json({ message: "Something Wrong" }).end();
       }
       if (project) {
@@ -31,7 +30,6 @@ exports.projectData = async function (req, res, next) {
           })
           .end();
       } else {
-        next();
         return res.status(400).json("Project not found").end();
       }
     }
