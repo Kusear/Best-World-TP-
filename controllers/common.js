@@ -3,11 +3,10 @@ var mongoose = require("mongoose");
 var Grid = require("gridfs-stream");
 // var nodemailer = require("../config/nodemailer");
 
-exports.login = async function (req, res, next) {
+exports.login = async function (req, res) {
   // validate
   await Users.findOne({ email: req.body.email }, function (err, user) {
-    if (user.onPreModerate) {
-      next();
+    if (user.onPreModerate) {  // убрать премодерацию
       return res
         .status(400)
         .json({ message: "accont on pre moderation" })
@@ -15,11 +14,7 @@ exports.login = async function (req, res, next) {
     }
     var isAuthenticated = user && user.verifyPassword(req.body.password);
     if (!isAuthenticated) {
-      next({
-        status: 400,
-        message: "Wrong data",
-      });
-      return;
+      return res.status(400).json({ err: "no auth" }).end();
     }
     return res
       .status(200)
