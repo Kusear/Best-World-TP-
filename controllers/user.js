@@ -3,7 +3,7 @@ var mongoose = require("mongoose");
 var passport = require("passport");
 
 exports.userData = async function (req, res, next) {
-  var user = await Users.findById(rea.body.userID, function (err) {
+  var user = await Users.findById(req.body.userID, function (err) {
     if (err) {
       next();
       return res.status(500).json({ err: err.message }).end();
@@ -117,10 +117,15 @@ exports.getUsersOnPreModerate = async function (req, res) {
 };
 
 exports.getUsers = async function (req, res) {
-  await Users.find({ /*onPreModerate: false*/ }, function (err, result) {
-    if (err) {
-      return res.status(400).json({ err: err.message }).end();
+  await Users.find(
+    {
+      /*onPreModerate: false*/
+    },
+    function (err, result) {
+      if (err) {
+        return res.status(400).json({ err: err.message }).end();
+      }
+      return res.status(200).json(result).end();
     }
-    return res.status(200).json(result).end();
-  });
+  );
 };

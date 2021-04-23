@@ -67,11 +67,10 @@ app.get("/api/", function (req, res) {
 app.post(api_route + "/login", midleware.routeLog, controllersCommon.login);
 app.post(api_route + "/logout", midleware.auth, midleware.routeLog, controllersCommon.logout);
 app.post(api_route + "/registration", midleware.routeLog, controllersCommon.registration);
-app.post(api_route + "/deleteUser", midleware.routeLog, midleware.auth, controllersCommon.deleteUser);
 app.post(api_route + "/emailAuth", midleware.routeLog, controllersCommon.emailAuth);
 
 app.post(api_route + "/createProject", midleware.auth, midleware.routeLog, controllersProject.createProject);
-app.get(api_route + "/projectData", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersProject.projectData);
+app.post(api_route + "/projectData", midleware.routeLog, controllersProject.projectData);
 app.post(api_route + "/updateProject", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersProject.updateProject);
 app.delete(api_route + "/deleteProject", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersProject.deleteProject);
 app.post(api_route + "/preModerProjects", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersProject.preModerProjects);
@@ -82,14 +81,13 @@ app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
 app.post(
   api_route + "/getFile",
   midleware.auth,
-  // multer({storage: store}).any(),
   controllersCommon.getFiles
 );
 /////
 
-app.get(api_route + "/userData", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersUser.userData);
+app.post(api_route + "/userData", midleware.routeLog, controllersUser.userData);
 app.post(api_route + "/updateUser", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersUser.updateUser);
-app.post(api_route + "/deleteUser", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersUser.deleteUser);
+app.delete(api_route + "/deleteUser", midleware.auth, midleware.routeLog, midleware.roleCheck("user", "admin", "superadmin"), controllersUser.deleteUser);
 app.post(api_route + "/preModerateUsers", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersUser.getUsersOnPreModerate);
 app.get(api_route + "/getUsers", midleware.auth, midleware.routeLog, midleware.roleCheck("admin", "superadmin"), controllersUser.getUsers);
 

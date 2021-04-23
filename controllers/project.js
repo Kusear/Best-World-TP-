@@ -39,32 +39,35 @@ exports.projectData = async function (req, res, next) {
 };
 
 exports.createProject = async function (req, res, next) {
-
   try {
+    var user = await Users.findById(req.body.creatorid);
+    var manager = await Users.findById(req.body.managerid);
     var newProject = await new Projects({
-      IDcreator: req.body.creatorid, //required
+      IDcreator: req.body.creatorid, //required 
+      creatorName: user.username,
       IDmanager: req.body.managerid,
+      managerName: manager.username,
       needManager: req.body.neededManager,
       title: req.body.projectTitle, // required
       // picture
       description: req.body.projectDescription,
-      subject: [req.body.projectSubject],
+      projectSubject: req.body.projectSubject,
       picture: req.body.filename,
       countMembers: req.body.membersCount,
       creationDate: new Date(),
       endTeamGathering: new Date(req.body.endGathering), // required
       endProjectDate: new Date(req.body.endProject), // required
-      requareRoles: req.body.requredRoles,
+      requiredRoles: req.body.requredRoles,
     }).save();
-
-    console.log(newProject.requreRoles);
+    // project add members
+    console.log("a");
 
     return res.status(200).json(newProject).end();
   } catch (err) {
     if (err) {
       next({
         status: 400,
-        message: "User already exist",
+        message: "Project already exist",
       });
       return;
     }

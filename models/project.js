@@ -1,17 +1,18 @@
 var mongoose = require("mongoose");
 var User = require("./user");
 
-var reqShema = new mongoose.Schema({
-  name: String,
-  countOfMembers: Number,
-});
-
 var ProjectSchema = new mongoose.Schema({
-  IDcreator: {
+  IDcreator: {  
     type: String,
     required: true,
   },
+  creatorName: {
+    type: String,
+  },
   IDmanager: {
+    type: String,
+  },
+  managerName: {
     type: String,
   },
   needManager: {
@@ -31,7 +32,8 @@ var ProjectSchema = new mongoose.Schema({
     type: String,
   },
   projectSubject: {
-    type: Array,
+    type: String,
+    default: "no subject"
   },
   picture: {
     type: String,
@@ -52,14 +54,12 @@ var ProjectSchema = new mongoose.Schema({
     required: true,
   },
   requiredRoles: {
-    type: [Object],
+    type: Array,
+    default: [],
   },
   projectMembers: {
-    type: [
-      {
-        type: String,
-      },
-    ],
+    type: Array,
+    default: [],
   },
 });
 

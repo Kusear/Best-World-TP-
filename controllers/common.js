@@ -1,9 +1,6 @@
-// var passport = require("passport");
 var Users = require("../models/user").User;
 var mongoose = require("mongoose");
 var Grid = require("gridfs-stream");
-var { GridFsBucket, ObjectId } = require("mongodb");
-var store = require("../config/multer").storage;
 // var nodemailer = require("../config/nodemailer");
 
 exports.login = async function (req, res, next) {
@@ -51,19 +48,6 @@ exports.registration = async function (req, res, next) {
       //image: req.files[0].fieldname,
     }).save();
 
-    // var gfs = Grid(mongoose.connection.db, mongoose.mongo);
-
-    // req.pipe(
-    //   gfs
-    //     .createWriteStream({
-    //       filename: req.files[0].fieldname,
-    //     })
-    //     .on("close", function (savedFile) {
-    //       console.log("file saved", savedFile);
-    //       return res.json({ file: savedFile });
-    //     })
-    // );
-
     res
       .status(200)
       .json({
@@ -82,37 +66,6 @@ exports.registration = async function (req, res, next) {
     }
     next();
   }
-};
-
-exports.deleteUser = async function (req, res, next) {
-  var userToDelete = req.body.id;
-
-  if (!userToDelete) {
-    return res
-      .status(400)
-      .json({ err: "field (usertoupdate) are required" })
-      .end();
-  }
-
-  await Users.findById(userToDelete, async function (err, user) {
-    if (err) {
-      next();
-      return res.status(500).json({ err: err.message }).end();
-    }
-
-    if (!user) {
-      next();
-      return res.status(400).json({ err: "User not found" }).end();
-    }
-
-    await user.remove(function (err, doc) {
-      if (err) {
-        next();
-        return res.status(400).json({ err: err.message }).end();
-      }
-      return res.status(200).json({ message: "updated" }).end();
-    });
-  });
 };
 
 exports.emailAuth = function (req, res) {
@@ -138,24 +91,14 @@ exports.saveFiles = function (req, res) {
 };
 
 exports.getFiles = function (req, res) {
-  var bucket = new GridFsBucket(store);
-  var stream = bucket.openDownloadStream(new ObjectId(req.body.id));
+  var gfs = Grid(mongoose.connection.db, mongoose.mongo);
 
-  stream.on("error", function (err) {
-    if (err.code === "ENOENT") {
-      return res.status(404).send("File not found");
-    }
-    res.status(500).send(err.message);
-  });
-  stream.pipe(res);
-  // var gfs = Grid(mongoose.connection.db, mongoose.mongo);
-
-  // gfs
-  //   .createReadStream({ filename: req.body.filename })
-  //   .on("error", function (err) {
-  //     res.send("No image found with that title");
-  //   })
-  //   .pipe(res);
+  gfs
+    .createReadStream({ filename: req.body.filename })
+    .on("error", function (err) {
+      res.send("No image found with that title");
+    })
+    .pipe(res);
 };
 
 //  nodemailer.mailAuthMessage.to = newUser.email;
