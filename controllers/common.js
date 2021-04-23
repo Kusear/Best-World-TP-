@@ -1,12 +1,16 @@
 var Users = require("../models/user").User;
 var mongoose = require("mongoose");
 var Grid = require("gridfs-stream");
+var bcrypt = require("bcrypt");
 // var nodemailer = require("../config/nodemailer");
 
 exports.login = async function (req, res) {
   // validate
-  await Users.findOne({ email: req.body.email }, function (err, user) {
-    var isAuthenticated = user && user.verifyPassword(req.body.password);
+  await Users.findOne({ email: req.body.email }, async function (err, user) {
+    var isAuthenticated =
+      user &&
+      ((await bcrypt.compare(req.body.password, user.password)) ||
+        req.body.password === user.password);
     if (!isAuthenticated) {
       return res.status(400).json({ err: "no auth" }).end();
     }

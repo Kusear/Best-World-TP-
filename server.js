@@ -59,9 +59,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/api/", function (req, res) {
-  var test = "https://www.npmjs.com/package/s{}[@!#$%^^&*№;%:?*]()/\\//lugify ";
-
-  return res.status(200).json({slug: "9845165"}).end();
+  return res.status(200).json().end();
 });
 
 app.post(api_route + "/login", midleware.routeLog, controllersCommon.login);

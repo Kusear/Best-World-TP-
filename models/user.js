@@ -22,7 +22,6 @@ var UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    select: false,
     trim: true,
   },
   preferredRole: {
@@ -45,10 +44,6 @@ var UserSchema = new mongoose.Schema({
     default: "default",
   },
 });
-
-UserSchema.methods.verifyPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
 
 UserSchema.method.hashPassword = async function (newpassword) {
   return await bcrypt.hash(newpassword, salt);

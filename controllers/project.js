@@ -11,6 +11,7 @@ exports.projectData = async function (req, res) {
         return res.status(500).json({ message: "Something Wrong" }).end();
       }
       if (project) {
+        console.log(project.description);
         return res.status(200).json(project).end();
       } else {
         return res.status(400).json("Project not found").end();
