@@ -82,7 +82,7 @@ app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
 app.post(
   api_route + "/getFile",
   midleware.auth,
-  multer({storage: store}).any(),
+  // multer({storage: store}).any(),
   controllersCommon.getFiles
 );
 /////
