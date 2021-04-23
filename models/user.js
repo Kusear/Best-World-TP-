@@ -22,10 +22,10 @@ var UserSchema = new mongoose.Schema({
     required: true,
     select: false,
   },
-  // onPreModerate: {
-  //   type: Boolean,
-  //   default: true,
-  // },
+  onPreModerate: {
+    type: Boolean,
+    default: true,
+  },
   preferredRole: {
     type: String,
   },
