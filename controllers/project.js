@@ -54,8 +54,10 @@ exports.createProject = async function (req, res, next) {
       creationDate: new Date(),
       endTeamGathering: new Date(req.body.endGathering), // required
       endProjectDate: new Date(req.body.endProject), // required
-      requareRoles: [req.body.requredRoles],
+      requareRoles: req.body.requredRoles,
     }).save();
+
+    console.log(newProject.requreRoles);
 
     return res.status(200).json(newProject).end();
   } catch (err) {

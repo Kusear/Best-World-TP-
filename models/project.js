@@ -1,6 +1,11 @@
 var mongoose = require("mongoose");
 var User = require("./user");
 
+var reqShema = new mongoose.Schema({
+  name: String,
+  countOfMembers: Number,
+});
+
 var ProjectSchema = new mongoose.Schema({
   IDcreator: {
     type: String,
@@ -47,10 +52,14 @@ var ProjectSchema = new mongoose.Schema({
     required: true,
   },
   requiredRoles: {
-    type: [],
+    type: [Object],
   },
   projectMembers: {
-    type: [],
+    type: [
+      {
+        type: String,
+      },
+    ],
   },
 });
 
