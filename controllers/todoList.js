@@ -43,7 +43,6 @@ exports.createToDoList = async (req, res) => {
 
   const List = await new ToDoLists({
     projectSlug: projectSlug,
-    color: req.body.color,
     boards: req.body.boards,
   });
 
