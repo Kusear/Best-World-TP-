@@ -56,11 +56,13 @@ exports.updeteToDoList = async (req, res) => {
   if (!projectSlug) {
     return res.status(400).json({ err: "projectSlug are required" }).end();
   }
+  console.log("1");//
   var List = await ToDoLists.findOne({ projectSlug: projectSlug }, (err) => {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }
   });
+  console.log("2");//
   if (!List) {
     return res.status(400).json({ message: "List not found" }).end();
   }
@@ -69,9 +71,11 @@ exports.updeteToDoList = async (req, res) => {
     color: req.body.color,
     boards: req.body.boards,
   };
+  coinsole.log("3");//
   List = newList;
-  List.update((err) => {
+  await List.update((err) => {
     if (err) {
+      console.log(err.message);//
       return res.status(400).json({ err: err.message }).end();
     }
   });
