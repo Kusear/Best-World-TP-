@@ -2,7 +2,7 @@ const ToDoLists = require("../models/todoList_model").TODOList;
 const Projects = require("../models/project").Project;
 
 exports.getProjectTODOList = async (req, res) => {
-  var projectSlug = req.params.projectSlug;
+  var projectSlug = req.query.projectSlug;
   if (!projectSlug) {
     return res.status(400).json({ err: "projectSlug are required" }).end();
   }
