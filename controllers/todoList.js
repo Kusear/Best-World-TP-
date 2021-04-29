@@ -71,7 +71,7 @@ exports.updeteToDoList = async (req, res) => {
     color: req.body.color,
     boards: req.body.boards,
   };
-  coinsole.log("3");//
+  console.log("3");//
   List = newList;
   await List.update((err) => {
     if (err) {
