@@ -85,8 +85,8 @@ exports.emailAuth = function (req, res) {
       console.error(error);
     });
   //  var mailAuthMessage = {
-  //     from: "kusear7@gmail.com",
-  //     to: "dan-smile@mail.ru",
+  //     from: "",
+  //     to: "",
   //     subject: "Test message",
   //     html:
   //       "<h1>Test message</h1>" +
