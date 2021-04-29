@@ -67,7 +67,6 @@ exports.updeteToDoList = async (req, res) => {
     return res.status(400).json({ message: "List not found" }).end();
   }
   var newList = {
-    projectSlug: req.body.projectSlug,
     color: req.body.color,
     boards: req.body.boards,
   };
