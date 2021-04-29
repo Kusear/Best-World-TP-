@@ -4,6 +4,7 @@
   "description": "TP project\r This project is a student project.",
   "main": "server.js",
   "dependencies": {
+    "@sendgrid/mail": "^7.4.2",
     "bcrypt": "^5.0.1",
     "connect-mongo": "^4.4.1",
     "cookie-parser": "^1.4.5",

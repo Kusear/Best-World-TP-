@@ -1,11 +1,30 @@
-var Users = require("../models/user").User;
+var Users = require("../models/user_model").User;
 var mongoose = require("mongoose");
 var Grid = require("gridfs-stream");
 var bcrypt = require("bcrypt");
-// var nodemailer = require("../config/nodemailer");
+var nodemailer = require("../config/nodemailer");
+// var sendgrid = require("../config/sendgrid");
+
+const sgMail = require("@sendgrid/mail");
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const msg = {
+  to: "kusear7@gmail.com", // Change to your recipient
+  from: "momis28378@hype68.com", // Change to your verified sender
+  subject: "Sending with SendGrid is Fun",
+  text: "and easy to do anywhere, even with Node.js",
+  html: "<strong>and easy to do anywhere, even with Node.js</strong>",
+};
+
+/* TODO
+ * доделать подтверждение по email
+ * доделать загрузку картинок в бд при регистрации и создание уникального имени файла
+ * сделать валидацию полей в login, registration
+ * уничтожение json token при logout
+ */
 
 exports.login = async function (req, res) {
-  // validate
   await Users.findOne({ email: req.body.email }, async function (err, user) {
     var isAuthenticated =
       user &&
@@ -32,7 +51,6 @@ exports.logout = function (req, res) {
 };
 
 exports.registration = async function (req, res) {
-  // validate
   try {
     var newUser = await new Users({
       username: req.body.username,
@@ -40,7 +58,6 @@ exports.registration = async function (req, res) {
       password: req.body.password,
       //image: req.files[0].fieldname,
     }).save();
-
     res
       .status(200)
       .json({
@@ -52,14 +69,37 @@ exports.registration = async function (req, res) {
       .end();
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(400).json({err: "User already exist"}).end();
+      return res.status(400).json({ err: "User already exist" }).end();
     }
-    return res.status(400).json({err: err.message}).end();
+    return res.status(400).json({ err: err.message }).end();
   }
 };
 
 exports.emailAuth = function (req, res) {
-  res.send("<h1>Completed</h1>");
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log("Email sent");
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  //  var mailAuthMessage = {
+  //     from: "kusear7@gmail.com",
+  //     to: "dan-smile@mail.ru",
+  //     subject: "Test message",
+  //     html:
+  //       "<h1>Test message</h1>" +
+  //       "<br>Bruh</br>" +
+  //       "<a href = 'http://localhost:3000/api/emailAuth'>Go to site</a>",
+  //   };
+  //   nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
+  //     if(error) {
+  //       console.log(error);
+  //     }
+  //     else {console.log(resp);}
+  //     nodemailer.transport.close();
+  //   });
 };
 
 exports.saveFiles = function (req, res) {
@@ -67,7 +107,7 @@ exports.saveFiles = function (req, res) {
 
   console.log("req.body: ", req.body);
   console.log("req.params: ", req.query);
-  // install multer-gridfs-storage
+
   req.pipe(
     gfs
       .createWriteStream({
@@ -102,22 +142,3 @@ exports.getFiles = function (req, res) {
 //     console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
 //   }
 // );
-
-// bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
-//   if (err) {
-//     console.log("crypt err: ", err);
-//     next({
-//       status: 400,
-//       message: err.message,
-//     });
-//     return;
-//   }
-//   newUser.password = hash;
-//   Users.insertMany(newUser, function (err, result) {
-//     if (err) {
-//       console.log(err);
-//       return res.status(500).json({ err: err.message }).end();
-//     }
-//     return res.status(200).json("success").end();
-//   });
-// });

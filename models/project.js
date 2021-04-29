@@ -1,5 +1,5 @@
 var mongoose = require("mongoose");
-var User = require("./user");
+var User = require("./user_model");
 var slugify = require("slugify");
 
 var ProjectSchema = new mongoose.Schema({

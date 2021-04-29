@@ -1,6 +1,10 @@
-var Users = require("../models/user").User;
+var Users = require("../models/user_model").User;
 var mongoose = require("mongoose");
 var passport = require("passport");
+
+/* TODO
+  * - в userData сделать отправку аватарки пользователя в ответе
+*/
 
 exports.userData = async function (req, res, next) {
   var user = await Users.findById(req.body.userID, function (err) {
@@ -9,7 +13,6 @@ exports.userData = async function (req, res, next) {
       return res.status(500).json({ err: err.message }).end();
     }
   });
-  // do a multipart/form-data
   return res
     .status(200)
     .json({
@@ -19,7 +22,6 @@ exports.userData = async function (req, res, next) {
       onPreModerate: user.onPreModerate,
       preferredRole: user.preferredRole,
       info: user.info,
-      // picture
     })
     .end();
 };

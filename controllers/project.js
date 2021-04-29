@@ -1,6 +1,11 @@
 var mongoose = require("mongoose");
 var Projects = require("../models/project").Project;
-var Users = require("../models/user").User;
+var Users = require("../models/user_model").User;
+
+/* TODO 
+  * - в (projectData) добавить отправку картинок в ответ
+  * - переделать или убарть getPreModerateProjects
+*/
 
 exports.projectData = async function (req, res) {
   // add pic process
@@ -31,7 +36,6 @@ exports.createProject = async function (req, res, next) {
       managerName: req.body.creatorUsername,
       needManager: req.body.neededManager,
       title: req.body.projectTitle, // required
-      // picture
       description: req.body.projectDescription,
       projectSubject: req.body.projectSubject,
       picture: req.body.filename,
@@ -167,13 +171,4 @@ exports.getProjects = async function (req, res) {
       return res.status(200).json(result).end();
     }
   );
-};
-
-exports.preModerProjects = async function (req, res) {
-  Projects.find({ onPreModerate: true }, null, function (err, result) {
-    if (err) {
-      return res.status(400).json({ err: err.message }).end();
-    }
-    return res.status(200).json(result).end();
-  });
 };

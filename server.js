@@ -7,15 +7,13 @@ var bcrypt = require("bcrypt");
 var cors = require("cors");
 var MongoStore = require("connect-mongo");
 require("dotenv").config();
-//////
 
-//////
 var Grid = require("gridfs-stream");
-
 var midleware = require("./midleware/midleware");
 var controllersCommon = require("./controllers/common");
 var controllersUser = require("./controllers/user");
 var controllersProject = require("./controllers/project");
+var controllersProjectBoard = require('./controllers/todoList');
 require("./config/config-passport");
 var app = express();
 
@@ -58,10 +56,20 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+/* TODO
+  * изменить пути для премодерированых функций
+  * удалить роль админа
+*/
+
 app.get("/api/", function (req, res) {
   return res.status(200).json().end();
 });
 
+/////////
+app.get("/emailAuth", controllersCommon.emailAuth);
+/////////
+
+// Common routes
 app.post(api_route + "/login", midleware.routeLog, controllersCommon.login);
 app.post(
   api_route + "/logout",
@@ -80,6 +88,7 @@ app.post(
   controllersCommon.emailAuth
 );
 
+// Project routes
 app.post(
   api_route + "/createProject",
   midleware.auth,
@@ -105,24 +114,30 @@ app.delete(
   midleware.roleCheck("admin", "superadmin"),
   controllersProject.deleteProject
 );
-app.post(
-  api_route + "/preModerProjects",
-  midleware.auth,
-  midleware.routeLog,
-  midleware.roleCheck("admin", "superadmin"),
-  controllersProject.preModerProjects
-);
+// app.post(
+//   api_route + "/preModerProjects",
+//   midleware.auth,
+//   midleware.routeLog,
+//   midleware.roleCheck("admin", "superadmin"),
+//   controllersProject.preModerProjects
+// );
 app.get(
   api_route + "/getProjects",
   midleware.routeLog,
   controllersProject.getProjects
 );
 
+// Project board routes
+app.get(api_route + "/getBoard", /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.getProjectTODOList);
+app.post(api_route + "/createBoard", /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.createToDoList);
+app.post(api_route + "/updateBoard", midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"), controllersProjectBoard.updeteToDoList);
+
 /////
 app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
 app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
 /////
 
+// User routes
 app.post(api_route + "/userData", midleware.routeLog, controllersUser.userData);
 app.post(
   api_route + "/updateUser",
