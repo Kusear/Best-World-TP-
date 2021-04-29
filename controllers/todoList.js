@@ -53,33 +53,29 @@ exports.createToDoList = async (req, res) => {
 
 exports.updeteToDoList = async (req, res) => {
   var projectSlug = req.body.projectSlug;
+
   if (!projectSlug) {
     return res.status(400).json({ err: "projectSlug are required" }).end();
   }
-  console.log("1");//
-  await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
+  var List = await ToDoLists.findOne({ projectSlug: projectSlug }, (err) => {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }
-    if (!list) {
-      return res.status(400).json({ message: "List not found" }).end();
-    }
-    console.log("2");//
-  
-    var newList = {
-      projectSlug: req.body.projectSlug,
-      color: req.body.color,
-      boards: req.body.boards,
-    };
-    console.log("3");//
-    list = newList;
-    await list.update((err) => {
-      if (err) {
-        console.log(err.message);//
-        return res.status(400).json({ err: err.message }).end();
-      }
-    });
-    return res.status(200).json({ message: "seccess" }).end();
+  });
 
+  if (!List) {
+    return res.status(400).json({ message: "List not found" }).end();
+  }
+  var newList = {
+    projectSlug: req.body.projectSlug,
+    color: req.body.color,
+    boards: req.body.boards,
+  };
+
+  List.updateOne(newList, (err) => {
+    if (err) {
+      return res.status(400).json({ err: err.message }).end();
+    }
+    return res.status(200).json({ message: "seccess" }).end();
   });
 };
