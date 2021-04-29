@@ -5,7 +5,7 @@ var bcrypt = require("bcrypt");
 var nodemailer = require("../config/nodemailer");
 // var sendgrid = require("../config/sendgrid");
 
-const sgMail = require("@sendgrid/mail");
+// const sgMail = require("@sendgrid/mail");
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -76,14 +76,14 @@ exports.registration = async function (req, res) {
 };
 
 exports.emailAuth = function (req, res) {
-  sgMail
-    .send(msg)
-    .then(() => {
-      console.log("Email sent");
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  // sgMail
+  //   .send(msg)
+  //   .then(() => {
+  //     console.log("Email sent");
+  //   })
+  //   .catch((error) => {
+  //     console.error(error);
+  //   });
   //  var mailAuthMessage = {
   //     from: "",
   //     to: "",
