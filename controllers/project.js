@@ -7,6 +7,7 @@ var Users = require("../models/user_model").User;
 /* TODO
  * - в (projectData) добавить отправку картинок в ответ
  * - переделать или убарть getPreModerateProjects
+ * обернуть получение данных из req в try catch
  */
 
 exports.projectData = async function (req, res) {
@@ -197,8 +198,8 @@ exports.addProjectMember = async (req, res) => {
     }
     var newMember = new Members();
 
-    newMember.username = req.body.newMember.username;
-    newMember.role = req.body.newMember.role;
+    newMember.username = req.body.username;
+    newMember.role = req.body.role;
     pr.projectMembers.push(newMember);
     pr.save();
     return res.status(200).json({ message: "success" }).end();
@@ -232,12 +233,12 @@ exports.addReqest = async (req, res) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
-      var newRequest = new Requests();
-      newRequest.username = req.body.newRequest.username;
-      newRequest.role = req.body.newRequest.role;
-      pr.requests.push(newRequest);
-      pr.save();
-      return res.status(200).json({ message: "success" }).end();
+    var newRequest = new Requests();
+    newRequest.username = req.body.username;
+    newRequest.role = req.body.role;
+    pr.requests.push(newRequest);
+    pr.save();
+    return res.status(200).json({ message: "success" }).end();
   });
 };
 

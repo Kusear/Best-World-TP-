@@ -92,9 +92,9 @@ exports.createBoard = async (req, res) => {
       return res.status(500).json({ err: err.message }).end();
     }
     var newBoard = new Boards();
-    newBoard.name = req.body.newBoard.name;
-    newBoard.color = req.body.newBoard.color;
-    newBoard.items = req.body.newBoard.items;
+    newBoard.name = req.body.name;
+    newBoard.color = req.body.color;
+    newBoard.items = req.body.items;
     list.boards.push(newBoard);
     list.save();
     return res.status(200).json({ message: "seccess" }).end();
@@ -164,8 +164,8 @@ exports.createTask = async (req, res) => {
         return res.status(500).json({ err: err.message }).end();
       }
       var newTask = new Tasks();
-      newTask.text = req.body.newTask.text;
-      newTask.performer = req.body.newTask.performer;
+      newTask.text = req.body.text;
+      newTask.performer = req.body.performer;
       list.boards.id(req.body.boardID).items.push(newTask);
       list.save();
       return res.status(200).json({ message: "seccess" }).end();
