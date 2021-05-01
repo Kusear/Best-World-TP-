@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const User = require("./user_model");
 const slugify = require("slugify");
 
-const Requests = new mongoose.Schema({
+const RequestsSchema = new mongoose.Schema({
   username: {
     type: String,
   },
@@ -89,7 +89,7 @@ const ProjectSchema = new mongoose.Schema({
     default: [],
   },
   requests: {
-    type: [Requests],
+    type: [RequestsSchema],
     default: [],
   },
   needChanges: {
@@ -106,9 +106,9 @@ ProjectSchema.pre("save", async function (next) {
     (await slugify(this.title, {
       replacement: "-",
       remove: undefined,
-      lower: false, 
+      lower: false,
       strict: false,
-      locale: "ru", 
+      locale: "ru",
     })) +
     "-" +
     this._id;
@@ -117,3 +117,5 @@ ProjectSchema.pre("save", async function (next) {
 
 exports.projectCollection = "project";
 exports.Project = mongoose.model("project", ProjectSchema);
+exports.Members = mongoose.model("members", ProjectMembers);
+exports.Requests = mongoose.model("requests", RequestsSchema);

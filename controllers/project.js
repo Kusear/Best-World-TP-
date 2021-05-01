@@ -1,5 +1,7 @@
 var mongoose = require("mongoose");
 var Projects = require("../models/project").Project;
+var Members = require("../models/project").Members;
+var Requests = require("../models/project").Requests;
 var Users = require("../models/user_model").User;
 
 /* TODO
@@ -189,17 +191,18 @@ exports.addProjectMember = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne({ slug: projectSlug }, (err) => {
+  var project = await Projects.findOne({ slug: projectSlug }, (err, pr) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
+    var newMember = new Members();
+
+    newMember.username = req.body.newMember.username;
+    newMember.role = req.body.newMember.role;
+    pr.projectMembers.push(newMember);
+    pr.save();
+    return res.status(200).json({ message: "success" }).end();
   });
-  await project.projectMembers.create(req.body.newMember, (err) => {
-    if (err) {
-      return res.status(500).json({ err: err.message }).end();
-    }
-  });
-  return res.status(200).json({ message: "success" }).end();
 };
 
 exports.deleteProjectMember = async (req, res) => {
@@ -225,17 +228,17 @@ exports.addReqest = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne({ slug: projectSlug }, (err) => {
+  var project = await Projects.findOne({ slug: projectSlug }, (err, pr) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
+      var newRequest = new Requests();
+      newRequest.username = req.body.newRequest.username;
+      newRequest.role = req.body.newRequest.role;
+      pr.requests.push(newRequest);
+      pr.save();
+      return res.status(200).json({ message: "success" }).end();
   });
-  project.requests.create(req.body.newRequest, (err) => {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-  });
-  return res.status(200).json({ message: "success" }).end();
 };
 
 exports.deleteRequest = async (req, res) => {

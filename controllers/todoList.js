@@ -1,5 +1,8 @@
 const ToDoLists = require("../models/todoList_model").TODOList;
 const Projects = require("../models/project").Project;
+const Boards = require("../models/todoList_model").Boards;
+const Tasks = require("../models/todoList_model").Tasks;
+
 
 exports.getProjectTODOList = async (req, res) => {
   var projectSlug = req.query.projectSlug;
@@ -84,20 +87,18 @@ exports.createBoard = async (req, res) => {
     return res.status(500).json({ err: "slug are required" }).end();
   }
   console.log(slug);
-  var todoList = await ToDoLists.findOne({ projectSlug: slug }, (err) => {
+  var todoList = await ToDoLists.findOne({ projectSlug: slug }, async (err, list) => {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }
+    var newBoard = new Boards();
+    newBoard.name = req.body.newBoard.name;
+    newBoard.color = req.body.newBoard.color;
+    newBoard.items = req.body.newBoard.items;
+    list.boards.push(newBoard);
+    list.save();
+    return res.status(200).json({ message: "seccess" }).end();
   });
-  if (!todoList) {
-    return res.status(500).json({ message: "ToDo List doesnt exist" }).end();
-  }
-  await todoList.boards.create(req.body.newBoard, (err) => {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-  });
-  return res.status(200).json({ message: "seccess" }).end();
 };
 
 exports.updateBoard = async (req, res) => {
@@ -114,10 +115,6 @@ exports.updateBoard = async (req, res) => {
     }
   );
   var board = todoList.boards.id(req.body.boardID);
-  // var newData = {
-  //   name: req.body.name,
-  //   color: req.body.color,
-  // };
 
   if (req.body.name) {
     board.name = req.body.name;
@@ -162,17 +159,18 @@ exports.createTask = async (req, res) => {
   }
   var todoList = await ToDoLists.findOne(
     { projectSlug: projectSlug },
-    (err) => {
+    (err, list) => {
       if (err) {
         return res.status(500).json({ err: err.message }).end();
       }
+      var newTask = new Tasks();
+      newTask.text = req.body.newTask.text;
+      newTask.performer = req.body.newTask.performer;
+      list.boards.id(req.body.boardID).items.push(newTask);
+      list.save();
+      return res.status(200).json({ message: "seccess" }).end();
     }
   );
-  var task = todoList.boards.id(req.body.boardID).items.id(req.body.taskID);
-
-  await task.create(req.body.newTask);
-
-  return res.status(200).json({ message: "seccess" }).end();
 };
 
 exports.updateTask = async (req, res) => {

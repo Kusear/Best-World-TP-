@@ -15,7 +15,10 @@ const BoardsSchema = new mongoose.Schema({
     require: true,
     trim: true,
   },
-  items: [Tasks],
+  items: {
+    type: [Tasks],
+    default: [],
+  },
   color: {
     type: String,
   },
@@ -33,3 +36,5 @@ const TODOListShema = new mongoose.Schema({
 });
 
 exports.TODOList = mongoose.model("TODOLists", TODOListShema);
+exports.Boards = mongoose.model("boards", BoardsSchema);
+exports.Tasks = mongoose.model("tasks", Tasks);
