@@ -214,7 +214,7 @@ app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
 /////
 
 // User routes
-app.post(api_route + "/userData", midleware.routeLog, controllersUser.userData);
+app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);
 app.post(
   api_route + "/updateUser",
   midleware.auth,
