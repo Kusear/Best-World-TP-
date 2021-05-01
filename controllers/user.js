@@ -3,13 +3,12 @@ var mongoose = require("mongoose");
 var passport = require("passport");
 
 /* TODO
-  * - в userData сделать отправку аватарки пользователя в ответе
-*/
+ * в userData сделать отправку аватарки пользователя в ответе
+ */
 
-exports.userData = async function (req, res, next) {
-  var user = await Users.findById(req.body.userID, function (err) {
+exports.userData = async function (req, res) {
+  var user = await Users.findOne({username: req.query.username}, function (err) {
     if (err) {
-      next();
       return res.status(500).json({ err: err.message }).end();
     }
   });
@@ -18,10 +17,11 @@ exports.userData = async function (req, res, next) {
     .json({
       username: user.username,
       email: user.email,
+      name: user.name,
       role: user.role,
-      onPreModerate: user.onPreModerate,
       preferredRole: user.preferredRole,
       info: user.info,
+      image: user.image,
     })
     .end();
 };
@@ -40,8 +40,8 @@ exports.updateUser = async function (req, res) {
     username: req.body.username,
     email: req.body.email,
     password: req.body.password,
-    onPreModerate: req.body.onPreModerate,
     preferredRole: req.body.preferredRole,
+    name: req.body.name,
     role: req.body.role,
     info: req.body.info,
   };
@@ -63,8 +63,8 @@ exports.updateUser = async function (req, res) {
     if (newData.password && !user.verifyPassword(newData.password)) {
       user.password = user.hashPassword(newData.password);
     }
-    if (newData.onPreModerate) {
-      user.onPreModerate = newData.onPreModerate;
+    if (newData.name) {
+      user.name = newData.name;
     }
     if (newData.preferredRole) {
       user.preferredRole = newData.preferredRole;
@@ -86,14 +86,14 @@ exports.updateUser = async function (req, res) {
 };
 
 exports.deleteUser = async function (req, res) {
-  var userToDelete = req.body.userID;
+  var userToDelete = req.body.username;
   if (!userToUpdate) {
     return res
       .status(400)
       .json({ err: "field (usertoupdate) are required" })
       .end();
   }
-  await Users.findById(userToDelete, async function (err, user) {
+  await Users.findOne(userToDelete, async function (err, user) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }

@@ -13,7 +13,7 @@ var midleware = require("./midleware/midleware");
 var controllersCommon = require("./controllers/common");
 var controllersUser = require("./controllers/user");
 var controllersProject = require("./controllers/project");
-var controllersProjectBoard = require('./controllers/todoList');
+var controllersProjectBoard = require("./controllers/todoList");
 require("./config/config-passport");
 var app = express();
 
@@ -57,11 +57,21 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 /* TODO
-  * изменить пути для премодерированых функций
-  * удалить роль админа
-*/
+ * изменить пути для премодерированых функций
+ * удалить роль админа
+ * удалить комменты midleware для todo листов
+ */
 
-app.get("/api/", function (req, res) {
+const ToDoLists = require("./models/todoList_model").TODOList;
+
+app.post("/api/", async function (req, res) {
+  var list = await ToDoLists.findOne(
+    { projectSlug: req.body.slug },
+    (err) => {}
+  );
+  console.log("list: ", list);
+  console.log("boards: ", list.boards);
+  console.log("items: ", list.boards.id("608d60bb460fa43e24353a57").items);
   return res.status(200).json().end();
 });
 
@@ -114,24 +124,90 @@ app.delete(
   midleware.roleCheck("admin", "superadmin"),
   controllersProject.deleteProject
 );
-// app.post(
-//   api_route + "/preModerProjects",
-//   midleware.auth,
-//   midleware.routeLog,
-//   midleware.roleCheck("admin", "superadmin"),
-//   controllersProject.preModerProjects
-// );
 app.get(
   api_route + "/getProjects",
   midleware.routeLog,
   controllersProject.getProjects
 );
+app.post(
+  api_route + "/updateRequiredRoles",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProject.updateRequiredRoles
+);
+app.post(
+  api_route + "/addProjectMember",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProject.addProjectMember
+);
+app.post(
+  api_route + "/deleteProjectMember",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProject.deleteProjectMember
+);
+app.post(
+  api_route + "/addRequest",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProject.addReqest
+);
+app.post(
+  api_route + "/deleteRequest",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProject.deleteRequest
+);
 
 // Project board routes
-app.get(api_route + "/getBoard", /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.getProjectTODOList);
-app.post(api_route + "/createBoard", /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.createToDoList);
-app.post(api_route + "/updateBoard", midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"), controllersProjectBoard.updeteToDoList);
+app.get(
+  api_route + "/getTodoList",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.getProjectTODOList
+);
+app.post(
+  api_route + "/createTodoList",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.createToDoList
+);
+app.post(
+  api_route + "/updateTodoList",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProjectBoard.updeteToDoList
+);
+app.post(
+  api_route + "/createBoard",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.createBoard
+);
+app.post(
+  api_route + "/updateBoard",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.updateBoard
+);
+app.post(
+  api_route + "/deleteBoard",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.deleteBoard
+);
 
+app.post(
+  api_route + "/createTask",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.createTask
+);
+app.post(
+  api_route + "/updateTask",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.updateTask
+);
+app.post(
+  api_route + "/deleteTask",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.deleteTask
+);
+
+// files routes
 /////
 app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
 app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
@@ -153,13 +229,6 @@ app.delete(
   midleware.roleCheck("user", "admin", "superadmin"),
   controllersUser.deleteUser
 );
-// app.post(
-//   api_route + "/preModerateUsers",
-//   midleware.auth,
-//   midleware.routeLog,
-//   midleware.roleCheck("admin", "superadmin"),
-//   controllersUser.getUsersOnPreModerate
-// );
 app.get(
   api_route + "/getUsers",
   midleware.auth,

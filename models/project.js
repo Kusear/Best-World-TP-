@@ -1,8 +1,38 @@
-var mongoose = require("mongoose");
-var User = require("./user_model");
-var slugify = require("slugify");
+const mongoose = require("mongoose");
+const User = require("./user_model");
+const slugify = require("slugify");
 
-var ProjectSchema = new mongoose.Schema({
+const Requests = new mongoose.Schema({
+  username: {
+    type: String,
+  },
+  role: {
+    type: String,
+  },
+});
+
+const RequiredRoles = new mongoose.Schema({
+  role: {
+    type: String,
+  },
+  count: {
+    type: Number,
+  },
+  alreadyEnter: {
+    type: Number,
+  },
+});
+
+const ProjectMembers = new mongoose.Schema({
+  username: {
+    type: String,
+  },
+  role: {
+    type: String,
+  },
+});
+
+const ProjectSchema = new mongoose.Schema({
   IDcreator: {
     type: String,
     required: true,
@@ -23,7 +53,6 @@ var ProjectSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-    unique: true,
     trim: true,
   },
   description: {
@@ -52,11 +81,15 @@ var ProjectSchema = new mongoose.Schema({
     required: true,
   },
   requiredRoles: {
-    type: Array,
+    type: [RequiredRoles],
     default: [],
   },
   projectMembers: {
-    type: Array,
+    type: [ProjectMembers],
+    default: [],
+  },
+  requests: {
+    type: [Requests],
     default: [],
   },
   needChanges: {
@@ -70,13 +103,13 @@ var ProjectSchema = new mongoose.Schema({
 
 ProjectSchema.pre("save", async function (next) {
   this.slug =
-    slugify(this.title, {
-      replacement: "-", // replace spaces with replacement character, defaults to `-`
-      remove: undefined, // remove characters that match regex, defaults to `undefined`
-      lower: false, // convert to lower case, defaults to `false`
-      strict: false, // strip special characters except replacement, defaults to `false`
-      locale: "ru", // language code of the locale to use
-    }) +
+    (await slugify(this.title, {
+      replacement: "-",
+      remove: undefined,
+      lower: false, 
+      strict: false,
+      locale: "ru", 
+    })) +
     "-" +
     this._id;
   next();
