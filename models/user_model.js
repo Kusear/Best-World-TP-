@@ -23,6 +23,10 @@ var UserSchema = new mongoose.Schema({
     unique: true,
     trim: true,
   },
+  emailConfirm: {
+    type: Boolean,
+    default: false,
+  },
   password: {
     type: String,
     required: true,

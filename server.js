@@ -7,7 +7,6 @@ var bcrypt = require("bcrypt");
 var cors = require("cors");
 var MongoStore = require("connect-mongo");
 require("dotenv").config();
-var nodemailer = require("./config/nodemailer");
 
 var Grid = require("gridfs-stream");
 var midleware = require("./midleware/midleware");
@@ -58,31 +57,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 /* TODO
- * удалить роль админа
  * удалить комменты midleware для todo листов
  */
 
 const ToDoLists = require("./models/todoList_model").TODOList;
 
 app.post("/api/", async function (req, res) {
-  var mailAuthMessage = {
-    from: "no-reply@best-world-team.com",
-    to: "",
-    subject: "Test message",
-    html:
-      "<h1>Test message</h1>" +
-      "<br>Bruh</br>" +
-      "<a href = 'http://localhost:3000/api/emailAuth'>Go to site</a>",
-  };
-  nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log(resp);
-    }
-    nodemailer.transport.close();
-  });
-  return res.status(200).json().end();
+  return res.status(200).json("main route").end();
 });
 
 /////////
@@ -102,8 +83,8 @@ app.post(
   midleware.routeLog,
   controllersCommon.registration
 );
-app.post(
-  api_route + "/emailAuth",
+app.get(
+  api_route + "/emailAuth/:id",
   midleware.routeLog,
   controllersCommon.emailAuth
 );
@@ -124,14 +105,14 @@ app.post(
   api_route + "/updateProject",
   midleware.auth,
   midleware.routeLog,
-  midleware.roleCheck("user", "admin", "superadmin"),
+  midleware.roleCheck("user", "superadmin"),
   controllersProject.updateProject
 );
 app.delete(
   api_route + "/deleteProject",
   midleware.auth,
   midleware.routeLog,
-  midleware.roleCheck("admin", "superadmin"),
+  midleware.roleCheck("user", "superadmin"),
   controllersProject.deleteProject
 );
 app.get(
@@ -139,13 +120,13 @@ app.get(
   midleware.routeLog,
   controllersProject.getProjects
 );
-app.post(
-  api_route + "/updateRequiredRoles",
-  midleware.routeLog,
-  midleware.auth,
-  midleware.roleCheck("user", "superadmin"),
-  controllersProject.updateRequiredRoles
-);
+// app.post(
+//   api_route + "/updateRequiredRoles",
+//   midleware.routeLog,
+//   midleware.auth,
+//   midleware.roleCheck("user", "superadmin"),
+//   controllersProject.updateRequiredRoles
+// );
 app.post(
   api_route + "/addProjectMember",
   midleware.routeLog,
@@ -233,21 +214,21 @@ app.post(
   api_route + "/updateUser",
   midleware.auth,
   midleware.routeLog,
-  midleware.roleCheck("user", "admin", "superadmin"),
+  midleware.roleCheck("user", "superadmin"),
   controllersUser.updateUser
 );
 app.delete(
   api_route + "/deleteUser",
   midleware.auth,
   midleware.routeLog,
-  midleware.roleCheck("user", "admin", "superadmin"),
+  midleware.roleCheck("user", "superadmin"),
   controllersUser.deleteUser
 );
 app.get(
   api_route + "/getUsers",
   midleware.auth,
   midleware.routeLog,
-  midleware.roleCheck("admin", "superadmin"),
+  midleware.roleCheck("user", "superadmin"),
   controllersUser.getUsers
 );
 

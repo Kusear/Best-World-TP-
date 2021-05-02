@@ -2,10 +2,6 @@ var Users = require("../models/user_model").User;
 var mongoose = require("mongoose");
 var passport = require("passport");
 
-/* TODO
- * в userData сделать отправку аватарки пользователя в ответе
- */
-
 exports.userData = async function (req, res) {
   var user = await Users.findOne({username: req.query.username}, function (err) {
     if (err) {

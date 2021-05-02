@@ -6,8 +6,8 @@ var ToDoLists = require("../models/todoList_model").TODOList;
 var Users = require("../models/user_model").User;
 
 /* TODO
- * - в (projectData) добавить отправку картинок в ответ
- * обернуть получение данных из req в try catch
+ * сделть обновление требуемых ролей в добавлении пользователя в проект (присылает id роли и количество вошедших) ?
+ * полностью проверить все ли правильно написано с изменением subdoc
  */
 
 exports.projectData = async function (req, res) {
@@ -128,9 +128,8 @@ exports.updateProject = async function (req, res) {
   });
 };
 
-// TODO сделать при удалении проекта удаление todo листа этого проекта
 exports.deleteProject = async function (req, res) {
-  var projectToDelete = req.body.projectID;
+  var projectToDelete = req.body.projectSlug;
   var responce = {
     todoListStatus: "",
     projectStatus: "",
@@ -139,42 +138,45 @@ exports.deleteProject = async function (req, res) {
     return res.status(500).json({ err: "no projectID to edit" }).end();
   }
 
-  await Projects.findById(projectToDelete, async function (err, project) {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-
-    if (!project) {
-      return res.status(500).json({ err: "Project not found" }).end();
-    }
-
-    await ToDoLists.findOne(
-      { projectSlug: project.slug },
-      async (err, list) => {
-        if (err) {
-          return res.status(520).json({ err: err.message }).end();
-        }
-
-        if (list) {
-          await list.remove((err) => {
-            if (err) {
-              return res.status(520).json({ err: err.message }).end();
-            }
-            responce.todoListStatus = "deleted";
-          });
-        } else {
-          responce.todoListStatus = "todo not found";
-        }
-      }
-    );
-    await project.remove(function (err, doc) {
+  await Projects.findOne(
+    { slug: projectToDelete },
+    async function (err, project) {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(520).json({ err: err.message }).end();
       }
-      responce.projectStatus = "deleted";
-      return res.status(200).json(responce).end();
-    });
-  });
+
+      if (!project) {
+        return res.status(500).json({ err: "Project not found" }).end();
+      }
+
+      await ToDoLists.findOne(
+        { projectSlug: project.slug },
+        async (err, list) => {
+          if (err) {
+            return res.status(520).json({ err: err.message }).end();
+          }
+
+          if (list) {
+            await list.remove((err) => {
+              if (err) {
+                return res.status(520).json({ err: err.message }).end();
+              }
+              responce.todoListStatus = "deleted";
+            });
+          } else {
+            responce.todoListStatus = "todo not found";
+          }
+        }
+      );
+      await project.remove(function (err, doc) {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+        responce.projectStatus = "deleted";
+        return res.status(200).json(responce).end();
+      });
+    }
+  );
 };
 
 exports.getProjects = async function (req, res) {
@@ -185,38 +187,38 @@ exports.getProjects = async function (req, res) {
     return res.status(200).json(result).end();
   });
 };
-
-exports.updateRequiredRoles = async (req, res) => {
-  var projectSlug = req.body.projectSlug;
-  if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
-  }
-  var project = await Projects.findOne({ slug: projectSlug }, (err) => {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-  });
-  var reqRoles = await project.requaredRoles.id(req.body.roleID);
-  if (req.body.name) {
-    reqRoles.name = req.body.name;
-  }
-  if (req.body.count) {
-    reqRoles.count = req.body.count;
-  }
-  reqRoles.update((err) => {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-  });
-  return res.status(200).json({ message: "seccess" }).end();
-};
+// TODO возможно удалить эту часть если все нормально работать будет
+// exports.updateRequiredRoles = async (req, res) => {
+//   var projectSlug = req.body.projectSlug;
+//   if (!projectSlug) {
+//     return res.status(500).json({ err: "projectSlug are required" }).end();
+//   }
+//   var project = await Projects.findOne({ slug: projectSlug }, (err) => {
+//     if (err) {
+//       return res.status(520).json({ err: err.message }).end();
+//     }
+//   });
+//   var reqRoles = await project.requaredRoles.id(req.body.roleID);
+//   if (req.body.name) {
+//     reqRoles.name = req.body.name;
+//   }
+//   if (req.body.count) {
+//     reqRoles.count = req.body.count;
+//   }
+//   reqRoles.update((err) => {
+//     if (err) {
+//       return res.status(520).json({ err: err.message }).end();
+//     }
+//   });
+//   return res.status(200).json({ message: "seccess" }).end();
+// };
 
 exports.addProjectMember = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne({ slug: projectSlug }, (err, pr) => {
+  await Projects.findOne({ slug: projectSlug }, async (err, pr) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
@@ -225,7 +227,21 @@ exports.addProjectMember = async (req, res) => {
     newMember.username = req.body.username;
     newMember.role = req.body.role;
     pr.projectMembers.push(newMember);
-    pr.save();
+
+    var reqRole = await pr.requaredRoles.id(req.body.roleID);
+    await pr.requiredRoles.pull(req.body.roleID);
+    if (req.body.name) {
+      reqRole.name = req.body.name;
+    }
+    if (req.body.count) {
+      reqRole.count = req.body.count;
+    }
+    if (req.body.alreadyEnter) {
+      reqRole.alreadyEnter = req.body.alreadyEnter;
+    }
+    await pr.requiredRoles.push(reqRole);
+
+    await pr.save();
     return res.status(200).json({ message: "success" }).end();
   });
 };
@@ -235,17 +251,13 @@ exports.deleteProjectMember = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne({ slug: projectSlug }, (err) => {
+  await Projects.findOne({ slug: projectSlug }, async (err, project) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
+    project.projectMembers.pull(req.body.memberID);
+    return res.status(200).json({ message: "success" }).end();
   });
-  project.projectMembers.id(req.body.memberID).remove((err) => {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-  });
-  return res.status(200).json({ message: "success" }).end();
 };
 
 exports.addReqest = async (req, res) => {
@@ -253,15 +265,15 @@ exports.addReqest = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne({ slug: projectSlug }, (err, pr) => {
+  await Projects.findOne({ slug: projectSlug }, async (err, pr) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
     var newRequest = new Requests();
     newRequest.username = req.body.username;
     newRequest.role = req.body.role;
-    pr.requests.push(newRequest);
-    pr.save();
+    await pr.requests.push(newRequest);
+    await pr.save();
     return res.status(200).json({ message: "success" }).end();
   });
 };
@@ -271,13 +283,12 @@ exports.deleteRequest = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne({ slug: projectSlug }, (err) => {
+  await Projects.findOne({ slug: projectSlug }, async (err, project) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
+    // var request = project.requests.id(req.body.requestID);
+    project.requests.id(req.body.requestID).pull(req.body.requestID);
+    return res.status(200).json({ message: "success" }).end();
   });
-  project.requests.id(req.body.requestID).remove((err) => {
-    return res.status(520).json({ err: err.message }).end();
-  });
-  return res.status(200).json({ message: "success" }).end();
 };

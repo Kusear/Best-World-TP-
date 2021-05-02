@@ -1,24 +1,10 @@
-var Users = require("../models/user_model").User;
-var mongoose = require("mongoose");
-var Grid = require("gridfs-stream");
-var bcrypt = require("bcrypt");
-var nodemailer = require("../config/nodemailer");
-// var sendgrid = require("../config/sendgrid");
-
-// const sgMail = require("@sendgrid/mail");
-
-// sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-const msg = {
-  to: "kusear7@gmail.com", // Change to your recipient
-  from: "momis28378@hype68.com", // Change to your verified sender
-  subject: "Sending with SendGrid is Fun",
-  text: "and easy to do anywhere, even with Node.js",
-  html: "<strong>and easy to do anywhere, even with Node.js</strong>",
-};
+const Users = require("../models/user_model").User;
+const mongoose = require("mongoose");
+const Grid = require("gridfs-stream");
+const bcrypt = require("bcrypt");
+const nodemailer = require("../config/nodemailer");
 
 /* TODO
- * доделать подтверждение по email
  * доделать загрузку картинок в бд при регистрации и создание уникального имени файла
  * сделать валидацию полей в login, registration
  */
@@ -57,6 +43,27 @@ exports.registration = async function (req, res) {
       password: req.body.password,
       //image: req.files[0].fieldname,
     }).save();
+
+    // TODO изменить ссылку на front
+    var mailAuthMessage = {
+      to: newUser.email,
+      subject: "Test message",
+      html:
+        "<h1>Test message</h1>" +
+        "<br>Bruh</br>" +
+        "<div><a href = 'http://192.168.0.4:3000/api/emailAuth?id='" +
+        newUser.id +
+        ">Verify email</a></div>",
+    };
+    nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log(resp);
+      }
+      nodemailer.transport.close();
+    });
+
     res
       .status(200)
       .json({
@@ -74,31 +81,19 @@ exports.registration = async function (req, res) {
   }
 };
 
-exports.emailAuth = function (req, res) {
-  // sgMail
-  //   .send(msg)
-  //   .then(() => {
-  //     console.log("Email sent");
-  //   })
-  //   .catch((error) => {
-  //     console.error(error);
-  //   });
-  //  var mailAuthMessage = {
-  //     from: "",
-  //     to: "",
-  //     subject: "Test message",
-  //     html:
-  //       "<h1>Test message</h1>" +
-  //       "<br>Bruh</br>" +
-  //       "<a href = 'http://localhost:3000/api/emailAuth'>Go to site</a>",
-  //   };
-  //   nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
-  //     if(error) {
-  //       console.log(error);
-  //     }
-  //     else {console.log(resp);}
-  //     nodemailer.transport.close();
-  //   });
+exports.emailAuth = async function (req, res) {
+  Users.findById(req.params.id, (err, user) => {
+    if (err) {
+      return res.status(520).json({ err: err.message }).end();
+    }
+    user.emailConfirm = true;
+    user.save((err) => {
+      if (err) {
+        return res.status(520).json({ err: err.message }).end();
+      }
+      return res.status(200).json("Email confirmed").end();
+    });
+  });
 };
 
 exports.saveFiles = function (req, res) {
