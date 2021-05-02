@@ -2,6 +2,7 @@ var mongoose = require("mongoose");
 var Projects = require("../models/project").Project;
 var Members = require("../models/project").Members;
 var Requests = require("../models/project").Requests;
+var ToDoLists = require("../models/todoList_model").TODOList;
 var Users = require("../models/user_model").User;
 
 /* TODO
@@ -130,7 +131,10 @@ exports.updateProject = async function (req, res) {
 // TODO сделать при удалении проекта удаление todo листа этого проекта
 exports.deleteProject = async function (req, res) {
   var projectToDelete = req.body.projectID;
-
+  var responce = {
+    todoListStatus: "",
+    projectStatus: "",
+  };
   if (!projectToDelete) {
     return res.status(500).json({ err: "no projectID to edit" }).end();
   }
@@ -144,11 +148,31 @@ exports.deleteProject = async function (req, res) {
       return res.status(500).json({ err: "Project not found" }).end();
     }
 
+    await ToDoLists.findOne(
+      { projectSlug: project.slug },
+      async (err, list) => {
+        if (err) {
+          return res.status(520).json({ err: err.message }).end();
+        }
+
+        if (list) {
+          await list.remove((err) => {
+            if (err) {
+              return res.status(520).json({ err: err.message }).end();
+            }
+            responce.todoListStatus = "deleted";
+          });
+        } else {
+          responce.todoListStatus = "todo not found";
+        }
+      }
+    );
     await project.remove(function (err, doc) {
       if (err) {
         return res.status(500).json({ err: err.message }).end();
       }
-      return res.status(200).json({ message: "deleted" }).end();
+      responce.projectStatus = "deleted";
+      return res.status(200).json(responce).end();
     });
   });
 };
