@@ -7,6 +7,9 @@ const Tasks = new mongoose.Schema({
   performer: {
     type: String,
   },
+  description: {
+    type: String,
+  },
 });
 
 const BoardsSchema = new mongoose.Schema({

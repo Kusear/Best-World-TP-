@@ -21,7 +21,6 @@ const msg = {
  * доделать подтверждение по email
  * доделать загрузку картинок в бд при регистрации и создание уникального имени файла
  * сделать валидацию полей в login, registration
- * уничтожение json token при logout
  */
 
 exports.login = async function (req, res) {

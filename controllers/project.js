@@ -6,7 +6,6 @@ var Users = require("../models/user_model").User;
 
 /* TODO
  * - в (projectData) добавить отправку картинок в ответ
- * - переделать или убарть getPreModerateProjects
  * обернуть получение данных из req в try catch
  */
 

@@ -7,6 +7,7 @@ var bcrypt = require("bcrypt");
 var cors = require("cors");
 var MongoStore = require("connect-mongo");
 require("dotenv").config();
+var nodemailer = require("./config/nodemailer");
 
 var Grid = require("gridfs-stream");
 var midleware = require("./midleware/midleware");
@@ -57,7 +58,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 /* TODO
- * изменить пути для премодерированых функций
  * удалить роль админа
  * удалить комменты midleware для todo листов
  */
@@ -65,13 +65,22 @@ app.use(passport.session());
 const ToDoLists = require("./models/todoList_model").TODOList;
 
 app.post("/api/", async function (req, res) {
-  var list = await ToDoLists.findOne(
-    { projectSlug: req.body.slug },
-    (err) => {}
-  );
-  console.log("list: ", list);
-  console.log("boards: ", list.boards);
-  console.log("items: ", list.boards.id("608d60bb460fa43e24353a57").items);
+   var mailAuthMessage = {
+      from: "no-reply@best-world-team.com",
+      to: "",
+      subject: "Test message",
+      html:
+        "<h1>Test message</h1>" +
+        "<br>Bruh</br>" +
+        "<a href = 'http://localhost:3000/api/emailAuth'>Go to site</a>",
+    };
+    nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
+      if(error) {
+        console.log(error);
+      }
+      else {console.log(resp);}
+      nodemailer.transport.close();
+    });
   return res.status(200).json().end();
 });
 
