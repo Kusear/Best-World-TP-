@@ -255,7 +255,8 @@ exports.deleteProjectMember = async (req, res) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
-    project.projectMembers.pull(req.body.memberID);
+    await project.projectMembers.pull(req.body.memberID);
+    await project.save();
     return res.status(200).json({ message: "success" }).end();
   });
 };
@@ -288,7 +289,9 @@ exports.deleteRequest = async (req, res) => {
       return res.status(520).json({ err: err.message }).end();
     }
     // var request = project.requests.id(req.body.requestID);
-    project.requests.id(req.body.requestID).pull(req.body.requestID);
+    await project.requests.pull(req.body.requestID);
+    console.log(project.requests); // TODO удалить 
+    await project.save();
     return res.status(200).json({ message: "success" }).end();
   });
 };
