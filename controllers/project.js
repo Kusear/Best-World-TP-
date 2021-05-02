@@ -127,6 +127,7 @@ exports.updateProject = async function (req, res) {
   });
 };
 
+// TODO сделать при удалении проекта удаление todo листа этого проекта
 exports.deleteProject = async function (req, res) {
   var projectToDelete = req.body.projectID;
 

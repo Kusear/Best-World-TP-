@@ -49,7 +49,7 @@ exports.createToDoList = async (req, res) => {
   });
 
   await List.save();
-  return res.status(200).json({List}).end();
+  return res.status(200).json(List).end();
 };
 
 exports.updeteToDoList = async (req, res) => {
