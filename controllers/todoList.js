@@ -81,7 +81,7 @@ exports.updeteToDoList = async (req, res) => {
 };
 
 exports.createBoard = async (req, res) => {
-  var slug = req.body.slug;
+  var projectSlug = req.body.projectSlug;
   if (!slug) {
     return res.status(500).json({ err: "slug are required" }).end();
   }
@@ -98,7 +98,10 @@ exports.createBoard = async (req, res) => {
       newBoard.items = req.body.items;
       list.boards.push(newBoard);
       list.save();
-      return res.status(200).json({ message: "seccess" }).end();
+      return res
+        .status(200)
+        .json({ message: "seccess", boardID: newBoard.id })
+        .end();
     }
   );
 };
@@ -166,7 +169,10 @@ exports.createTask = async (req, res) => {
       newTask.description = req.body.description;
       await list.boards.id(req.body.boardID).items.push(newTask);
       await list.save();
-      return res.status(200).json({ message: "seccess" }).end();
+      return res
+        .status(200)
+        .json({ message: "seccess", taskID: newTask.id })
+        .end();
     }
   );
 };
@@ -216,6 +222,7 @@ exports.moveTask = async (req, res) => {
       var task = await list.boards
         .id(req.body.oldBoard)
         .items.id(req.body.taskID);
+      console.log(task);
       await list.boards.id(req.body.newBoard).items.push(task);
       await list.boards.id(req.body.oldBoard).items.pull(task);
       await list.save((err) => {
