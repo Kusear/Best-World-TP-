@@ -65,22 +65,23 @@ app.use(passport.session());
 const ToDoLists = require("./models/todoList_model").TODOList;
 
 app.post("/api/", async function (req, res) {
-   var mailAuthMessage = {
-      from: "no-reply@best-world-team.com",
-      to: "",
-      subject: "Test message",
-      html:
-        "<h1>Test message</h1>" +
-        "<br>Bruh</br>" +
-        "<a href = 'http://localhost:3000/api/emailAuth'>Go to site</a>",
-    };
-    nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
-      if(error) {
-        console.log(error);
-      }
-      else {console.log(resp);}
-      nodemailer.transport.close();
-    });
+  var mailAuthMessage = {
+    from: "no-reply@best-world-team.com",
+    to: "",
+    subject: "Test message",
+    html:
+      "<h1>Test message</h1>" +
+      "<br>Bruh</br>" +
+      "<a href = 'http://localhost:3000/api/emailAuth'>Go to site</a>",
+  };
+  nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log(resp);
+    }
+    nodemailer.transport.close();
+  });
   return res.status(200).json().end();
 });
 
@@ -210,6 +211,10 @@ app.post(
 app.post(
   api_route + "/updateTask",
   /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.updateTask
+);
+app.post(
+  api_route + "/moveTask",
+  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ controllersProjectBoard.moveTask
 );
 app.post(
   api_route + "/deleteTask",
