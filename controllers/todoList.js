@@ -82,12 +82,12 @@ exports.updeteToDoList = async (req, res) => {
 
 exports.createBoard = async (req, res) => {
   var projectSlug = req.body.projectSlug;
-  if (!slug) {
-    return res.status(500).json({ err: "slug are required" }).end();
+  if (!projectSlug) {
+    return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  console.log(slug);
+  console.log(projectSlug);
   var todoList = await ToDoLists.findOne(
-    { projectSlug: slug },
+    { projectSlug: projectSlug },
     async (err, list) => {
       if (err) {
         return res.status(500).json({ err: err.message }).end();
