@@ -86,6 +86,9 @@ exports.emailAuth = async function (req, res) {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
+    if (!user) {
+      return res.status(500).json("User not found").end();
+    }
     user.emailConfirm = true;
     user.save((err) => {
       if (err) {
