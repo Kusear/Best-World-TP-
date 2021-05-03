@@ -222,14 +222,23 @@ exports.addProjectMember = async (req, res) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
-    var newMember = new Members();
+    if (!pr) {
+      return res.status(500).json("Project not found").end();
+    }
 
+    var newMember = new Members();
     newMember.username = req.body.username;
     newMember.role = req.body.role;
     pr.projectMembers.push(newMember);
 
     var reqRole = await pr.requaredRoles.id(req.body.roleID);
+
+    if (!reqRole) {
+      return res.status(500).json("Req role not found").end();
+    }
+
     await pr.requiredRoles.pull(req.body.roleID);
+
     if (req.body.name) {
       reqRole.name = req.body.name;
     }
@@ -239,6 +248,7 @@ exports.addProjectMember = async (req, res) => {
     if (req.body.alreadyEnter) {
       reqRole.alreadyEnter = req.body.alreadyEnter;
     }
+    
     await pr.requiredRoles.push(reqRole);
 
     await pr.save();
@@ -260,7 +270,7 @@ exports.deleteProjectMember = async (req, res) => {
     return res.status(200).json({ message: "success" }).end();
   });
 };
-
+ // TODO сделать проверку на одну и туже роль
 exports.addReqest = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {

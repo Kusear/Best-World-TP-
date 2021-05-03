@@ -82,7 +82,7 @@ exports.registration = async function (req, res) {
 };
 
 exports.emailAuth = async function (req, res) {
-  Users.findById(req.body.id, (err, user) => {
+  Users.findById(mongoose.Types.ObjectId(req.body.id), (err, user) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
