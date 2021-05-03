@@ -332,18 +332,23 @@ exports.addReqest = async (req, res) => {
       return res.status(520).json({ err: err.message }).end();
     }
 
+    var requestExist = false;
+
     pr.requests.forEach((element) => {
-      if (element.role === req.body.role) {
-        return res.status(500).json("Request already sent").end();
+      if (element.role === req.body.role && element.username === req.body.username) {
+        requestExist = true;
       }
     });
-
-    var newRequest = new Requests();
-    newRequest.username = req.body.username;
-    newRequest.role = req.body.role;
-    await pr.requests.push(newRequest);
-    await pr.save();
-    return res.status(200).json({ message: "success" }).end();
+    if (!requestExist) {
+      var newRequest = new Requests();
+      newRequest.username = req.body.username;
+      newRequest.role = req.body.role;
+      await pr.requests.push(newRequest);
+      await pr.save();
+      return res.status(200).json({ message: "success" }).end();
+    } else {
+      return res.status(500).json("Request already sent").end();
+    }
   });
 };
 
