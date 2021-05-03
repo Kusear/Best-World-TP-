@@ -8,6 +8,7 @@ var Users = require("../models/user_model").User;
 /* TODO
  * сделть обновление требуемых ролей в добавлении пользователя в проект (присылает id роли и количество вошедших) ?
  * полностью проверить все ли правильно написано с изменением subdoc
+ * добавить комментарии с тем что присылать
  */
 
 exports.projectData = async function (req, res) {
@@ -229,9 +230,10 @@ exports.addProjectMember = async (req, res) => {
     var newMember = new Members();
     newMember.username = req.body.username;
     newMember.role = req.body.role;
-    pr.projectMembers.push(newMember);
 
-    var reqRole = await pr.requaredRoles.id(req.body.roleID);
+    await pr.projectMembers.push(newMember);
+
+    var reqRole = await pr.requiredRoles.id(req.body.roleID);
 
     if (!reqRole) {
       return res.status(500).json("Req role not found").end();
@@ -248,7 +250,7 @@ exports.addProjectMember = async (req, res) => {
     if (req.body.alreadyEnter) {
       reqRole.alreadyEnter = req.body.alreadyEnter;
     }
-    
+
     await pr.requiredRoles.push(reqRole);
 
     await pr.save();
@@ -270,7 +272,7 @@ exports.deleteProjectMember = async (req, res) => {
     return res.status(200).json({ message: "success" }).end();
   });
 };
- // TODO сделать проверку на одну и туже роль
+// TODO сделать проверку на одну и туже роль
 exports.addReqest = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
@@ -280,6 +282,13 @@ exports.addReqest = async (req, res) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
+
+    pr.requests.forEach((element) => {
+      if (element.role === req.body.role) {
+        return res.status(500).json("Request already sent").end();
+      }
+    });
+
     var newRequest = new Requests();
     newRequest.username = req.body.username;
     newRequest.role = req.body.role;
