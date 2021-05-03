@@ -67,7 +67,7 @@ app.post("/api/", async function (req, res) {
 });
 
 /////////
-app.get("/emailAuth", controllersCommon.emailAuth);
+// app.get("/emailAuth", controllersCommon.emailAuth);
 /////////
 
 // Common routes
@@ -83,8 +83,8 @@ app.post(
   midleware.routeLog,
   controllersCommon.registration
 );
-app.get(
-  api_route + "/emailAuth/:id",
+app.post(
+  api_route + "/emailAuth",
   midleware.routeLog,
   controllersCommon.emailAuth
 );

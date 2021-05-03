@@ -3,6 +3,8 @@ const Chat = require("../models/chats_model").Chat;
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
 
+// TODO доделать чат
+
 function auth(socket, next) {
   // Parse cookie
   cookieParser()(socket.request, socket.request.res, () => {});

@@ -51,7 +51,7 @@ exports.registration = async function (req, res) {
       html:
         "<h1>Test message</h1>" +
         "<br>Bruh</br>" +
-        "<div><a href = 'http://192.168.0.4:3000/api/emailAuth?id='" +
+        "<div><a href = 'https://svelteappp.herokuapp.com/emailconfirm/'" +
         newUser.id +
         ">Verify email</a></div>",
     };
@@ -82,7 +82,7 @@ exports.registration = async function (req, res) {
 };
 
 exports.emailAuth = async function (req, res) {
-  Users.findById(req.params.id, (err, user) => {
+  Users.findById(req.body.id, (err, user) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }

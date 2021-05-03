@@ -288,9 +288,7 @@ exports.deleteRequest = async (req, res) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
-    // var request = project.requests.id(req.body.requestID);
     await project.requests.pull(req.body.requestID);
-    console.log(project.requests); // TODO удалить 
     await project.save();
     return res.status(200).json({ message: "success" }).end();
   });

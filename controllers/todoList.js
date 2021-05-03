@@ -86,7 +86,7 @@ exports.createBoard = async (req, res) => {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
   console.log(projectSlug);
-  var todoList = await ToDoLists.findOne(
+  await ToDoLists.findOne(
     { projectSlug: projectSlug },
     async (err, list) => {
       if (err) {
@@ -157,7 +157,7 @@ exports.createTask = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var todoList = await ToDoLists.findOne(
+  await ToDoLists.findOne(
     { projectSlug: projectSlug },
     async (err, list) => {
       if (err) {
@@ -182,7 +182,7 @@ exports.updateTask = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var todoList = await ToDoLists.findOne(
+  await ToDoLists.findOne(
     { projectSlug: projectSlug },
     async (err, list) => {
       if (err) {
@@ -213,7 +213,7 @@ exports.moveTask = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var todoList = await ToDoLists.findOne(
+  await ToDoLists.findOne(
     { projectSlug: projectSlug },
     async (err, list) => {
       if (err) {
@@ -240,15 +240,12 @@ exports.deleteTask = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  var todoList = await ToDoLists.findOne(
-    { projectSlug: projectSlug },
-    async (err, list) => {
-      if (err) {
-        return res.status(500).json({ err: err.message }).end();
-      }
-      await list.boards.id(req.body.boardID).items.pull(req.body.taskID);
-      await list.save();
-      return res.status(200).json({ message: "seccess" }).end();
+  await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
     }
-  );
+    await list.boards.id(req.body.boardID).items.pull(req.body.taskID);
+    await list.save();
+    return res.status(200).json({ message: "seccess" }).end();
+  });
 };
