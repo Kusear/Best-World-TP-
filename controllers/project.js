@@ -320,7 +320,6 @@ exports.deleteProjectMember = async (req, res) => {
 // TODO сделать проверку на одну и туже роль
 exports.addReqest = async (req, res) => {
   // req.body.projectSlug
-  // req.body.role
   // newRequest.username = req.body.username;
   // newRequest.role = req.body.role;
 
