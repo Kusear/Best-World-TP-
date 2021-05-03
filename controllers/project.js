@@ -13,6 +13,9 @@ var Users = require("../models/user_model").User;
 
 exports.projectData = async function (req, res) {
   // add pic process
+
+  //   projectSlug,
+
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -31,6 +34,23 @@ exports.projectData = async function (req, res) {
 };
 
 exports.createProject = async function (req, res) {
+  //     IDcreator: req.body.creatorid, //required
+  //     creatorName: req.body.creatorUsername,
+  //     IDmanager: req.body.managerid,
+  //     managerName: req.body.creatorUsername,
+  //     needManager: req.body.neededManager,
+  //     title: req.body.projectTitle, // required
+  //     description: req.body.projectDescription,
+  //     projectSubject: req.body.projectSubject,
+  //     picture: req.body.filename,
+  //     countOfMembers: req.body.membersCount,
+  //     creationDate: new Date(),
+  //     endTeamGathering: new Date(req.body.endGathering), // required
+  //     endProjectDate: new Date(req.body.endProject), // required
+  //     requiredRoles: req.body.requredRoles,
+  //     projectMembers: req.body.projectMembers,
+  //     requests: req.body.requests,
+
   try {
     var newProject = await new Projects({
       IDcreator: req.body.creatorid, //required
@@ -61,6 +81,18 @@ exports.createProject = async function (req, res) {
 };
 
 exports.updateProject = async function (req, res) {
+  // req.body.projectTitleToUpdate
+  // ManagerID: req.body.managerID,
+  // title: req.body.projectTitle,
+  // description: req.body.projectDescription,
+  // subject: req.body.projectSubject,
+  // picture: req.body.filename,
+  // countMembers: req.body.membersCount,
+  // endTeamGathering: req.body.endGathering,
+  // endProjectDate: req.body.endProject,
+  // requareRoles: req.body.requredRoles,
+  // projectMembers: req.body.projectMembers,
+
   var projectToUpdate = req.body.projectTitleToUpdate;
 
   if (!projectToUpdate) {
@@ -130,6 +162,8 @@ exports.updateProject = async function (req, res) {
 };
 
 exports.deleteProject = async function (req, res) {
+  // req.body.projectSlug
+
   var projectToDelete = req.body.projectSlug;
   var responce = {
     todoListStatus: "",
@@ -215,6 +249,14 @@ exports.getProjects = async function (req, res) {
 // };
 
 exports.addProjectMember = async (req, res) => {
+  // req.body.projectSlug
+  // req.body.role
+  // req.body.username
+  // req.body.roleID
+  // reqRole.name = req.body.name; // optional
+  // reqRole.count = req.body.count; // optional
+  // reqRole.alreadyEnter = req.body.alreadyEnter; // optional
+
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -259,6 +301,9 @@ exports.addProjectMember = async (req, res) => {
 };
 
 exports.deleteProjectMember = async (req, res) => {
+  // req.body.projectSlug
+  // req.body.memberID
+
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -274,6 +319,11 @@ exports.deleteProjectMember = async (req, res) => {
 };
 // TODO сделать проверку на одну и туже роль
 exports.addReqest = async (req, res) => {
+  // req.body.projectSlug
+  // req.body.role
+  // newRequest.username = req.body.username;
+  // newRequest.role = req.body.role;
+
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -299,6 +349,9 @@ exports.addReqest = async (req, res) => {
 };
 
 exports.deleteRequest = async (req, res) => {
+  // req.body.projectSlug
+  // req.body.requestID
+
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
