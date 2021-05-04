@@ -303,6 +303,10 @@ exports.addProjectMember = async (req, res) => {
 exports.deleteProjectMember = async (req, res) => {
   // req.body.projectSlug
   // req.body.memberID
+  // req.body.roleID
+  // reqRole.name = req.body.name; // optional
+  // reqRole.count = req.body.count; // optional
+  // reqRole.alreadyEnter = req.body.alreadyEnter; // optional
 
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
@@ -313,6 +317,25 @@ exports.deleteProjectMember = async (req, res) => {
       return res.status(520).json({ err: err.message }).end();
     }
     await project.projectMembers.pull(req.body.memberID);
+
+    var reqRole = await project.requiredRoles.id(req.body.roleID);
+
+    if (!reqRole) {
+      return res.status(500).json("Req role not found").end();
+    }
+    await project.requiredRoles.pull(req.body.roleID);
+    if (req.body.name) {
+      reqRole.name = req.body.name;
+    }
+    if (req.body.count) {
+      reqRole.count = req.body.count;
+    }
+    if (req.body.alreadyEnter) {
+      reqRole.alreadyEnter = req.body.alreadyEnter;
+    }
+
+    await project.requiredRoles.push(reqRole);
+
     await project.save();
     return res.status(200).json({ message: "success" }).end();
   });
@@ -335,7 +358,10 @@ exports.addReqest = async (req, res) => {
     var requestExist = false;
 
     pr.requests.forEach((element) => {
-      if (element.role === req.body.role && element.username === req.body.username) {
+      if (
+        element.role === req.body.role &&
+        element.username === req.body.username
+      ) {
         requestExist = true;
       }
     });

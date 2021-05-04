@@ -1,24 +1,28 @@
-var express = require("express");
-var session = require("express-session");
-var cookieParser = require("cookie-parser");
-var passport = require("passport");
-var mongoose = require("mongoose");
-var bcrypt = require("bcrypt");
-var cors = require("cors");
-var MongoStore = require("connect-mongo");
+const express = require("express");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const passport = require("passport");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const cors = require("cors");
+const MongoStore = require("connect-mongo");
 require("dotenv").config();
+const soketio = require("socket.io");
+const http = require("http");
 
-var Grid = require("gridfs-stream");
-var midleware = require("./midleware/midleware");
-var controllersCommon = require("./controllers/common");
-var controllersUser = require("./controllers/user");
-var controllersProject = require("./controllers/project");
-var controllersProjectBoard = require("./controllers/todoList");
+const Grid = require("gridfs-stream");
+const midleware = require("./midleware/midleware");
+const controllersCommon = require("./controllers/common");
+const controllersUser = require("./controllers/user");
+const controllersProject = require("./controllers/project");
+const controllersProjectBoard = require("./controllers/todoList");
 require("./config/config-passport");
-var app = express();
+const app = express();
+const server = http.createServer(app);
+const io = soketio(server);
 
-var MONGO_URL = process.env.MONGO_URL;
-var api_route = "/api";
+const MONGO_URL = process.env.MONGO_URL;
+const api_route = "/api";
 
 mongoose.set("useFindAndModify", false);
 app.use(express.json());
@@ -53,6 +57,7 @@ app.use(
     saveUninitialized: false,
   })
 );
+// app.use(io);
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -63,6 +68,10 @@ app.use(passport.session());
 const ToDoLists = require("./models/todoList_model").TODOList;
 
 app.post("/api/", async function (req, res) {
+  io.on("connection", (socket) => {
+    console.log("soket io connected");
+  });
+
   return res.status(200).json("main route").end();
 });
 
@@ -235,7 +244,7 @@ app.get(
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
   .then(
-    app.listen(process.env.PORT || 3000, function () {
+    server.listen(process.env.PORT || 3000, function () {
       console.log("API Working!");
     })
   )
