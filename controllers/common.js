@@ -6,17 +6,19 @@ const nodemailer = require("../config/nodemailer");
 
 /* TODO
  * доделать загрузку картинок в бд при регистрации и создание уникального имени файла
- * сделать валидацию полей в login, registration
  */
 
 exports.login = async function (req, res) {
+  // req.body.email
+  // req.body.password
+
   await Users.findOne({ email: req.body.email }, async function (err, user) {
     var isAuthenticated =
       user &&
       ((await bcrypt.compare(req.body.password, user.password)) ||
         req.body.password === user.password);
     if (!isAuthenticated) {
-      return res.status(400).json({ err: "no auth" }).end();
+      return res.status(510).json({ err: "Не авторизован" }).end();
     }
     return res
       .status(200)
@@ -41,17 +43,17 @@ exports.registration = async function (req, res) {
       username: req.body.username,
       email: req.body.email,
       password: req.body.password,
-      //image: req.files[0].fieldname,
+      image: req.body.filename,
     }).save();
-
-    // TODO изменить ссылку на front
+    
     var mailAuthMessage = {
       to: newUser.email,
       subject: "Test message",
       html:
         "<h1>Test message</h1>" +
         "<br>Bruh</br>" +
-        "<div><a href = 'https://svelteappp.herokuapp.com/emailconfirm/'" +
+        "<div><a href =" +
+        process.env.CONFIRM_URL +
         newUser.id +
         ">Verify email</a></div>",
     };
@@ -75,9 +77,12 @@ exports.registration = async function (req, res) {
       .end();
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(400).json({ err: "User already exist" }).end();
+      return res
+        .status(500)
+        .json({ err: "Пользователь уже зарегистрирован" })
+        .end();
     }
-    return res.status(400).json({ err: err.message }).end();
+    return res.status(520).json({ err: err.message }).end();
   }
 };
 
@@ -127,15 +132,3 @@ exports.getFiles = function (req, res) {
     })
     .pipe(res);
 };
-
-//  nodemailer.mailAuthMessage.to = newUser.email;
-// nodemailer.transport.sendMail(
-//   nodemailer.mailAuthMessage,
-//   function (err, info) {
-//     if (err) {
-//       return console.log("ERROR send email: ", err.message);
-//     }
-//     console.log("Message send: ", info.messageId);
-//     console.log("Preview URL: ", nodemailer.getTestMessageUrl(info));
-//   }
-// );

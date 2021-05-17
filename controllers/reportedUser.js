@@ -2,7 +2,7 @@ var ReportedUsers = require("../models/reported_users").ReportedUser;
 
 // сделать создание
 
-exports.getReortedUsers = async function (req, res) {
+exports.getReportedUsers = async function (req, res) {
   ReportedUsers.find({}, function (err, result) {
     if (err) {
       return res.status(400).json({ err: err.message }).end();

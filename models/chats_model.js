@@ -1,9 +1,18 @@
 var mongoose = require("mongoose");
 
 const ChatMessages = new mongoose.Schema({
-  date: { type: Date },
-  content: { type: String },
+  date: { type: Date, default: new Date() },
+  text: { type: String },
   username: { type: String },
+});
+
+const BlackList = new mongoose.Schema({
+  username: {
+    type: String,
+  },
+  role: {
+    type: String,
+  },
 });
 
 const ChatMembers = new mongoose.Schema({
@@ -16,14 +25,21 @@ const ChatMembers = new mongoose.Schema({
 });
 
 const Chat = new mongoose.Schema({
-  projectID: {
+  chatRoom: {
     type: String,
-    required: true,
   },
   chatMembers: [ChatMembers],
-  message: [ChatMessages],
+  messages: { type: [ChatMessages], default: [] },
+  privateChat: {
+    type: Boolean,
+  },
+  blackList: {
+    type: [BlackList],
+    default: [],
+  },
 });
 
 exports.Chat = mongoose.model("Chat", Chat);
 exports.ChatMembers = mongoose.model("ChatMembers", ChatMembers);
 exports.ChatMessages = mongoose.model("ChatMessages", ChatMessages);
+exports.ChatBlackList = mongoose.model("ChatBlackList", BlackList);

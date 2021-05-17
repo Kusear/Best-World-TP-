@@ -46,7 +46,7 @@ const ProjectSchema = new mongoose.Schema({
   managerName: {
     type: String,
   },
-  needManager: {
+  needHelp: {
     type: Boolean,
     default: false,
   },
@@ -93,6 +93,10 @@ const ProjectSchema = new mongoose.Schema({
     default: [],
   },
   needChanges: {
+    type: Boolean,
+    default: false,
+  },
+  archive: {
     type: Boolean,
     default: false,
   },
