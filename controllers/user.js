@@ -20,28 +20,28 @@ exports.userData = async function (req, res) {
       return res.status(500).json({ err: "User not found" }).end();
     }
 
-    var member = await Projects.aggregate(
-      [
-        {
-          $project: {
-            projectMembers: {
-              $filter: {
-                input: "$projectMembers",
-                as: "members",
-                cond: {
-                  $eq: ["$$members.username", user.username],
-                },
-              },
-            },
-          },
-        },
-      ],
-      async (err, countOfDocs) => {
-        if (err) {
-          console.log("err: ", err.message);
-        }
-      }
-    );
+    // var member = await Projects.aggregate(
+    //   [
+    //     {
+    //       $project: {
+    //         projectMembers: {
+    //           $filter: {
+    //             input: "$projectMembers",
+    //             as: "members",
+    //             cond: {
+    //               $eq: ["$$members.username", user.username],
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //   ],
+    //   async (err, countOfDocs) => {
+    //     if (err) {
+    //       console.log("err: ", err.message);
+    //     }
+    //   }
+    // );
 
     var memberInProjects = await Projects.find(
       { "projectMembers.username": user.username },
@@ -136,13 +136,30 @@ exports.updateUser = async function (req, res) {
     if (newData.info) {
       user.info = newData.info;
     }
-
-    await user.update(function (err, doc) {
+    var stat = false;
+    await user.update({ info: newData.info }, function (err, doc) {
       if (err) {
         return res.status(400).json({ err: err.message }).end();
       }
-      return res.status(200).json({ message: "updated" }).end();
+      stat = true;
     });
+
+    await user.update(
+      { preferredRole: newData.preferredRole },
+      function (err, doc) {
+        if (err) {
+          return res.status(400).json({ err: err.message }).end();
+        }
+        if (stat) {
+          return res.status(200).json({ message: "updated" }).end();
+        } else {
+          return res
+            .status(200)
+            .json({ message: "Not all changes applied" })
+            .end();
+        }
+      }
+    );
   });
 };
 
