@@ -15,6 +15,11 @@ exports.userData = async function (req, res) {
       }
     }
   );
+
+  console.log("query: ", req.query);
+  console.log("body: ", req.body);
+  console.log("params: ", req.params);
+
   if (!user) {
     return res.status(500).json({ err: "User not found" }).end();
   }
@@ -79,7 +84,7 @@ exports.userData = async function (req, res) {
       preferredRole: user.preferredRole,
       info: user.info,
       image: user.image,
-      projects: projects, // TODO уточнить как удобнее передавать бэку
+      projects: projects, 
     })
     .end();
 };
@@ -168,7 +173,7 @@ exports.deleteUser = async function (req, res) {
 };
 
 exports.getUsers = async function (req, res) {
-  await Users.find({}, function (err, result) {
+  await Users.find({role: "user"}, function (err, result) {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }

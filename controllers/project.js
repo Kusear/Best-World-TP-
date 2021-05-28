@@ -63,6 +63,7 @@ exports.createProject = async function (req, res) {
       requiredRoles: req.body.requredRoles,
       projectMembers: req.body.projectMembers,
       requests: req.body.requests,
+      needChanges: req.body.needChanges,
     }).save();
 
     var newProjectChat = await Chat({
@@ -194,6 +195,7 @@ exports.deleteProject = async function (req, res) {
   var responce = {
     todoListStatus: "",
     projectStatus: "",
+    chatStatus: "",
   };
   if (!projectToDelete) {
     return res.status(500).json({ err: "no projectID to edit" }).end();
@@ -229,6 +231,22 @@ exports.deleteProject = async function (req, res) {
           }
         }
       );
+
+      await Chat.findOne({ chatRoom: project.slug }, async (err, chat) => {
+        if (err) {
+          responce.chatStatus = err.message;
+        }
+        if (!chat) {
+          responce.chatStatus = "Chat not found";
+        }
+        await chat.remove((err, result) => {
+          if (err) {
+            responce.chatStatus = err.message;
+          }
+          responce.chatStatus = "deleted";
+        });
+      });
+
       await project.remove(function (err, doc) {
         if (err) {
           return res.status(500).json({ err: err.message }).end();
@@ -272,15 +290,15 @@ exports.getArchivedProjects = async function (req, res) {
   return res.status(200).json(projects).end();
 };
 
-exports.addProjectMember = async (req, res) => { // TODO удалять все реквесты принатого пользователся
+exports.addProjectMember = async (req, res) => {
+  // TODO удалять все реквесты принатого пользователся
   // req.body.projectSlug
   // req.body.role
-  // req.body.username
+  // req.body.id (request id)
   // req.body.roleID
   // reqRole.name = req.body.name; // optional
   // reqRole.count = req.body.count; // optional
   // reqRole.alreadyEnter = req.body.alreadyEnter; // optional
-
 
   // https://docs.mongodb.com/manual/reference/operator/update/pull/
   // прочитать ссылку про pull
@@ -303,28 +321,47 @@ exports.addProjectMember = async (req, res) => { // TODO удалять все �
 
     await pr.projectMembers.push(newMember);
 
-    var reqRole = await pr.requiredRoles.id(req.body.roleID);
+    var exeptionReqRole = "null";
+    try {
+      var reqRole = await pr.requiredRoles.id(req.body.roleID);
 
-    if (!reqRole) {
-      return res.status(500).json("Req role not found").end();
+      if (!reqRole) {
+        exeptionReqRole = "No reqRole";
+      }
+
+      await pr.requiredRoles.pull(req.body.roleID);
+
+      if (req.body.name) {
+        reqRole.name = req.body.name;
+      }
+      if (req.body.count) {
+        reqRole.count = req.body.count;
+      }
+      if (req.body.alreadyEnter) {
+        reqRole.alreadyEnter = req.body.alreadyEnter;
+      }
+
+      await pr.requiredRoles.push(reqRole);
+    } catch (ex) {
+      exeptionReqRole = ex;
     }
 
-    await pr.requiredRoles.pull(req.body.roleID);
-
-    if (req.body.name) {
-      reqRole.name = req.body.name;
+    var exeptionPullRequests = "null";
+    try {
+      await pr.requests.pull({ _id: req.body.id });
+    } catch (ex) {
+      exeptionPullRequests = ex;
     }
-    if (req.body.count) {
-      reqRole.count = req.body.count;
-    }
-    if (req.body.alreadyEnter) {
-      reqRole.alreadyEnter = req.body.alreadyEnter;
-    }
-
-    await pr.requiredRoles.push(reqRole);
 
     await pr.save();
-    return res.status(200).json({ message: "success" }).end();
+    return res
+      .status(200)
+      .json({
+        message: "success",
+        exeptionReqRole: exeptionReqRole,
+        exeptionPullRequests: exeptionPullRequests,
+      })
+      .end();
   });
 };
 
@@ -347,36 +384,63 @@ exports.deleteProjectMember = async (req, res) => {
 
     var user = await project.projectMembers.id(req.body.memberID);
 
-    await Chat.findOne({chatRoom: project.slug}, (err, chat)=>{
+    await Chat.findOne({ chatRoom: project.slug }, (err, chat) => {
       if (err) {
-        return res.status(520).json({err: err.message}).end();
+        return res.status(520).json({ err: err.message }).end();
       }
       chat.chatMembers.pull(user);
       chat.save();
     });
 
+    // await ToDoLists.findOne(
+    //   { projectSlug: project.slug },
+    //   async (err, list) => {
+    //     if (err) {
+    //       // TODO добавить переменную для передачи статуса
+    //     }
+    //     // list.boards.items.pull({performer: });
+    //     // TODO сделать удаление задач удаленного пользователя через aggregate
+    //   }
+    // );
+    try {
+    await ToDoLists.updateMany(
+      {},
+      { $pull: { boards: { items: { performer: user.username } } } }
+    );
+    } catch (err) {
+      
+    }
+
     await project.projectMembers.pull(req.body.memberID);
 
-    var reqRole = await project.requiredRoles.id(req.body.roleID);
+    var exeption = "null";
+    try {
+      var reqRole = await project.requiredRoles.id(req.body.roleID);
 
-    if (!reqRole) {
-      return res.status(500).json("Req role not found").end();
-    }
-    await project.requiredRoles.pull(req.body.roleID);
-    if (req.body.name) {
-      reqRole.name = req.body.name;
-    }
-    if (req.body.count) {
-      reqRole.count = req.body.count;
-    }
-    if (req.body.alreadyEnter) {
-      reqRole.alreadyEnter = req.body.alreadyEnter;
-    }
+      if (!reqRole) {
+        return res.status(500).json("Req role not found").end();
+      }
+      await project.requiredRoles.pull(req.body.roleID);
+      if (req.body.name) {
+        reqRole.name = req.body.name;
+      }
+      if (req.body.count) {
+        reqRole.count = req.body.count;
+      }
+      if (req.body.alreadyEnter) {
+        reqRole.alreadyEnter = req.body.alreadyEnter;
+      }
 
-    await project.requiredRoles.push(reqRole);
+      await project.requiredRoles.push(reqRole);
+    } catch (ex) {
+      exeption = ex;
+    }
 
     await project.save();
-    return res.status(200).json({ message: "success" }).end();
+    return res
+      .status(200)
+      .json({ message: "success", exeption: exeption })
+      .end();
   });
 };
 
@@ -413,13 +477,18 @@ exports.addReqest = async (req, res) => {
 
       await pr.requests.push(newRequest);
 
-      var chat = Chat.findOne({chatRoom: pr.slug});
-      if (!chat) {
-        return res.status(500).json({err: "Chat not found"}).end();
+      var exeption = "null";
+      try {
+        var chat = Chat.findOne({ chatRoom: pr.slug });
+        if (!chat) {
+          return res.status(500).json({ err: "Chat not found" }).end();
+        }
+        await chat.chatMembers.push(newRequest);
+        await chat.save();
+      } catch (ex) {
+        exeption = ex;
       }
-      await chat.chatMembers.push(newRequest);
-      await chat.save();
-      
+
       await pr.save();
       return res.status(200).json({ message: "success" }).end();
     } else {
@@ -428,7 +497,7 @@ exports.addReqest = async (req, res) => {
   });
 };
 
-exports.deleteRequest = async (req, res) => { 
+exports.deleteRequest = async (req, res) => {
   // req.body.projectSlug
   // req.body.requestID
 
@@ -442,14 +511,22 @@ exports.deleteRequest = async (req, res) => {
     }
     await project.requests.pull(req.body.requestID);
 
-    var chat = Chat.findOne({chatRoom: project.slug});
+    var exeption = "null";
+    try {
+      var chat = Chat.findOne({ chatRoom: project.slug });
       if (!chat) {
-        return res.status(500).json({err: "Chat not found"}).end();
+        return res.status(500).json({ err: "Chat not found" }).end();
       }
       await chat.chatMembers.pull(req.body.requestID);
       await chat.save();
+    } catch (ex) {
+      exeption = ex;
+    }
 
     await project.save();
-    return res.status(200).json({ message: "success" }).end();
+    return res
+      .status(200)
+      .json({ message: "success", exeption: exeption })
+      .end();
   });
 };

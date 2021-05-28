@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Grid = require("gridfs-stream");
 const bcrypt = require("bcrypt");
 const nodemailer = require("../config/nodemailer");
+const slugify = require("slugify");
 
 /* TODO
  * доделать загрузку картинок в бд при регистрации и создание уникального имени файла
@@ -45,7 +46,7 @@ exports.registration = async function (req, res) {
       password: req.body.password,
       image: req.body.filename,
     }).save();
-    
+
     var mailAuthMessage = {
       to: newUser.email,
       subject: "Test message",
@@ -104,16 +105,23 @@ exports.emailAuth = async function (req, res) {
   });
 };
 
-exports.saveFiles = function (req, res) {
+exports.saveFiles = async function (req, res) {
   var gfs = Grid(mongoose.connection.db, mongoose.mongo);
-
-  console.log("req.body: ", req.body);
-  console.log("req.params: ", req.query);
+  var filenameSlug =
+    (await slugify(req.query.filename, {
+      replacement: "-",
+      remove: undefined,
+      lower: false,
+      strict: false,
+      locale: "ru",
+    })) +
+    "-" +
+    req.query.userID;
 
   req.pipe(
     gfs
       .createWriteStream({
-        filename: req.query.filename,
+        filename: filenameSlug,
       })
       .on("close", function (savedFile) {
         console.log("file saved", savedFile);

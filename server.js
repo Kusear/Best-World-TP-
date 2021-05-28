@@ -5,11 +5,12 @@ const passport = require("passport");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const MongoStore = require("connect-mongo");
-require("dotenv").config();
 const soketio = require("socket.io");
 const http = require("http");
 const path = require("path");
 const nodemailer = require("./config/nodemailer");
+require("dotenv").config();
+require("./config/config-passport");
 
 const midleware = require("./midleware/midleware");
 const controllersCommon = require("./controllers/common");
@@ -17,15 +18,15 @@ const controllersUser = require("./controllers/user");
 const controllersProject = require("./controllers/project");
 const controllersProjectBoard = require("./controllers/todoList");
 const controllersChat = require("./controllers/chat_contr");
-require("./config/config-passport");
 const app = express();
 const server = http.createServer(app);
 const io = soketio(server, {
-    cors: {
-        origin: '*',
-    }
+  cors: {
+    origin: "*",
+  },
 });
 require("./sockets/chat")(io);
+require("./sockets/task_lists")(io);
 
 const MONGO_URL = process.env.MONGO_URL;
 const api_route = "/api";
@@ -63,23 +64,18 @@ app.use(
     saveUninitialized: false,
   })
 );
-app.use(express.static(path.join(__dirname, "public")));  // TODO удалить как доделаю чат и таски
+app.use(express.static(path.join(__dirname, "public"))); // TODO удалить как доделаю чат и таски
 app.use(passport.initialize());
 app.use(passport.session());
 
-/* TODO
- * удалить комменты midleware для todo листов
- */
-app.get("/", midleware.auth, (req, res)=>{
-
-});
+app.get("/", midleware.auth, (req, res) => {});
 
 const Chat2 = require("./models/chats_model").Chat;
 app.get("/api/", async function (req, res) {
-  var a = Chat2.find({}, (err, result)=>{
+  var a = Chat2.find({}, (err, result) => {
     console.log(result);
   });
-  
+
   return res.status(200).json("aga").end();
 });
 
@@ -125,7 +121,7 @@ app.post(
   midleware.roleCheck("user", "superadmin"),
   controllersProject.updateProject
 );
-app.delete(
+app.post(
   api_route + "/deleteProject",
   midleware.auth,
   midleware.routeLog,
@@ -174,12 +170,18 @@ app.post(
 // Project board routes
 app.get(
   api_route + "/getTodoList",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.getProjectTODOList
 );
 app.post(
   api_route + "/createTodoList",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.createToDoList
 );
 app.post(
@@ -192,38 +194,59 @@ app.post(
 );
 app.post(
   api_route + "/createBoard",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.createBoard
 );
 app.post(
   api_route + "/updateBoard",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.updateBoard
 );
 app.post(
   api_route + "/deleteBoard",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.deleteBoard
 );
 
 app.post(
   api_route + "/createTask",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.createTask
 );
 app.post(
   api_route + "/updateTask",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.updateTask
 );
 app.post(
   api_route + "/moveTask",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.moveTask
 );
 app.post(
   api_route + "/deleteTask",
-  /*midleware.routeLog, midleware.auth, midleware.roleCheck("user", "superadmin"),*/ midleware.checkProjectMember,
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  midleware.checkProjectMember,
   controllersProjectBoard.deleteTask
 );
 
@@ -242,7 +265,7 @@ app.post(
   midleware.roleCheck("user", "superadmin"),
   controllersUser.updateUser
 );
-app.delete(
+app.post(
   api_route + "/deleteUser",
   midleware.auth,
   midleware.routeLog,
@@ -258,7 +281,7 @@ app.get(
 );
 
 // Chat routes
-app.post(api_route+ '/createChat', controllersChat.createChat);
+app.post(api_route + "/createChat", controllersChat.createChat);
 app.get(api_route + "/getChats", controllersChat.getChats);
 app.post(api_route + "/deleteChat", controllersChat.deleteChat);
 

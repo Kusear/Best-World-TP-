@@ -3,13 +3,6 @@ const Projects = require("../models/project").Project;
 const Boards = require("../models/todoList_model").Boards;
 const Tasks = require("../models/todoList_model").Tasks;
 
-/* TODO
- * необходимые значения в комменты для удобства
- * при принятии пользователя на одну роль, то все остальные его заявки удалиются
- * делать запросы к frontу для получения изменений
- * - При удалении пользователя из member'ов очищать поле задачи 
- "кому назначена задача" в тасклистах, если она ранее принадлежала этому пользователю.
- */
 
 exports.getProjectTODOList = async (req, res) => {
   // req.query.projectSlug

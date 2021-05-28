@@ -3,6 +3,12 @@ const Projects = require("../models/project").Project;
 const Boards = require("../models/todoList_model").Boards;
 const Tasks = require("../models/todoList_model").Tasks;
 
+/* TODO
+ * делать запросы к frontу для получения изменений
+ * - При удалении пользователя из member'ов очищать поле задачи 
+ "кому назначена задача" в тасклистах, если она ранее принадлежала этому пользователю.
+ */
+
 module.exports = (io) => {
   var counter = 0; //
   var user = {
@@ -12,7 +18,7 @@ module.exports = (io) => {
   };
 
   io.on("connection", (socket) => {
-    console.log("socket io connected " + socket.id + " " + counter);
+    console.log("socket io connected Task" + socket.id + " " + counter);
     user.id = socket.id;
 
     socket.on("get-TaskList", async ({ username, token, slug }) => {
@@ -124,7 +130,7 @@ module.exports = (io) => {
 
     socket.on("delete-board", async ({ delBoard }) => {
       if (!delBoard) {
-        io.emit("err", {
+        io.to(user.id).emit("err", {
           err: "delBoard are required",
         });
         return;

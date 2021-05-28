@@ -1,0 +1,364 @@
+        $$$$$$$$$$$$
+            INFO
+
+All routes stats with - /api/
+{} - means group of values for better view and doesnt affect on sending data
+If {} plased with some word that means json object with some parametrs
+
+        $$$$$$$$$$$$
+
+
+
+
+############## User routes ##############
+
+Route - /userData
+Method - GET
+Auth needed - yes
+Values: 
+    username (ник пользователя)
+Response: 
+      username: user.username,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      preferredRole: user.preferredRole,
+      info: user.info,
+      image: user.image,
+      projects: projects,
+
+
+Route - /updateUser
+Method - POST
+Auth needed - yes
+Values: 
+    userToUpdate (ник пользователя)
+    {   (новые данные пользователя, данные ниже изменяются при передаче значений)
+        username
+        email
+        password
+        preferredRole
+        name
+        role
+        info
+    }
+Response: 
+    message: "updated"
+
+
+Route - /deleteUser
+Method - POST
+Auth needed - yes
+Values: 
+    username (ник пользователя)
+Response: 
+    message: "deleted"
+
+
+Route - /getUsers
+Method - GET
+Auth needed - yes
+Values: 
+    none
+Response: 
+    result (список всех пользователей исключая супер админа)
+    
+
+
+
+############## Project routes ##############
+
+Route - /createProject
+Method - POST
+Auth needed - yes
+Values: 
+    creatorid, //required
+    creatorUsername,
+    managerid,
+    creatorUsername,
+    needHelp,
+    projectTitle, // required
+    projectDescription,
+    projectSubject,
+    filename,
+    membersCount,
+    Date(),
+    Date(req.body.endGathering), // required
+    Date(req.body.endProject), // required
+    requredRoles,
+    projectMembers,
+    requests,
+Response: 
+    project: newProject
+    prChat: newProjectChat
+
+
+Route - /projectData
+Method - POST
+Auth needed - no
+Values: 
+    projectSlug
+Response: 
+    project (полностью мнформация о проекте)
+
+
+Route - /updateProject
+Method - POST
+Auth needed - yes
+Values: 
+    managerID,
+    managerName, 
+    projectTitle,
+    projectDescription,
+    projectSubject,
+    filename,
+    membersCount,
+    endGathering,
+    endProject,
+    requredRoles,
+    projectMembers,
+    archive, 
+    needHelp, 
+    needChanges, 
+Response: 
+    message: "updated"
+
+
+Route - /deleteProject
+Method - POST
+Auth needed - yes
+Values: 
+    projectSlug
+Response: 
+    responce: {
+        projectStatus,
+        todoListStatus
+    }
+
+
+Route - /getProjects
+Method - GET
+Auth needed - no
+Values: 
+    none
+Response: 
+    projects (массив проектов)
+
+
+Route - /getArchivedProjects
+Method - GET
+Auth needed - no
+Values: 
+    none
+Response: 
+    projects
+
+
+Route - /addProjectMember
+Method - POST
+Auth needed - yes
+Values: 
+    projectSlug
+    role
+    id (request id)
+    roleID
+    name; // optional
+    count; // optional
+    alreadyEnter; // optional
+Response: 
+    message: "success",
+    exeptionReqRole: exeptionReqRole,
+    exeptionPullRequests: exeptionPullRequests,
+
+
+Route - /deleteProjectMember
+Method - POST
+Auth needed - yes
+Values: 
+    projectSlug
+    memberID
+    roleID
+    {   (для изменения требуемых ролей)
+        name; // optional
+        count; // optional
+        alreadyEnter; // optional
+    }
+Response: 
+    message: "success", 
+    exeption: exeption
+
+
+Route - /addRequest
+Method - POST
+Auth needed - yes
+Values: 
+    projectSlug
+    { (данные нового запроса)
+        username;
+        role;
+    }
+Response: 
+     message: "success"
+
+Route - /deleteRequest
+Method - POST
+Auth needed - yes
+Values: 
+    projectSlug
+    requestID
+Response: 
+    message: "success", 
+    exeption: exeption
+
+
+
+############## Chat ##############
+
+$$$$$$$$$$$
+{} means json object
+$$$$$$$$$$$
+
+
+
+Theme - joinRoom
+Values: 
+    { username, token, room }
+Response:  
+    io.to(cUser.id).emit("err", { err: });
+    or 
+    io.to(chat.chatRoom).emit("message", {
+          status: CONNECTED,
+          user: cUser.username,
+        });
+
+
+Theme - chatMessage
+Values: 
+    text (json object)
+Response:  
+    io.to(cUser.id).emit("err", {
+            err: 
+          });
+    or
+    io.to(chat.chatRoom).emit("message", text);
+
+
+Theme - getHistory
+Values: 
+    { username, page }
+Response:  
+    io.to(cUser.id).emit("err", { err: });
+    or 
+    io.to(cUser.id).emit("history", {history: messagesHistory});
+
+
+Theme - blockUser
+Values: 
+    {userID}
+Response:  
+    io.to(cUser.id).emit("err", { err:  });
+    or 
+    io.to(chat.chatRoom).emit("userBlocked", {
+          text: "User " + user.username + " are blocked",
+        });
+
+
+Theme - unblockUser
+Values: 
+    {userID}
+Response:  
+    io.to(cUser.id).emit("err", { err:  });
+    or 
+    io.to(chat.chatRoom).emit("userUnblocked", {
+          text: "User " + user.username + " are unblocked",
+        });
+
+
+Theme - leave
+Values: 
+    {userID}
+Response:  
+    io.to(cUser.id).emit("err", { err: });
+    or 
+    io.to(caht.chatRoom).emit("userLeave", {
+          status: DISCONNECTED,
+          username: cUser.username,
+        });
+
+############## Task Lists ##############
+
+Theme -  get-TaskList
+Values: 
+    { username, token, slug }
+Response:  
+    io.to(user.id).emit("err", { err: });
+    or
+    io.to(user.id).emit("listData", { list });
+
+
+Theme -  create-board
+Values: 
+    { crtBoard }
+Response:   
+    io.to(user.id).emit("err", { err: });
+    or 
+    io.to(user.id).emit("created-board", {
+            status: "success",
+            board: newBoard,
+          });
+
+
+Theme -  update-board
+Values: 
+    { updBoard }
+Response:   
+    io.to(user.id).emit("err", { err: });
+    or 
+    io.to(user.id).emit("updated-board", {
+            status: success,
+            board: board,
+          });
+
+
+Theme -  delete-board
+Values: 
+    { delBoard }
+Response:   
+    io.to(user.id).emit("err", { err: err.message });
+    or
+    io.to(user.id).emit("deleted-board", { status: "success" });
+
+
+Theme -  create-task
+Values: 
+    { board, crtTask }
+Response:   
+    io.to(user.id).emit("err", { err: });
+    or 
+    io.to(user.id).emit("created-task", { status: "success" });
+
+
+Theme -  
+Values: 
+
+Response:   
+
+
+
+Theme -  
+Values: 
+
+Response:   
+
+
+Theme -  
+Values: 
+
+Response:   
+
+
+Theme -  
+Values: 
+
+Response:   
+
