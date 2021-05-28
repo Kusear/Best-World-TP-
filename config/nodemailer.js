@@ -1,8 +1,7 @@
 var nodemailer = require("nodemailer");
 
 /* TODO 
- * сделать обновление токена для nodemailer
- * проверить работу через время
+ * сделать уведомления для разных сообщений
  */
 
 var transport = nodemailer.createTransport(

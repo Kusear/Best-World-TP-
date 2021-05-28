@@ -7,86 +7,84 @@ const projectMembers = require("../models/project").Members;
  */
 
 exports.userData = async function (req, res) {
-  var user = await Users.findOne(
-    { username: req.query.username },
-    function (err) {
-      if (err) {
-        return res.status(500).json({ err: err.message }).end();
-      }
+  await Users.findOne({ username: req.query.username }, async (err, user) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
     }
-  );
 
-  console.log("query: ", req.query);
-  console.log("body: ", req.body);
-  console.log("params: ", req.params);
+    console.log("query: ", req.query);
+    console.log("body: ", req.body);
+    console.log("params: ", req.params);
 
-  if (!user) {
-    return res.status(500).json({ err: "User not found" }).end();
-  }
+    if (!user) {
+      return res.status(500).json({ err: "User not found" }).end();
+    }
 
-  var member = await Projects.aggregate(
-    [
-      {
-        $project: {
-          projectMembers: {
-            $filter: {
-              input: "$projectMembers",
-              as: "members",
-              cond: {
-                $eq: ["$$members.username", user.username],
+    var member = await Projects.aggregate(
+      [
+        {
+          $project: {
+            projectMembers: {
+              $filter: {
+                input: "$projectMembers",
+                as: "members",
+                cond: {
+                  $eq: ["$$members.username", user.username],
+                },
               },
             },
           },
         },
-      },
-    ],
-    async (err, countOfDocs) => {
-      if (err) {
-        console.log("err: ", err.message);
+      ],
+      async (err, countOfDocs) => {
+        if (err) {
+          console.log("err: ", err.message);
+        }
+      }
+    );
+
+    var memberInProjects = await Projects.find(
+      { "projectMembers.username": user.username },
+      (err, result) => {
+        if (err) {
+        }
+        // return res.status(520).json({ err: err.message }).end();
+        console.log("MEMBERINPROJECT\n");
+      }
+    );
+
+    var projects = [];
+    memberInProjects.forEach((element) => {
+      var construction = {
+        project: "",
+        role: "",
+        archived: false,
+      };
+      construction.role = element.projectMembers[0].role;
+      projects.push(construction);
+    });
+    for (let i = 0; i < projects.length; i++) {
+      projects[i].project = memberInProjects[i];
+      if (memberInProjects[i].archived) {
+        projects[i].archived = true;
       }
     }
-  );
 
-  var memberInProjects = await Projects.find(
-    { "projectMembers.username": user.username },
-    (err, result) => {
-      if (err) {
-        return res.status(520).json({ err: err.message }).end();
-      }
-    }
-  );
-
-  var projects = [];
-  member.forEach((element) => {
-    var construction = {
-      project: "",
-      role: "",
-      archived: false,
-    };
-    construction.role = element.projectMembers[0].role;
-    projects.push(construction);
+    console.log("\nprojects: ", projects);
+    return res
+      .status(200)
+      .json({
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        preferredRole: user.preferredRole,
+        info: user.info,
+        image: user.image,
+        projects: projects,
+      })
+      .end();
   });
-  for (let i = 0; i < projects.length; i++) {
-    projects[i].project = memberInProjects[i];
-    if (memberInProjects[i].archived) {
-      projects[i].archived = true;
-    }
-  }
-
-  console.log("\nprojects: ", projects);
-  return res
-    .status(200)
-    .json({
-      username: user.username,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      preferredRole: user.preferredRole,
-      info: user.info,
-      image: user.image,
-      projects: projects, 
-    })
-    .end();
 };
 
 exports.updateUser = async function (req, res) {
@@ -173,11 +171,10 @@ exports.deleteUser = async function (req, res) {
 };
 
 exports.getUsers = async function (req, res) {
-  await Users.find({role: "user"}, function (err, result) {
+  await Users.find({ role: "user" }, function (err, result) {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }
     return res.status(200).json(result).end();
   });
 };
-
