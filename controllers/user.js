@@ -137,6 +137,13 @@ exports.updateUser = async function (req, res) {
       user.info = newData.info;
     }
     var stat = false;
+    await user.update(function (err, doc) {
+      if (err) {
+        return res.status(400).json({ err: err.message }).end();
+      }
+      stat = true;
+    });
+
     await user.update({ info: newData.info }, function (err, doc) {
       if (err) {
         return res.status(400).json({ err: err.message }).end();

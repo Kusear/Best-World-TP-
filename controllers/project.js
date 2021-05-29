@@ -7,6 +7,11 @@ var Users = require("../models/user_model").User;
 const Chat = require("../models/chats_model").Chat;
 const ChatMembers = require("../models/chats_model").ChatMembers;
 
+/* TODO
+ * добавить теги и ключевые слова
+ * поиск по массиву клчевых слов или по одному
+*/
+
 exports.projectData = async function (req, res) {
   //  req.body.projectSlug
 
