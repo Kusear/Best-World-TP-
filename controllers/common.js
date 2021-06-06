@@ -13,7 +13,7 @@ exports.login = async function (req, res) {
   await Users.findOne({ email: req.body.email }, async function (err, user) {
     var isAuthenticated =
       user &&
-      ((await bcrypt.compare(req.body.password, user.password)) ||
+      (bcrypt.compare(req.body.password, user.password) ||
         req.body.password === user.password);
     if (!isAuthenticated) {
       return res.status(510).json({ err: "Не авторизован" }).end();
