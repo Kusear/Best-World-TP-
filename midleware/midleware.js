@@ -27,9 +27,10 @@ exports.checkProjectMember = async (req, res, next) => {
   if (req.body.projectSlug) {
     projectSlug = req.body.projectSlug;
   }
-  if (req.params.projectSlug) {
+  if (req.query.projectSlug) {
     projectSlug = req.query.projectSlug;
   }
+  console.log("slug:", projectSlug);
   await Projects.findOne({ slug: projectSlug }, async function (err, project) {
     if (err) {
       return res.status(500).json({ err: err.message }).end();

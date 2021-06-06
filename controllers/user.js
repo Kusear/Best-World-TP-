@@ -1,6 +1,8 @@
 const Users = require("../models/user_model").User;
+const Chats = require("../models/chats_model").Chat;
 const Projects = require("../models/project").Project;
 const projectMembers = require("../models/project").Members;
+const ReportedUsers = require("../models/reported_users").ReportedUser;
 
 const STATUS_DBOBJECT_NOT_FOUND = 32685;
 const INTERNAL_ERROR = 23568;
@@ -69,6 +71,7 @@ exports.userData = async function (req, res) {
 };
 
 exports.updateUser = async function (req, res) {
+  // TODO обновление везде
   var userToUpdate = req.body.userToUpdate;
 
   if (!userToUpdate) {
@@ -80,16 +83,6 @@ exports.updateUser = async function (req, res) {
       })
       .end();
   }
-
-  // var newData = {
-  //   username: req.body.username,
-  //   email: req.body.email,
-  //   password: req.body.password,
-  //   preferredRole: req.body.preferredRole,
-  //   name: req.body.name,
-  //   role: req.body.role,
-  //   info: req.body.info,
-  // };
 
   var state = false;
   await Users.findOne({ username: userToUpdate }, (err, user) => {
@@ -110,32 +103,59 @@ exports.updateUser = async function (req, res) {
       .json({ err: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
       .end();
   }
-try {
-  await Users.findOneAndUpdate(
-    { username: userToUpdate },
-    req.body.newData,
-    { new: true },
-    async (err, user) => {
-      if (err) {
+  try {
+    await Users.findOneAndUpdate(
+      // TODO восстановление пароля
+      { username: userToUpdate },
+      req.body.newData,
+      { new: true },
+      async (err, user) => {
+        if (err) {
+          return res
+            .status(500)
+            .json({ err: err.message, status: INTERNAL_ERROR })
+            .end();
+        }
         return res
-          .status(500)
-          .json({ err: err.message, status: INTERNAL_ERROR })
+          .status(200)
+          .json({ message: "updated", status: SUCCESS })
           .end();
       }
-      return res.status(200).json({ message: "updated", status: SUCCESS }).end();
+    );
+
+    if (req.body.newData.username) {
+      await Projects.updateMany(
+        { "projectMembers.username": userToUpdate },
+        { $set: { "projectMembers.$.username": req.body.newData.username } },
+        { multi: true }
+      );
+      await Chats.updateMany(
+        { "chatMembers.username": userToUpdate },
+        { $set: { "chatMembers.$.username": req.body.newData.username } },
+        { multi: true }
+      );
+      await ReportedUsers.updateMany(
+        { username: userToUpdate },
+        { username: req.body.newData.username },
+        { multi: true }
+      );
     }
-  );
-} catch (error) {
-  if (err.code === 11000) {
-    return res.status(500).json({err: "Данный никнейм уже занят.", status: INTERNAL_ERROR}).end();
+  } catch (error) {
+    if (err.code === 11000) {
+      return res
+        .status(500)
+        .json({ err: "Данный никнейм уже занят.", status: INTERNAL_ERROR })
+        .end();
+    } else {
+      return res.status(500).json({ err: "Something wrong" }).end();
+    }
   }
-}
-  
 };
 
 exports.deleteUser = async function (req, res) {
+  // TODO сделать удаление из всего
   var userToDelete = req.body.username;
-  if (!userToUpdate) {
+  if (!userToDelete) {
     return res
       .status(400)
       .json({
@@ -144,29 +164,95 @@ exports.deleteUser = async function (req, res) {
       })
       .end();
   }
-  await Users.findOne(userToDelete, async function (err, user) {
-    if (err) {
-      return res
-        .status(500)
-        .json({ err: err.message, status: INTERNAL_ERROR })
-        .end();
-    }
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
-        .end();
-    }
-    await user.remove(function (err, doc) {
+  var userFromBD = await Users.findOne(
+    { username: userToDelete },
+    async function (err, user) {
       if (err) {
         return res
           .status(500)
           .json({ err: err.message, status: INTERNAL_ERROR })
           .end();
       }
-      return res.status(200).json({ message: "deleted", status: SUCCESS }).end();
-    });
-  });
+      if (!user) {
+        return;
+      }
+
+      var stat = {
+        proj: false,
+        chats: false,
+        repor: false,
+      };
+      await Projects.find(
+        { "projectMembers.username": userToDelete },
+        (err, project) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ err: err.message, status: INTERNAL_ERROR })
+              .end();
+          }
+          if (!project) {
+            stat.proj = false;
+          } else {
+            project.projectMembers.forEach((element) => {
+              if (element.username === userFromBD.username) {
+                project.projectMembers.pull(element);
+              }
+            });
+            project.save();
+            stat.proj = true;
+          }
+        }
+      );
+      await Chats.find(
+        { "chatMembers.username": userToDelete },
+        (err, chat) => {
+          if (err) {
+            return;
+          }
+          if (!chat) {
+            stat.chats = false;
+          } else {
+            chat.chatMembers.forEach((element) => {
+              if (element.username === userFromBD.username) {
+                chat.chatMembers.pull(element);
+              }
+            });
+            chat.save();
+            stat.chats = true;
+          }
+        }
+      );
+      await ReportedUsers.findOneAndRemove(
+        { username: userToDelete },
+        { multi: true },
+        (err) => {
+          if (err) {
+            stat.repor = false;
+          } else {
+            stat.repor = true;
+          }
+        }
+      );
+
+      await user.remove(function (err, doc) {
+        if (err) {
+          return res
+            .status(500)
+            .json({ err: err.message, status: INTERNAL_ERROR })
+            .end();
+        }
+        return res
+          .status(200)
+          .json({
+            message: "deleted",
+            status: SUCCESS,
+            deletFromEverywhere: stat,
+          })
+          .end();
+      });
+    }
+  );
 };
 
 exports.getUsers = async function (req, res) {
@@ -177,7 +263,7 @@ exports.getUsers = async function (req, res) {
         .json({ err: err.message, status: INTERNAL_ERROR })
         .end();
     }
-    return res.status(200).json({result, status: SUCCESS}).end();
+    return res.status(200).json({ result, status: SUCCESS }).end();
   });
 };
 

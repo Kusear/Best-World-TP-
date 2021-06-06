@@ -1,4 +1,5 @@
 const Users = require("../models/user_model").User;
+const Links = require("../models/links_model").Link;
 const mongoose = require("mongoose");
 const Grid = require("gridfs-stream");
 const mongodb = require("mongodb");
@@ -56,7 +57,7 @@ exports.registration = async function (req, res) {
         "<h1>Test message</h1>" +
         "<br>Bruh</br>" +
         "<div><a href =" +
-        "http://localhost:3000/emailconfirm/" +
+        "http://localhost:3000/emailconfirm/" + // TODO временное
         // process.env.CONFIRM_URL +
         newUser.id +
         ">Verify email</a></div>",
@@ -91,7 +92,7 @@ exports.registration = async function (req, res) {
 };
 
 exports.emailAuth = async function (req, res) {
-  Users.findById(mongoose.Types.ObjectId(req.body.id), (err, user) => {
+  await Users.findById(mongoose.Types.ObjectId(req.body.id), (err, user) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
@@ -108,6 +109,57 @@ exports.emailAuth = async function (req, res) {
   });
 };
 
+exports.sendRecoveryEmail = async (req, res) => {
+  var user = await Users.findById(req.body.userID, (err) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+  });
+  var url = process.env.FRONT_URL + "passwordrecovery/" + req.body.userID;
+  var info = {
+    notificationID: -1,
+    email: user.email,
+    subject: "Смена пароля.",
+    theme: "Смена пароля.",
+    text:
+      "Поступил запрос на смену пароля. Если вы не делали этого, не переходите по ссылке." +
+      " Для смены пароля, перейдите по ссылке ниже." +
+      "<br>" +
+      "<div><a href =" +
+      url +
+      ">СМЕНИТЬ ПАРОЛЬ</a>." +
+      "</div>",
+  };
+  await new Links({
+    userID: user._id,
+    link: url,
+  }).save();
+  nodemailer.sendMessageEmail(info);
+  return res.status(200).json({ message: "success" }).end();
+};
+
+exports.recoveryPassword = async (req, res) => {
+  await Users.findByIdAndUpdate(
+    req.body.userID,
+    { password: bcrypt.hash(req.body.newPassword) },
+    { new: true },
+    async (err, result) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
+      }
+
+      await Links.findOne({ userID: req.body.userID }, (error, link) => {
+        if (error) {
+          return res.status(500).json({ err: error.message }).end();
+        }
+        link.remove();
+      });
+
+      return res.status(200).json({ message: "success" }).end();
+    }
+  );
+};
+
 exports.saveFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
@@ -122,6 +174,8 @@ exports.saveFiles = async function (req, res) {
     "-" +
     req.query.userID;
 
+  console.log("slug: ", filenameSlug);
+
   var image = {
     image: filenameSlug,
   };
@@ -131,18 +185,6 @@ exports.saveFiles = async function (req, res) {
       return res.status(500).json({ err: err.message }).end();
     }
   });
-
-  var file = gfs.find(
-    { filename: user.image },
-    { contentType: req.query.contentType }
-  );
-
-  if (file) {
-    file.forEach((element) => {
-      gfs.delete(element._id);
-      console.log(element.filename);
-    });
-  }
 
   await Users.findByIdAndUpdate(
     req.query.userID,
@@ -160,9 +202,26 @@ exports.saveFiles = async function (req, res) {
       .openUploadStream(filenameSlug, { contentType: req.query.contentType })
       .on("close", function (savedFile) {
         console.log("file saved", savedFile);
-        return res.json({ file: savedFile, status: "saved" });
+        return res.json({
+          file: savedFile,
+          status: "saved",
+          imageName: filenameSlug,
+        });
       })
   );
+  // var file = gfs.find(
+  //   { filename: user.image },
+  //   { contentType: req.query.contentType }
+  // );
+  
+  // if (file) {
+  //   file.forEach((element) => {
+  //     if (element.filename === user.image) {
+  //       gfs.delete(element._id);
+  //       console.log(element.filename);
+  //     }
+  //   });
+  // }
 };
 
 exports.getFiles = async function (req, res) {

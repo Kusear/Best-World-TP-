@@ -13,7 +13,7 @@ exports.getProjectTODOList = async (req, res) => {
   }
   var project = await Projects.findOne(
     { slug: projectSlug },
-    async function (err) {
+    function (err) {
       if (err) {
         return res.status(500).json({ message: "Something Wrong" }).end();
       }
@@ -21,6 +21,7 @@ exports.getProjectTODOList = async (req, res) => {
   );
   await ToDoLists.findOne({ projectSlug: projectSlug }, (err, list) => {
     if (err) {
+      console.log("asdfasdasdf");
       return res.status(500).json({ err: err.message }).end();
     }
     if (!list) {

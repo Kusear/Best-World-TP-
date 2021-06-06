@@ -66,24 +66,13 @@ app.use(
     saveUninitialized: false,
   })
 );
-app.use(express.static(path.join(__dirname, "public"))); // TODO удалить как доделаю чат и таски
+// app.use(express.static(path.join(__dirname, "public"))); // TODO удалить как доделаю чат и таски
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/", midleware.auth, (req, res) => {});
 
 app.post("/api/", midleware.auth, async function (req, res) {
-  // var Projects = require("./models/project").Project;
-  // var projects = await Projects.find({}, null, function (err, result) {
-  //   if (err) {
-  //     return res.status(520).json({ err: err.message }).end(); //TODO удалить
-  //   }
-  // })
-  //   .where("projectHashTag")
-  //   .all(req.query.hashTag)
-  //   .skip(20 * req.query.currentPage)
-  //   .limit(20);
-
   return res.status(200).json({}).end();
 });
 
@@ -109,6 +98,8 @@ app.post(
   midleware.routeLog,
   controllersCommon.emailAuth
 );
+app.post(api_route + "/sendRecoveryEmail", midleware.auth, controllersCommon.sendRecoveryEmail);
+app.post(api_route + "/recoveryPassword", midleware.auth, controllersCommon.recoveryPassword);
 
 // Project routes
 app.post(
