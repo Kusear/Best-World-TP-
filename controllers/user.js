@@ -141,7 +141,7 @@ exports.updateUser = async function (req, res) {
       );
     }
   } catch (error) {
-    if (err.code === 11000) {
+    if (error.code === 11000) {
       return res
         .status(500)
         .json({ err: "Данный никнейм уже занят.", status: INTERNAL_ERROR })
