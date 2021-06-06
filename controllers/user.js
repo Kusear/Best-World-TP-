@@ -122,7 +122,7 @@ exports.updateUser = async function (req, res) {
           .end();
       }
     );
-
+ try {
     if (req.body.newData.username) {
       await Projects.updateMany(
         { "projectMembers.username": userToUpdate },
@@ -140,6 +140,9 @@ exports.updateUser = async function (req, res) {
         { multi: true }
       );
     }
+  }catch (e) {
+    console.log("ERROR WITH updateMany");
+  }
   } catch (error) {
     if (error.code === 11000) {
       return res
