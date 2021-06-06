@@ -18,16 +18,20 @@ exports.login = async function (req, res) {
     if (!isAuthenticated) {
       return res.status(510).json({ err: "Не авторизован" }).end();
     }
-    return res
-      .status(200)
-      .json({
-        _id: user._id,
-        username: user.username,
-        role: user.role,
-        emailConfirm: user.emailConfirm,
-        token: user.getToken(),
-      })
-      .end();
+    if (user.emailConfirm) {
+      return res
+        .status(200)
+        .json({
+          _id: user._id,
+          username: user.username,
+          role: user.role,
+          emailConfirm: user.emailConfirm,
+          token: user.getToken(),
+        })
+        .end();
+    } else {
+      return res.status(500).json({ emailConfirm: user.emailConfirm }).end();
+    }
   });
 };
 
