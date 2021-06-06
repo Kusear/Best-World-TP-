@@ -2,46 +2,25 @@ const Users = require("../models/user_model").User;
 const Projects = require("../models/project").Project;
 const projectMembers = require("../models/project").Members;
 
-/* TODO
- * узнать про проекты в архиве (тип отдельная функция или при удалении проекта)
- */
+const STATUS_DBOBJECT_NOT_FOUND = 32685;
+const INTERNAL_ERROR = 23568;
+const SUCCESS = 22222;
 
 exports.userData = async function (req, res) {
   await Users.findOne({ username: req.query.username }, async (err, user) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res
+        .status(500)
+        .json({ err: err.message, status: INTERNAL_ERROR })
+        .end();
     }
-
-    console.log("query: ", req.query);
-    console.log("body: ", req.body);
-    console.log("params: ", req.params);
 
     if (!user) {
-      return res.status(500).json({ err: "User not found" }).end();
+      return res
+        .status(500)
+        .json({ err: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
+        .end();
     }
-
-    // var member = await Projects.aggregate(
-    //   [
-    //     {
-    //       $project: {
-    //         projectMembers: {
-    //           $filter: {
-    //             input: "$projectMembers",
-    //             as: "members",
-    //             cond: {
-    //               $eq: ["$$members.username", user.username],
-    //             },
-    //           },
-    //         },
-    //       },
-    //     },
-    //   ],
-    //   async (err, countOfDocs) => {
-    //     if (err) {
-    //       console.log("err: ", err.message);
-    //     }
-    //   }
-    // );
 
     var memberInProjects = await Projects.find(
       { "projectMembers.username": user.username },
@@ -82,6 +61,8 @@ exports.userData = async function (req, res) {
         info: user.info,
         image: user.image,
         projects: projects,
+        emailConfirm: user.emailConfirm,
+        status: SUCCESS,
       })
       .end();
   });
@@ -93,81 +74,63 @@ exports.updateUser = async function (req, res) {
   if (!userToUpdate) {
     return res
       .status(400)
-      .json({ err: "field (usertoupdate) are required" })
+      .json({
+        err: "field (usertoupdate) are required",
+        status: INTERNAL_ERROR,
+      })
       .end();
   }
 
-  var newData = {
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password,
-    preferredRole: req.body.preferredRole,
-    name: req.body.name,
-    role: req.body.role,
-    info: req.body.info,
-  };
+  // var newData = {
+  //   username: req.body.username,
+  //   email: req.body.email,
+  //   password: req.body.password,
+  //   preferredRole: req.body.preferredRole,
+  //   name: req.body.name,
+  //   role: req.body.role,
+  //   info: req.body.info,
+  // };
 
-  await Users.findOne({ username: userToUpdate }, async function (err, user) {
+  var state = false;
+  await Users.findOne({ username: userToUpdate }, (err, user) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res
+        .status(500)
+        .json({ err: err.message, status: INTERNAL_ERROR })
+        .end();
     }
     if (!user) {
-      return res.status(400).json({ err: "User not found" }).end();
+      state = true;
     }
-
-    if (newData.username) {
-      user.username = newData.username;
-    }
-    if (newData.email) {
-      user.email = newData.email;
-    }
-    if (newData.password && !user.verifyPassword(newData.password)) {
-      user.password = user.hashPassword(newData.password);
-    }
-    if (newData.name) {
-      user.name = newData.name;
-    }
-    if (newData.preferredRole) {
-      user.preferredRole = newData.preferredRole;
-    }
-    if (newData.role) {
-      user.role = newData.role;
-    }
-    if (newData.info) {
-      user.info = newData.info;
-    }
-    var stat = false;
-    await user.update(function (err, doc) {
-      if (err) {
-        return res.status(400).json({ err: err.message }).end();
-      }
-      stat = true;
-    });
-
-    await user.update({ info: newData.info }, function (err, doc) {
-      if (err) {
-        return res.status(400).json({ err: err.message }).end();
-      }
-      stat = true;
-    });
-
-    await user.update(
-      { preferredRole: newData.preferredRole },
-      function (err, doc) {
-        if (err) {
-          return res.status(400).json({ err: err.message }).end();
-        }
-        if (stat) {
-          return res.status(200).json({ message: "updated" }).end();
-        } else {
-          return res
-            .status(200)
-            .json({ message: "Not all changes applied" })
-            .end();
-        }
-      }
-    );
   });
+
+  if (state) {
+    return res
+      .status(400)
+      .json({ err: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
+      .end();
+  }
+try {
+  await Users.findOneAndUpdate(
+    { username: userToUpdate },
+    req.body.newData,
+    { new: true },
+    async (err, user) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ err: err.message, status: INTERNAL_ERROR })
+          .end();
+      }
+      return res.status(200).json({ message: "updated", status: SUCCESS }).end();
+    }
+  );
+} catch (error) {
+  if (err.code === 11000) {
+    return res.status(500).json({err: "Данный никнейм уже занят.", status: INTERNAL_ERROR}).end();
+  }
+}
+  
 };
 
 exports.deleteUser = async function (req, res) {
@@ -175,21 +138,33 @@ exports.deleteUser = async function (req, res) {
   if (!userToUpdate) {
     return res
       .status(400)
-      .json({ err: "field (usertoupdate) are required" })
+      .json({
+        err: "field (usertoupdate) are required",
+        status: INTERNAL_ERROR,
+      })
       .end();
   }
   await Users.findOne(userToDelete, async function (err, user) {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res
+        .status(500)
+        .json({ err: err.message, status: INTERNAL_ERROR })
+        .end();
     }
     if (!user) {
-      return res.status(400).json({ message: "User not found" }).end();
+      return res
+        .status(400)
+        .json({ message: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
+        .end();
     }
     await user.remove(function (err, doc) {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res
+          .status(500)
+          .json({ err: err.message, status: INTERNAL_ERROR })
+          .end();
       }
-      return res.status(200).json({ message: "deleted" }).end();
+      return res.status(200).json({ message: "deleted", status: SUCCESS }).end();
     });
   });
 };
@@ -197,8 +172,34 @@ exports.deleteUser = async function (req, res) {
 exports.getUsers = async function (req, res) {
   await Users.find({ role: "user" }, function (err, result) {
     if (err) {
-      return res.status(400).json({ err: err.message }).end();
+      return res
+        .status(400)
+        .json({ err: err.message, status: INTERNAL_ERROR })
+        .end();
     }
-    return res.status(200).json(result).end();
+    return res.status(200).json({result, status: SUCCESS}).end();
   });
 };
+
+// var member = await Projects.aggregate(
+//   [
+//     {
+//       $project: {
+//         projectMembers: {
+//           $filter: {
+//             input: "$projectMembers",
+//             as: "members",
+//             cond: {
+//               $eq: ["$$members.username", user.username],
+//             },
+//           },
+//         },
+//       },
+//     },
+//   ],
+//   async (err, countOfDocs) => {
+//     if (err) {
+//       console.log("err: ", err.message);
+//     }
+//   }
+// );

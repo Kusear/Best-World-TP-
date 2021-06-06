@@ -18,6 +18,8 @@ const controllersUser = require("./controllers/user");
 const controllersProject = require("./controllers/project");
 const controllersProjectBoard = require("./controllers/todoList");
 const controllersChat = require("./controllers/chat_contr");
+const controllersReportUser = require("./controllers/reportedUser");
+const controllersReportProject = require("./controllers/reportedProject");
 const app = express();
 const server = http.createServer(app);
 const io = soketio(server, {
@@ -70,13 +72,19 @@ app.use(passport.session());
 
 app.get("/", midleware.auth, (req, res) => {});
 
-const Chat2 = require("./models/chats_model").Chat;
-app.get("/api/", async function (req, res) {
-  var a = Chat2.find({}, (err, result) => {
-    console.log(result);
-  });
+app.post("/api/", midleware.auth, async function (req, res) {
+  // var Projects = require("./models/project").Project;
+  // var projects = await Projects.find({}, null, function (err, result) {
+  //   if (err) {
+  //     return res.status(520).json({ err: err.message }).end(); //TODO удалить
+  //   }
+  // })
+  //   .where("projectHashTag")
+  //   .all(req.query.hashTag)
+  //   .skip(20 * req.query.currentPage)
+  //   .limit(20);
 
-  return res.status(200).json("aga").end();
+  return res.status(200).json({}).end();
 });
 
 // Common routes
@@ -132,6 +140,11 @@ app.get(
   api_route + "/getProjects",
   midleware.routeLog,
   controllersProject.getProjects
+);
+app.get(
+  api_route + "/getProjectsByTag",
+  midleware.routeLog,
+  controllersProject.getProjectsByTag
 );
 app.get(
   api_route + "/getArchivedProjects",
@@ -280,10 +293,20 @@ app.get(
   controllersUser.getUsers
 );
 
+// Report user routes
+app.post(api_route + "/createUserReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportUser.createRoportUser);
+app.get(api_route + "/getReportedUsers", midleware.auth, midleware.roleCheck("superadmin"), controllersReportUser.getReportedUsers);
+app.post(api_route + "/deleteUserReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportUser.deleteUserReport);
+
+// Report project routes
+app.post(api_route + "/createProjectReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportProject.createRoportProject);
+app.get(api_route + "/getReportedProjects", midleware.auth, midleware.roleCheck("superadmin"), controllersReportProject.getReortedProjects);
+app.post(api_route + "/deleteUserReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportProject.deleteReportProject);
+
 // Chat routes
-app.post(api_route + "/createChat", controllersChat.createChat);
-app.get(api_route + "/getChats", controllersChat.getChats);
-app.post(api_route + "/deleteChat", controllersChat.deleteChat);
+app.post(api_route + "/createChat", midleware.auth, controllersChat.createChat);
+app.get(api_route + "/getChats", midleware.auth, controllersChat.getChats);
+app.post(api_route + "/deleteChat", midleware.auth, controllersChat.deleteChat);
 
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })

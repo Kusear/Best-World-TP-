@@ -20,7 +20,6 @@ passport.use(
       } else {
         console.log("err else");
         return done(null, false);
-        // or you could create a new account
       }
     });
   })

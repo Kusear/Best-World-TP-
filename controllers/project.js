@@ -1,16 +1,12 @@
-var mongoose = require("mongoose");
-var Projects = require("../models/project").Project;
-var Members = require("../models/project").Members;
-var Requests = require("../models/project").Requests;
-var ToDoLists = require("../models/todoList_model").TODOList;
-var Users = require("../models/user_model").User;
+const mongoose = require("mongoose");
+const Projects = require("../models/project").Project;
+const Members = require("../models/project").Members;
+const Requests = require("../models/project").Requests;
+const ToDoLists = require("../models/todoList_model").TODOList;
+const Boards = require("../models/todoList_model").Boards;
+const Users = require("../models/user_model").User;
 const Chat = require("../models/chats_model").Chat;
 const ChatMembers = require("../models/chats_model").ChatMembers;
-
-/* TODO
- * добавить теги и ключевые слова
- * поиск по массиву клчевых слов или по одному
-*/
 
 exports.projectData = async function (req, res) {
   //  req.body.projectSlug
@@ -40,7 +36,7 @@ exports.createProject = async function (req, res) {
   //     needManager: req.body.neededManager,
   //     title: req.body.projectTitle, // required
   //     description: req.body.projectDescription,
-  //     projectSubject: req.body.projectSubject,
+  //     projectHashTag: req.body.projectHashTag,
   //     picture: req.body.filename,
   //     countOfMembers: req.body.membersCount,
   //     creationDate: new Date(),
@@ -59,7 +55,7 @@ exports.createProject = async function (req, res) {
       needManager: req.body.neededManager,
       title: req.body.projectTitle, // required
       description: req.body.projectDescription,
-      projectSubject: req.body.projectSubject,
+      projectHashTag: req.body.projectHashTag,
       picture: req.body.filename,
       countOfMembers: req.body.membersCount,
       creationDate: new Date(),
@@ -71,10 +67,15 @@ exports.createProject = async function (req, res) {
       needChanges: req.body.needChanges,
     }).save();
 
-    var newProjectChat = await Chat({
+    var newProjectChat = await new Chat({
       chatRoom: newProject.slug,
       chatMembers: newProject.projectMembers,
       privateChat: false,
+    }).save();
+
+    var newToDoList = await new TODOList({
+      projectSlug: newProject.slug,
+      boards: [new Boards({name: "Board 1"}), new Boards({name: "Board 2"}), new Boards({name: "Board 3"})],
     }).save();
 
     return res
@@ -94,7 +95,7 @@ exports.updateProject = async function (req, res) {
   // ManagerID: req.body.managerID, / string
   // title: req.body.projectTitle, / string
   // description: req.body.projectDescription, / string
-  // subject: req.body.projectSubject, / string
+  // subject: req.body.projectHashTag, / string
   // picture: req.body.filename,  / string
   // countMembers: req.body.membersCount, / number
   // endTeamGathering: req.body.endGathering, / date
@@ -117,7 +118,7 @@ exports.updateProject = async function (req, res) {
     managerName: req.body.managerName, //
     title: req.body.projectTitle,
     description: req.body.projectDescription,
-    subject: req.body.projectSubject,
+    subject: req.body.projectHashTag,
     picture: req.body.filename,
     countMembers: req.body.membersCount,
     endTeamGathering: req.body.endGathering,
@@ -129,68 +130,80 @@ exports.updateProject = async function (req, res) {
     needChanges: req.body.needChanges, //
   };
 
-  await Projects.findOne(
+  await Projects.findOneAndUpdate(
     { slug: projectToUpdate },
-    async function (err, project) {
+    req.body.newProjectData,
+    { new: true },
+    async (err, project) => {
       if (err) {
-        return res.status(520).json({ err: err.message }).end();
+        return res.status(500).json({ err: err.message }).end();
       }
-
-      if (!project) {
-        return res.status(500).json({ err: "Project not found" }).end();
-      }
-
-      if (newProjectData.managerName) {
-        project.managerName = newProjectData.managerName;
-      }
-      if (newProjectData.archive) {
-        project.archive = newProjectData.archive;
-      }
-      if (newProjectData.needHelp) {
-        project.needHelp = newProjectData.needHelp;
-      }
-      if (newProjectData.needChanges) {
-        project.needChanges = newProjectData.needChanges;
-      }
-      if (newProjectData.ManagerID) {
-        project.ManagerID = newProjectData.ManagerID;
-      }
-      if (newProjectData.title) {
-        project.title = newProjectData.title;
-      }
-      if (newProjectData.description) {
-        project.description = newProjectData.description;
-      }
-      if (newProjectData.subject) {
-        project.projectSubject = newProjectData.subject;
-      }
-      if (newProjectData.picture) {
-        project.picture = newProjectData.picture;
-      }
-      if (newProjectData.countMembers) {
-        project.countOfMembers = newProjectData.countMembers;
-      }
-      if (newProjectData.endTeamGathering) {
-        project.endTeamGathering = newProjectData.endTeamGathering;
-      }
-      if (newProjectData.endProjectDate) {
-        project.endProjectDate = newProjectData.endProjectDate;
-      }
-      if (newProjectData.requareRoles) {
-        project.requiredRoles = newProjectData.requareRoles;
-      }
-      if (newProjectData.projectMembers) {
-        project.projectMembers = newProjectData.projectMembers;
-      }
-
-      await project.update(function (err, doc) {
-        if (err) {
-          return res.status(520).json({ err: err.message }).end();
-        }
-        return res.status(200).json({ message: "updated" }).end();
-      });
+      return res.status(200).json({ message: "updated" }).end();
     }
   );
+
+  // await Projects.findOne(
+  //   { slug: projectToUpdate },
+  //   async function (err, project) {
+  //     if (err) {
+  //       return res.status(520).json({ err: err.message }).end();
+  //     }
+
+  //     if (!project) {
+  //       return res.status(500).json({ err: "Project not found" }).end();
+  //     }
+
+  //     if (newProjectData.managerName) {
+  //       project.managerName = newProjectData.managerName;
+  //     }
+  //     if (newProjectData.archive) {
+  //       project.archive = newProjectData.archive;
+  //     }
+  //     if (newProjectData.needHelp) {
+  //       project.needHelp = newProjectData.needHelp;
+  //     }
+  //     if (newProjectData.needChanges) {
+  //       project.needChanges = newProjectData.needChanges;
+  //     }
+  //     if (newProjectData.ManagerID) {
+  //       project.ManagerID = newProjectData.ManagerID;
+  //     }
+  //     if (newProjectData.title) {
+  //       project.title = newProjectData.title;
+  //     }
+  //     if (newProjectData.description) {
+  //       project.description = newProjectData.description;
+  //     }
+  //     if (newProjectData.subject) {
+  //       project.projectHashTag = newProjectData.subject;
+  //     }
+  //     if (newProjectData.picture) {
+  //       project.picture = newProjectData.picture;
+  //     }
+  //     if (newProjectData.countMembers) {
+  //       project.countOfMembers = newProjectData.countMembers;
+  //     }
+  //     if (newProjectData.endTeamGathering) {
+  //       project.endTeamGathering = newProjectData.endTeamGathering;
+  //     }
+  //     if (newProjectData.endProjectDate) {
+  //       project.endProjectDate = newProjectData.endProjectDate;
+  //     }
+  //     if (newProjectData.requareRoles) {
+  //       project.requiredRoles = newProjectData.requareRoles;
+  //     }
+  //     if (newProjectData.projectMembers) {
+  //       project.projectMembers = newProjectData.projectMembers;
+  //     }
+
+  //     await project.update(function (err, doc) {
+  //       if (err) {
+  //         return res.status(520).json({ err: err.message }).end();
+  //       }
+  //       return res.status(200).json({ message: "updated" }).end();
+  //     });
+  //   }
+  // );
 };
 
 exports.deleteProject = async function (req, res) {
@@ -277,6 +290,36 @@ exports.getProjects = async function (req, res) {
   return res.status(200).json(projects).end();
 };
 
+exports.getProjectsByTag = async (req, res) => {
+  var projects = await Projects.find({}, null, function (err, result) {
+    if (err) {
+      return res.status(520).json({ err: err.message }).end();
+    }
+  })
+    .where("projectHashTag")
+    .all(req.query.hashTag)
+    .skip(20 * req.query.currentPage)
+    .limit(20);
+
+  return res.status(200).json(projects).end();
+};
+
+exports.getProjectNeedHelp = async (req, res) => {
+  var projects = await Projects.find(
+    { needHelp: req.body.needHelp },
+    null,
+    function (err, result) {
+      if (err) {
+        return res.status(520).json({ err: err.message }).end();
+      }
+    }
+  )
+    .skip(20 * req.query.currentPage)
+    .limit(20);
+
+  return res.status(200).json(projects).end();
+};
+
 exports.getArchivedProjects = async function (req, res) {
   // req.query.currentPage
 
@@ -353,7 +396,12 @@ exports.addProjectMember = async (req, res) => {
 
     var exeptionPullRequests = "null";
     try {
-      await pr.requests.pull({ _id: req.body.id });
+      // await pr.requests.pull({ _id: req.body.id });
+      await Projects.findOneAndUpdate(
+        // TODO протестировать
+        { slug: projectSlug },
+        { $pull: { requests: { username: user.username } } }
+      );
     } catch (ex) {
       exeptionPullRequests = ex;
     }
@@ -396,25 +444,12 @@ exports.deleteProjectMember = async (req, res) => {
       chat.chatMembers.pull(user);
       chat.save();
     });
-
-    // await ToDoLists.findOne(
-    //   { projectSlug: project.slug },
-    //   async (err, list) => {
-    //     if (err) {
-    //       // TODO добавить переменную для передачи статуса
-    //     }
-    //     // list.boards.items.pull({performer: });
-    //     // TODO сделать удаление задач удаленного пользователя через aggregate
-    //   }
-    // );
     try {
-    await ToDoLists.updateMany(
-      {},
-      { $pull: { boards: { items: { performer: user.username } } } }
-    );
-    } catch (err) {
-      
-    }
+      await ToDoLists.updateMany(
+        { projectSlug: projectSlug },
+        { $pull: { boards: { items: { performer: user.username } } } }
+      );
+    } catch (err) {}
 
     await project.projectMembers.pull(req.body.memberID);
 

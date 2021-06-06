@@ -64,8 +64,11 @@ exports.loginValidation = async (req, res, next) => {
   if (!validator.isEmail(req.body.email)) {
     return res.status(500).json({ err: "Email не соответсвует шаблону" }).end();
   }
-  if (!validator.isLenght(req.body.password, {min: 8, max: 32})) {
-    return res.status(500).json({ err: "Пароль не содержит требуемое количество символов" }).end();
+  if (!validator.isLenght(req.body.password, { min: 8, max: 32 })) {
+    return res
+      .status(500)
+      .json({ err: "Пароль не содержит требуемое количество символов" })
+      .end();
   }
   return next();
 };
@@ -74,8 +77,11 @@ exports.registrationValidation = async (req, res, next) => {
   if (!validator.isEmail(req.body.email)) {
     return res.status(500).json({ err: "Email не соответсвует шаблону" }).end();
   }
-  if (!validator.isLenght(req.body.password, {min: 8, max: 32})) {
-    return res.status(500).json({ err: "Пароль не содержит требуемое количество символов" }).end();
+  if (!validator.isLenght(req.body.password, { min: 8, max: 32 })) {
+    return res
+      .status(500)
+      .json({ err: "Пароль не содержит требуемое количество символов" })
+      .end();
   }
   return next();
 };

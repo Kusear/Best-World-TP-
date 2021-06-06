@@ -4,7 +4,7 @@ const Boards = require("../models/todoList_model").Boards;
 const Tasks = require("../models/todoList_model").Tasks;
 
 
-exports.getProjectTODOList = async (req, res) => {
+exports.getProjectTODOList = async (req, res) => { 
   // req.query.projectSlug
 
   var projectSlug = req.query.projectSlug;

@@ -3,7 +3,6 @@ var mongoose = require("mongoose");
 var ReportedProjectSchema = new mongoose.Schema({
   IDcreator: {
     type: String,
-    required: true,
   },
   creatorName: {
     type: String,
@@ -31,6 +30,10 @@ var ReportedProjectSchema = new mongoose.Schema({
   },
   reportDescription: {
     type: String,
+  },
+  reportFromUser: {
+    type: String,
+    required: true,
   },
 });
 

@@ -1,13 +1,10 @@
 const Users = require("../models/user_model").User;
 const mongoose = require("mongoose");
 const Grid = require("gridfs-stream");
+const mongodb = require("mongodb");
 const bcrypt = require("bcrypt");
 const nodemailer = require("../config/nodemailer");
 const slugify = require("slugify");
-
-/* TODO
- * доделать загрузку картинок в бд при регистрации и создание уникального имени файла
- */
 
 exports.login = async function (req, res) {
   // req.body.email
@@ -106,7 +103,8 @@ exports.emailAuth = async function (req, res) {
 };
 
 exports.saveFiles = async function (req, res) {
-  var gfs = Grid(mongoose.connection.db, mongoose.mongo);
+  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+
   var filenameSlug =
     (await slugify(req.query.filename, {
       replacement: "-",
@@ -118,23 +116,54 @@ exports.saveFiles = async function (req, res) {
     "-" +
     req.query.userID;
 
+  var image = {
+    image: filenameSlug,
+  };
+
+  var user = await Users.findById(req.query.userID, (err) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+  });
+
+  var file = gfs.find(
+    { filename: user.image },
+    { contentType: req.query.contentType }
+  );
+
+  if (file) {
+    file.forEach((element) => {
+      gfs.delete(element._id);
+      console.log(element.filename);
+    });
+  }
+
+  await Users.findByIdAndUpdate(
+    req.query.userID,
+    image,
+    { new: true },
+    (err) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
+      }
+    }
+  );
+
   req.pipe(
     gfs
-      .createWriteStream({
-        filename: filenameSlug,
-      })
+      .openUploadStream(filenameSlug, { contentType: req.query.contentType })
       .on("close", function (savedFile) {
         console.log("file saved", savedFile);
-        return res.json({ file: savedFile });
+        return res.json({ file: savedFile, status: "saved" });
       })
   );
 };
 
-exports.getFiles = function (req, res) {
-  var gfs = Grid(mongoose.connection.db, mongoose.mongo);
+exports.getFiles = async function (req, res) {
+  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   gfs
-    .createReadStream({ filename: req.body.filename })
+    .openDownloadStreamByName(req.body.filename)
     .on("error", function (err) {
       res.send("No image found with that title");
     })

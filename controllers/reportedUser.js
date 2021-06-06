@@ -1,6 +1,27 @@
-var ReportedUsers = require("../models/reported_users").ReportedUser;
+const ReportedUsers = require("../models/reported_users").ReportedUser;
 
-// сделать создание
+exports.createRoportUser = async (req, res) => {
+  if (!req.body.reportFrom) {
+    return res.status(500).json({ message: "reportFrom are required" }).end();
+  }
+  var report = await ReportedUsers.findOne(
+    { reportFromUser: req.body.reportFrom },
+    (err) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
+      }
+    }
+  );
+
+  if (report) {
+    return res.status(500).json({ message: "Report already exist" }).end();
+  }
+  var newReport = await new ReportedUsers({
+    username: req.body.username,
+    reportFromUser: req.body.reportFrom,
+  }).save();
+  return res.status(200).json({ message: "success" }).end();
+};
 
 exports.getReportedUsers = async function (req, res) {
   ReportedUsers.find({}, function (err, result) {

@@ -5,12 +5,13 @@ var ReportedUserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  email: {
+  reportFromUser: {
     type: String,
     required: true,
   },
-  reportDescription: {
+  email: {
     type: String,
+    required: true,
   },
 });
 

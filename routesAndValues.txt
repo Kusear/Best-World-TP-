@@ -33,7 +33,7 @@ Method - POST
 Auth needed - yes
 Values: 
     userToUpdate (ник пользователя)
-    {   (новые данные пользователя, данные ниже изменяются при передаче значений)
+    "newData": {   (новые данные пользователя, данные ниже изменяются при передаче значений)
         username
         email
         password
@@ -338,27 +338,128 @@ Response:
     io.to(user.id).emit("created-task", { status: "success" });
 
 
-Theme -  
+
+############## Report user routes ##############
+
+Route - /createUserReport
+Method - POST
+Auth needed - yes 
 Values: 
+    reportFrom,
+    username
+Response: 
+    message: "reportFrom are required"
+    or
+    message: "Report already exist"
+    or
+    message: "success"
 
-Response:   
 
-
-
-Theme -  
+Route - /getReportedUsers
+Method - GET
+Auth needed - yes
 Values: 
+    none
+Response: 
+    err: err.message
+    or
+    result (массив зарепорченных пользователей)
 
-Response:   
 
-
-Theme -  
+Route - /deleteUserReport
+Method - POST
+Auth needed - yes 
 Values: 
+    reportID
+Response: 
+    err: "field (reportID) are required"
+    or
+    err: err.message
+    or
+    message: "deleted"
 
-Response:   
 
 
-Theme -  
+############## Report projects routes ##############
+
+Route - /createProjectReport
+Method - POST
+Auth needed - yes 
 Values: 
+    reportFrom
+    title
+Response: 
+    message: "reportFrom are required"
+    or
+    err: err.message
+    or
+    message: "Report already exist"
+    or
+    message: "success"
 
-Response:   
 
+Route - /getReportedProjects
+Method - GET
+Auth needed - yes
+Values: 
+    none
+Response: 
+    err: err.message
+    or
+    result (массив зарепорченых проектов)
+
+
+Route - /deleteUserReport
+Method - POST
+Auth needed - yes
+Values: 
+    reportID
+Response: 
+    err: "field (reportID) are required"
+    or
+    err: err.message 
+    or
+    message: "deleted"
+
+
+
+############## Chat routes ##############
+
+Route - /createChat
+Method - POST
+Auth needed - yes
+Values: 
+   chatRoom
+   chatMembers
+Response: 
+    err: err.message
+    or
+    err: "Chat already exist"
+    or
+    chat: newChat 
+
+
+Route - /getChats
+Method - GET
+Auth needed - yes
+Values: 
+   username 
+Response: 
+    err: err.message
+    or
+    err: "No chat with this user"
+    or
+    chats: userChats
+
+
+Route - /deleteChat
+Method - POST
+Auth needed - yes
+Values: 
+   chatRoom
+Response: 
+    err: err.message
+    or
+    err: "Chat not found"
+    or
+    message: "success"

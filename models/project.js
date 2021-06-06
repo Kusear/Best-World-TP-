@@ -58,9 +58,8 @@ const ProjectSchema = new mongoose.Schema({
   description: {
     type: String,
   },
-  projectSubject: {
-    type: String,
-    default: "no subject",
+  projectHashTag: {
+    type: [],
   },
   picture: {
     type: String,

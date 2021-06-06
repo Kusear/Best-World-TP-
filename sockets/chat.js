@@ -1,17 +1,13 @@
 const Chat = require("../models/chats_model").Chat;
 const Messages = require("../models/chats_model").ChatMessages;
-const cookieParser = require("cookie-parser");
-const passport = require("passport");
-const aga = require("../midleware/midleware");
+const Users = require("../models/user_model").User;
 
 // status
 const CONNECTED = 0;
 const DISCONNECTED = 1;
 
-/* TODO доделать чат
- * подгрузка сообщений порциями 30
- * функцию подгрузки сообщений
- * добавить проверку на наличие пользователя в чате
+/* TODO
+* сделать отправку сообщений пользователям оффлайн на email
  */
 
 module.exports = (io) => {
@@ -27,12 +23,24 @@ module.exports = (io) => {
     cUser.id = socket.id;
 
     socket.on("joinRoom", async ({ username, token, room }) => {
+
+      // await Users.findOne({username: username}, (err, user)=>{
+      //   if (err) {
+      //     io.to(cUser.id).emit("err", { err: err.message });
+      //     return socket.disconnect();
+      //   }
+      //   if (!user) {
+      //     io.to(cUser.id).emit("err", { err: "" });
+      //     return socket.disconnect();
+      //   }
+      // });
+
       cUser.Room = room;
       cUser.username = username;
-      await Chat.findOne({ chatRoom: cUser.Room }, (err, chat) => {
+      await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
         if (err) {
           console.log("err: ", err);
-          io.to(cUser.id).emit("err", { err: err.message });
+          io.to(cUser.id).emit("err", { err: err.message, status: DISCONNECTED });
           return socket.disconnect();
         }
 
@@ -40,7 +48,21 @@ module.exports = (io) => {
           console.log("chat not found");
           io.to(cUser.id).emit("err", {
             err: "Chat not found",
+            status: DISCONNECTED
           });
+          return socket.disconnect();
+        }
+
+        var s = false;
+        var arrayChatMembers = chat.chatMembers;
+        arrayChatMembers.forEach(element => {
+          if (element.username === username) {
+            s = true;
+          }
+        });
+
+        if (!s) {
+          io.to(cUser.id).emit("err", { err: "User not a member", status: DISCONNECTED });
           return socket.disconnect();
         }
 
@@ -158,6 +180,7 @@ module.exports = (io) => {
         var user = await chat.chatMembers.id(userID);
         await chat.chatMembers.pull(user);
         await chat.save();
+        socket.leave(cUser.Room);
         io.to(chat.chatRoom).emit("userLeave", {
           status: DISCONNECTED,
           username: cUser.username,
