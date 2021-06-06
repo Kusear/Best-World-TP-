@@ -75,7 +75,11 @@ exports.createProject = async function (req, res) {
 
     var newToDoList = await new TODOList({
       projectSlug: newProject.slug,
-      boards: [new Boards({name: "Board 1"}), new Boards({name: "Board 2"}), new Boards({name: "Board 3"})],
+      boards: [
+        new Boards({ name: "Board 1" }),
+        new Boards({ name: "Board 2" }),
+        new Boards({ name: "Board 3" }),
+      ],
     }).save();
 
     return res
@@ -113,97 +117,63 @@ exports.updateProject = async function (req, res) {
     return res.status(500).json({ err: "no project to edit" }).end();
   }
 
-  var newProjectData = {
-    ManagerID: req.body.managerID,
-    managerName: req.body.managerName, //
-    title: req.body.projectTitle,
-    description: req.body.projectDescription,
-    subject: req.body.projectHashTag,
-    picture: req.body.filename,
-    countMembers: req.body.membersCount,
-    endTeamGathering: req.body.endGathering,
-    endProjectDate: req.body.endProject,
-    requareRoles: req.body.requredRoles,
-    projectMembers: req.body.projectMembers,
-    archive: req.body.archive, //
-    needHelp: req.body.needHelp, //
-    needChanges: req.body.needChanges, //
-  };
+  // var newProjectData = {
+  //   ManagerID: req.body.managerID,
+  //   managerName: req.body.managerName, //
+  //   title: req.body.projectTitle,
+  //   description: req.body.projectDescription,
+  //   subject: req.body.projectHashTag,
+  //   picture: req.body.filename,
+  //   countMembers: req.body.membersCount,
+  //   endTeamGathering: req.body.endGathering,
+  //   endProjectDate: req.body.endProject,
+  //   requareRoles: req.body.requredRoles,
+  //   projectMembers: req.body.projectMembers,
+  //   archive: req.body.archive, //
+  //   needHelp: req.body.needHelp, //
+  //   needChanges: req.body.needChanges, //
+  // };
 
-  await Projects.findOneAndUpdate(
-    { slug: projectToUpdate },
-    req.body.newProjectData,
-    { new: true },
-    async (err, project) => {
-      if (err) {
-        return res.status(500).json({ err: err.message }).end();
-      }
-      return res.status(200).json({ message: "updated" }).end();
+  var projectA = await Projects.findOne({ slug: projectToUpdate }, (err) => {
+    if (err) {
+      console.log("ERR: ", err.message);
     }
-  );
+  });
 
-  // await Projects.findOne(
-  //   { slug: projectToUpdate },
-  //   async function (err, project) {
-  //     if (err) {
-  //       return res.status(520).json({ err: err.message }).end();
-  //     }
-
-  //     if (!project) {
-  //       return res.status(500).json({ err: "Project not found" }).end();
-  //     }
-
-  //     if (newProjectData.managerName) {
-  //       project.managerName = newProjectData.managerName;
-  //     }
-  //     if (newProjectData.archive) {
-  //       project.archive = newProjectData.archive;
-  //     }
-  //     if (newProjectData.needHelp) {
-  //       project.needHelp = newProjectData.needHelp;
-  //     }
-  //     if (newProjectData.needChanges) {
-  //       project.needChanges = newProjectData.needChanges;
-  //     }
-  //     if (newProjectData.ManagerID) {
-  //       project.ManagerID = newProjectData.ManagerID;
-  //     }
-  //     if (newProjectData.title) {
-  //       project.title = newProjectData.title;
-  //     }
-  //     if (newProjectData.description) {
-  //       project.description = newProjectData.description;
-  //     }
-  //     if (newProjectData.subject) {
-  //       project.projectHashTag = newProjectData.subject;
-  //     }
-  //     if (newProjectData.picture) {
-  //       project.picture = newProjectData.picture;
-  //     }
-  //     if (newProjectData.countMembers) {
-  //       project.countOfMembers = newProjectData.countMembers;
-  //     }
-  //     if (newProjectData.endTeamGathering) {
-  //       project.endTeamGathering = newProjectData.endTeamGathering;
-  //     }
-  //     if (newProjectData.endProjectDate) {
-  //       project.endProjectDate = newProjectData.endProjectDate;
-  //     }
-  //     if (newProjectData.requareRoles) {
-  //       project.requiredRoles = newProjectData.requareRoles;
-  //     }
-  //     if (newProjectData.projectMembers) {
-  //       project.projectMembers = newProjectData.projectMembers;
-  //     }
-
-  //     await project.update(function (err, doc) {
-  //       if (err) {
-  //         return res.status(520).json({ err: err.message }).end();
-  //       }
-  //       return res.status(200).json({ message: "updated" }).end();
-  //     });
-  //   }
-  // );
+  if (
+    req.body.userWhoUpdate === projectA.creatorName ||
+    req.body.userWhoUpdate === projectA.managerName
+  ) {
+    await Projects.findOneAndUpdate(
+      { slug: projectToUpdate },
+      req.body.newProjectData,
+      { new: true },
+      async (err, project) => {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+        return res.status(200).json({ message: "updated" }).end();
+      }
+    );
+  } else {
+    projectA.projectMembers.forEach((element) => {
+      if (element.canChange == true) {
+        Projects.findOneAndUpdate(
+          { slug: projectToUpdate },
+          req.body.newProjectData,
+          { new: true },
+          async (err, project) => {
+            if (err) {
+              return res.status(500).json({ err: err.message }).end();
+            }
+            return res.status(200).json({ message: "updated" }).end();
+          }
+        );
+        element.canChange = false;
+      }
+    });
+    projectA.save();
+  }
 };
 
 exports.deleteProject = async function (req, res) {
@@ -363,9 +333,17 @@ exports.addProjectMember = async (req, res) => {
       return res.status(500).json("Project not found").end();
     }
 
-    var newMember = new Members();
-    newMember.username = req.body.username;
-    newMember.role = req.body.role;
+    var newMember;
+    if (pr.projectMembers[0] == undefined && pr.needHelp == true) {
+      newMember = new Members();
+      newMember.username = req.body.username;
+      newMember.role = req.body.role;
+      newMember.canChange = true;
+    } else {
+      newMember = new Members();
+      newMember.username = req.body.username;
+      newMember.role = req.body.role;
+    }
 
     await pr.projectMembers.push(newMember);
 

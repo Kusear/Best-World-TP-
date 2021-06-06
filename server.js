@@ -20,6 +20,7 @@ const controllersProjectBoard = require("./controllers/todoList");
 const controllersChat = require("./controllers/chat_contr");
 const controllersReportUser = require("./controllers/reportedUser");
 const controllersReportProject = require("./controllers/reportedProject");
+const { Project } = require("./models/project");
 const app = express();
 const server = http.createServer(app);
 const io = soketio(server, {
@@ -72,7 +73,10 @@ app.use(passport.session());
 
 app.get("/", midleware.auth, (req, res) => {});
 
-app.post("/api/", midleware.auth, async function (req, res) {
+app.post("/api/", async function (req, res) {
+  // await Project.findOne({ slug: req.body.slug }, (err, pr) => {
+  //   console.log(pr.projectMembers[0]);
+  // });
   return res.status(200).json({}).end();
 });
 
@@ -98,8 +102,16 @@ app.post(
   midleware.routeLog,
   controllersCommon.emailAuth
 );
-app.post(api_route + "/sendRecoveryEmail", midleware.auth, controllersCommon.sendRecoveryEmail);
-app.post(api_route + "/recoveryPassword", midleware.auth, controllersCommon.recoveryPassword);
+app.post(
+  api_route + "/sendRecoveryEmail",
+  midleware.auth,
+  controllersCommon.sendRecoveryEmail
+);
+app.post(
+  api_route + "/recoveryPassword",
+  midleware.auth,
+  controllersCommon.recoveryPassword
+);
 
 // Project routes
 app.post(
@@ -285,14 +297,44 @@ app.get(
 );
 
 // Report user routes
-app.post(api_route + "/createUserReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportUser.createRoportUser);
-app.get(api_route + "/getReportedUsers", midleware.auth, midleware.roleCheck("superadmin"), controllersReportUser.getReportedUsers);
-app.post(api_route + "/deleteUserReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportUser.deleteUserReport);
+app.post(
+  api_route + "/createUserReport",
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersReportUser.createRoportUser
+);
+app.get(
+  api_route + "/getReportedUsers",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersReportUser.getReportedUsers
+);
+app.post(
+  api_route + "/deleteUserReport",
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersReportUser.deleteUserReport
+);
 
 // Report project routes
-app.post(api_route + "/createProjectReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportProject.createRoportProject);
-app.get(api_route + "/getReportedProjects", midleware.auth, midleware.roleCheck("superadmin"), controllersReportProject.getReortedProjects);
-app.post(api_route + "/deleteUserReport", midleware.auth, midleware.roleCheck("user", "superadmin"), controllersReportProject.deleteReportProject);
+app.post(
+  api_route + "/createProjectReport",
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersReportProject.createRoportProject
+);
+app.get(
+  api_route + "/getReportedProjects",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersReportProject.getReortedProjects
+);
+app.post(
+  api_route + "/deleteUserReport",
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersReportProject.deleteReportProject
+);
 
 // Chat routes
 app.post(api_route + "/createChat", midleware.auth, controllersChat.createChat);

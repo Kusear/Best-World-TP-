@@ -30,6 +30,10 @@ const ProjectMembers = new mongoose.Schema({
   role: {
     type: String,
   },
+  canChange: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const ProjectSchema = new mongoose.Schema({
@@ -69,15 +73,12 @@ const ProjectSchema = new mongoose.Schema({
   },
   creationDate: {
     type: Date,
-    required: true,
   },
   endTeamGathering: {
     type: Date,
-    required: true,
   },
   endProjectDate: {
     type: Date,
-    required: true,
   },
   requiredRoles: {
     type: [RequiredRoles],

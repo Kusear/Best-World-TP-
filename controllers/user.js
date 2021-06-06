@@ -122,27 +122,37 @@ exports.updateUser = async function (req, res) {
           .end();
       }
     );
- try {
-    if (req.body.newData.username) {
-      await Projects.updateMany(
-        { "projectMembers.username": userToUpdate },
-        { $set: { "projectMembers.$.username": req.body.newData.username } },
-        { multi: true }
-      );
-      await Chats.updateMany(
-        { "chatMembers.username": userToUpdate },
-        { $set: { "chatMembers.$.username": req.body.newData.username } },
-        { multi: true }
-      );
-      await ReportedUsers.updateMany(
-        { username: userToUpdate },
-        { username: req.body.newData.username },
-        { multi: true }
-      );
+    try {
+      if (req.body.newData.username) {
+        await Projects.updateMany(
+          { "projectMembers.username": userToUpdate },
+          { $set: { "projectMembers.$.username": req.body.newData.username } },
+          { multi: true }
+        );
+        await Projects.updateMany(
+          { creatorName: userToUpdate },
+          { $set: { creatorName: req.body.newData.username } },
+          { multi: true }
+        );
+        await Projects.updateMany(
+          { managerName: userToUpdate },
+          { $set: { managerName: req.body.newData.username } },
+          { multi: true }
+        );
+        await Chats.updateMany(
+          { "chatMembers.username": userToUpdate },
+          { $set: { "chatMembers.$.username": req.body.newData.username } },
+          { multi: true }
+        );
+        await ReportedUsers.updateMany(
+          { username: userToUpdate },
+          { username: req.body.newData.username },
+          { multi: true }
+        );
+      }
+    } catch (e) {
+      console.log("ERROR WITH updateMany");
     }
-  }catch (e) {
-    console.log("ERROR WITH updateMany");
-  }
   } catch (error) {
     if (error.code === 11000) {
       return res

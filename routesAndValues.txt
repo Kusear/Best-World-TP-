@@ -106,6 +106,7 @@ Route - /updateProject
 Method - POST
 Auth needed - yes
 Values: 
+    projectSlug
     managerID,
     managerName, 
     projectTitle,
