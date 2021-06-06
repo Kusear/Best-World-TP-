@@ -56,7 +56,8 @@ exports.registration = async function (req, res) {
         "<h1>Test message</h1>" +
         "<br>Bruh</br>" +
         "<div><a href =" +
-        process.env.CONFIRM_URL +
+        "http://localhost:3000/emailconfirm/" +
+        // process.env.CONFIRM_URL +
         newUser.id +
         ">Verify email</a></div>",
     };
