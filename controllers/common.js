@@ -24,6 +24,7 @@ exports.login = async function (req, res) {
         _id: user._id,
         username: user.username,
         role: user.role,
+        emailConfirm: user.emailConfirm,
         token: user.getToken(),
       })
       .end();
