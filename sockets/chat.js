@@ -1,14 +1,14 @@
 const Chat = require("../models/chats_model").Chat;
+const Project = require("../models/project").Project;
 const Messages = require("../models/chats_model").ChatMessages;
 const Users = require("../models/user_model").User;
+
+const mongodb = require("mongodb");
+const mongoose = require("mongoose");
 
 // status
 const CONNECTED = 0;
 const DISCONNECTED = 1;
-
-/* TODO
-* сделать отправку сообщений пользователям оффлайн на email
- */
 
 module.exports = (io) => {
   var counter = 0; //
@@ -23,7 +23,6 @@ module.exports = (io) => {
     cUser.id = socket.id;
 
     socket.on("joinRoom", async ({ username, token, room }) => {
-
       // await Users.findOne({username: username}, (err, user)=>{
       //   if (err) {
       //     io.to(cUser.id).emit("err", { err: err.message });
@@ -40,7 +39,10 @@ module.exports = (io) => {
       await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
         if (err) {
           console.log("err: ", err);
-          io.to(cUser.id).emit("err", { err: err.message, status: DISCONNECTED });
+          io.to(cUser.id).emit("err", {
+            err: err.message,
+            status: DISCONNECTED,
+          });
           return socket.disconnect();
         }
 
@@ -48,21 +50,24 @@ module.exports = (io) => {
           console.log("chat not found");
           io.to(cUser.id).emit("err", {
             err: "Chat not found",
-            status: DISCONNECTED
+            status: DISCONNECTED,
           });
           return socket.disconnect();
         }
 
         var s = false;
         var arrayChatMembers = chat.chatMembers;
-        arrayChatMembers.forEach(element => {
+        arrayChatMembers.forEach((element) => {
           if (element.username === username) {
             s = true;
           }
         });
 
         if (!s) {
-          io.to(cUser.id).emit("err", { err: "User not a member", status: DISCONNECTED });
+          io.to(cUser.id).emit("err", {
+            err: "User not a member",
+            status: DISCONNECTED,
+          });
           return socket.disconnect();
         }
 
@@ -79,7 +84,7 @@ module.exports = (io) => {
     socket.on("chatMessage", async (text, cb) => {
       await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", {err: err.message});
+          io.to(cUser.id).emit("err", { err: err.message });
           return;
         }
 
@@ -101,6 +106,155 @@ module.exports = (io) => {
       });
     });
 
+    socket.on("getUsersInChat", async ({ chat, project }) => {
+      var gfs = new mongodb.GridFSBucket(
+        mongoose.connection.db,
+        mongoose.mongo
+      );
+      var users = [];
+      if (chat) {
+        console.log("chat");
+        await Chat.findOne({ chatRoom: cUser.Room }, async (err, chatBD) => {
+          if (err) {
+            io.to(cUser.id).emit("err", { err: err.message });
+            return;
+          }
+          console.log(chatBD.chatMembers);
+          await chatBD.chatMembers.forEach(async (element) => {
+            await Users.findOne({ username: element.username }, (err, u) => {
+              if (err) {
+                console.log("err user", err.message);
+              }
+              console.log(u.username);
+              users.push({ username: u.username, image: u.image });
+
+              //
+              var list = {
+                count: 0,
+                array: [],
+              };
+              console.log("users: ", users);
+              users.forEach((element) => {
+                var obj = {
+                  username: "",
+                  image: "",
+                  chunks: [],
+                };
+                console.log("gfs");
+                gfs
+                  .openDownloadStreamByName(element.image, { revision: -1 })
+                  .on("data", (chunk) => {
+                    obj.chunks.push(chunk);
+                    // console.log("CHUNK: ", chunk);
+                  })
+                  .on("error", function (err) {
+                    console.log("err");
+                    obj.chunks.push("No image found with that title");
+                    //
+                    obj.image = element.image;
+                    obj.username = element.username;
+                    list.count++;
+                    list.array.push(obj);
+                    console.log(element);
+                    if (list.count == users.length) {
+                      console.log("io");
+                      io.to(cUser.id).emit("usersInChat", {
+                        users: list.array,
+                      });
+                      return;
+                    }
+                    //
+                  })
+                  .on("close", () => {
+                    obj.image = element.image;
+                    obj.username = element.username;
+                    list.count++;
+                    list.array.push(obj);
+                    console.log("a");
+                    if (list.count == users.length) {
+                      console.log("io");
+                      io.to(cUser.id).emit("usersInChat", {
+                        users: list.array,
+                      });
+                      return;
+                    }
+                  });
+              });
+              //
+            });
+          });
+        });
+      } else if (project) {
+        await Project.findOne({ slug: cUser.Room }, (err, pr) => {
+          if (err) {
+            io.to(cUser.id).emit("err", { err: err.message });
+            return;
+          }
+
+          pr.projectMembers.forEach((element) => {
+            Users.findOne({ username: element.username }, (err, u) => {
+              if (err) {
+                console.log("err in project branch chat users");
+              }
+              users.push({
+                username: u.username,
+                image: u.image,
+                role: element.role,
+              });
+
+              var list = {
+                count: 0,
+                array: [],
+              };
+              var c = 0;
+              users.forEach((element) => {
+                c++;
+                var obj = {
+                  username: "",
+                  image: "",
+                  role: "",
+                  chunks: [],
+                };
+                gfs
+                  .openDownloadStreamByName(element.image, { revision: -1 })
+                  .on("data", (chunk) => {
+                    obj.chunks.push(chunk);
+                    // console.log("CHUNK: ", chunk);
+                  })
+                  .on("error", function (err) {
+                    obj.chunks.push("No image found with that title");
+                    obj.image = element.image;
+                    obj.username = element.username;
+                    obj.role = element.role;
+                    list.count++;
+                    list.array.push(obj);
+                    if (list.count == c) {
+                      io.to(cUser.id).emit("usersInChat", {
+                        users: list.array,
+                      });
+                      return;
+                    }
+                  })
+                  .on("close", () => {
+                    obj.image = element.image;
+                    obj.username = element.username;
+                    obj.role = element.role;
+                    list.count++;
+                    list.array.push(obj);
+                    if (list.count == c) {
+                      io.to(cUser.id).emit("usersInChat", {
+                        users: list.array,
+                      });
+                      return;
+                    }
+                  });
+              });
+            });
+          });
+        });
+      }
+    });
+
     socket.on("getHistory", async ({ username2, page }) => {
       console.log(username2, " : ", page);
       if (!username2) {
@@ -109,18 +263,21 @@ module.exports = (io) => {
         });
         return;
       }
-      var messagesHistory = await Chat.findOne({ chatRoom: cUser.Room }, async (err) => {
-        if (err) {
-          io.to(cUser.id).emit("err", {err: err.message});
-          return;
+      var messagesHistory = await Chat.findOne(
+        { chatRoom: cUser.Room },
+        async (err) => {
+          if (err) {
+            io.to(cUser.id).emit("err", { err: err.message });
+            return;
+          }
         }
-      })
+      )
         .skip(30 * page)
         .limit(30);
-        io.to(cUser.id).emit("history", {history: messagesHistory});
+      io.to(cUser.id).emit("history", { history: messagesHistory });
     });
 
-    socket.on("blockUser", async ({userID}) => {
+    socket.on("blockUser", async ({ userID }) => {
       if (!userID) {
         socket.emit("err", {
           err: "userID are required",
@@ -129,7 +286,7 @@ module.exports = (io) => {
       }
       await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", {err: err.message});
+          io.to(cUser.id).emit("err", { err: err.message });
           return;
         }
 
@@ -142,7 +299,7 @@ module.exports = (io) => {
       });
     });
 
-    socket.on("unblockUser", async ({userID}) => {
+    socket.on("unblockUser", async ({ userID }) => {
       if (!userID) {
         socket.emit("err", {
           err: "userID are required",
@@ -151,7 +308,7 @@ module.exports = (io) => {
       }
       await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", {err: err.message});
+          io.to(cUser.id).emit("err", { err: err.message });
           return;
         }
 
@@ -164,7 +321,7 @@ module.exports = (io) => {
       });
     });
 
-    socket.on("leave", async ({userID}) => {
+    socket.on("leave", async ({ userID }) => {
       if (!userID) {
         socket.emit("err", {
           err: "userID are required",
@@ -173,7 +330,7 @@ module.exports = (io) => {
       }
       await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", {err: err.message});
+          io.to(cUser.id).emit("err", { err: err.message });
           return;
         }
 
@@ -191,3 +348,48 @@ module.exports = (io) => {
     counter++; //
   });
 };
+
+/**
+ *  получение картинок участников чата
+        // var gfs = new mongodb.GridFSBucket(
+        //   mongoose.connection.db,
+        //   mongoose.mongo
+        // );
+
+        // var a = req.body.filename;
+
+        // var list = {
+        //   count: 0,
+        //   array: [],
+        // };
+
+        // var c = 0;
+        // await a.forEach(async (element) => {
+        //   c++;
+        //   var obj = {
+        //     username: "",
+        //     image: "",
+        //     chunks: [],
+        //   };
+        //   gfs
+        //     .openDownloadStreamByName(element.image, { revision: -1 })
+        //     .on("data", (chunk) => {
+        //       obj.chunks.push(chunk);
+        //       // console.log("CHUNK: ", chunk);
+        //     })
+        //     .on("error", function (err) {
+        //       res.send("No image found with that title");
+        //     })
+        //     .on("close", () => {
+        //       obj.image = element.image;
+        //       obj.username = element.username;
+        //       list.count++;
+        //       list.array.push(obj);
+        //       if (list.count == c) {
+        //         return res.status(200).json({ list: list.array }).end();
+        //       }
+        //     });
+
+        //   // .pipe(res);
+        // });
+ */

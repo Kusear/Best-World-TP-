@@ -57,8 +57,7 @@ exports.registration = async function (req, res) {
         "<h1>Test message</h1>" +
         "<br>Bruh</br>" +
         "<div><a href =" +
-        "http://localhost:3000/emailconfirm/" + // TODO временное
-        // process.env.CONFIRM_URL +
+        process.env.CONFIRM_URL +
         newUser.id +
         ">Verify email</a></div>",
     };
@@ -71,11 +70,12 @@ exports.registration = async function (req, res) {
       nodemailer.transport.close();
     });
 
-    res
+    return res
       .status(200)
       .json({
         _id: newUser._id,
         username: newUser.username,
+        email: newUser.email,
         role: newUser.role,
         token: newUser.getToken(),
       })
@@ -138,29 +138,33 @@ exports.sendRecoveryEmail = async (req, res) => {
   return res.status(200).json({ message: "success" }).end();
 };
 
+// TODO восстановление пароля
 exports.recoveryPassword = async (req, res) => {
-  await Users.findByIdAndUpdate(
-    req.body.userID,
-    { password: bcrypt.hash(req.body.newPassword) },
-    { new: true },
-    async (err, result) => {
-      if (err) {
-        return res.status(500).json({ err: err.message }).end();
-      }
-
-      await Links.findOne({ userID: req.body.userID }, (error, link) => {
-        if (error) {
-          return res.status(500).json({ err: error.message }).end();
-        }
-        link.remove();
-      });
-
-      return res.status(200).json({ message: "success" }).end();
+  await Links.findOne({ userID: req.body.userID }, async (error, link) => {
+    if (error) {
+      return res.status(500).json({ err: error.message }).end();
     }
-  );
+    if (!link) {
+      return res.status(500).json({ err: "Link has expired" }).end();
+    }
+    link.remove();
+
+    await Users.findByIdAndUpdate(
+      req.body.userID,
+      { password: bcrypt.hash(req.body.newPassword) },
+      { new: true },
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+        return res.status(200).json({ message: "success" }).end();
+      }
+    );
+  });
 };
 
 exports.saveFiles = async function (req, res) {
+  // TODO сделать разделение на проектные файлы и картинки
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   var filenameSlug =
@@ -213,7 +217,7 @@ exports.saveFiles = async function (req, res) {
   //   { filename: user.image },
   //   { contentType: req.query.contentType }
   // );
-  
+
   // if (file) {
   //   file.forEach((element) => {
   //     if (element.filename === user.image) {
@@ -229,6 +233,9 @@ exports.getFiles = async function (req, res) {
 
   gfs
     .openDownloadStreamByName(req.body.filename)
+    .on("data", (chunk) => {
+      console.log("CHUNK: ", chunk);
+    })
     .on("error", function (err) {
       res.send("No image found with that title");
     })

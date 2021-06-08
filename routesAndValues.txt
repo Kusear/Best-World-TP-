@@ -10,6 +10,72 @@ If {} plased with some word that means json object with some parametrs
 
 
 
+############## Common routes ##############
+
+Route - /login
+Method - POST
+Auth needed - no 
+Values: 
+    email
+    password
+Response: 
+     _id
+    username
+    role
+    emailConfirm
+    token
+
+
+Route - /registration
+Method - POST
+Auth needed - no
+Values: 
+    username 
+    email
+    password
+Response: 
+    _id
+    username
+    email
+    token
+
+      
+Route - /emailAuth
+Method - POST
+Auth needed - no
+Values: 
+    id
+Response: 
+    "User not found"
+    or
+    err: err.message
+    or
+    "Email confirmed"
+
+
+Route - /sendRecoveryEmail
+Method - POST
+Auth needed - no
+Values: 
+    userID
+Response: 
+    message: "success" 
+
+
+Route - /recoveryPassword
+Method - POST
+Auth needed - no
+Values: 
+    userID
+    newPassword
+Response: 
+    err: error.message 
+    or
+    err: "Link has expired"
+    or
+    message: "success"
+
+
 ############## User routes ##############
 
 Route - /userData
@@ -242,6 +308,19 @@ Response:
           });
     or
     io.to(chat.chatRoom).emit("message", text);
+
+
+Theme - getUsersInChat
+Values: 
+    chat (json object {slug})
+    or
+    project (json object {slug})
+Response:  
+    io.to(cUser.id).emit("err", {
+            err: 
+          });
+    or
+    io.to(cUser.id).emit("usersInChat", list);
 
 
 Theme - getHistory

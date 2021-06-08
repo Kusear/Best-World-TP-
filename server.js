@@ -67,11 +67,11 @@ app.use(
     saveUninitialized: false,
   })
 );
-// app.use(express.static(path.join(__dirname, "public"))); // TODO удалить как доделаю чат и таски
+app.use(express.static(path.join(__dirname, "public"))); // TODO удалить как доделаю чат и таски
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/", midleware.auth, (req, res) => {});
+app.get("/", (req, res) => {});
 
 app.post("/api/", async function (req, res) {
   // await Project.findOne({ slug: req.body.slug }, (err, pr) => {
@@ -81,11 +81,7 @@ app.post("/api/", async function (req, res) {
 });
 
 // Common routes
-app.post(
-  api_route + "/login",
-  midleware.routeLog,
-  /*midleware.loginValidation,*/ controllersCommon.login
-);
+app.post(api_route + "/login", midleware.routeLog, controllersCommon.login);
 app.post(
   api_route + "/logout",
   midleware.auth,
@@ -104,12 +100,10 @@ app.post(
 );
 app.post(
   api_route + "/sendRecoveryEmail",
-  midleware.auth,
   controllersCommon.sendRecoveryEmail
 );
 app.post(
   api_route + "/recoveryPassword",
-  midleware.auth,
   controllersCommon.recoveryPassword
 );
 
@@ -274,6 +268,7 @@ app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);
+app.get(api_route + "/lightUserData", controllersUser.lightUserData);
 app.post(
   api_route + "/updateUser",
   midleware.auth,

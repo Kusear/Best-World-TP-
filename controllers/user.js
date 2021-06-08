@@ -55,6 +55,7 @@ exports.userData = async function (req, res) {
     return res
       .status(200)
       .json({
+        id: user._id,
         username: user.username,
         email: user.email,
         name: user.name,
@@ -70,8 +71,30 @@ exports.userData = async function (req, res) {
   });
 };
 
+exports.lightUserData = async (req, res) => {
+  await Users.findOne({ username: req.query.username }, async (err, user) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ err: err.message, status: INTERNAL_ERROR })
+        .end();
+    }
+
+    if (!user) {
+      return res
+        .status(500)
+        .json({ err: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
+        .end();
+    }
+
+    return res
+      .status(200)
+      .json({ username: user.username, image: user.image, role: user.role })
+      .end();
+  });
+};
+
 exports.updateUser = async function (req, res) {
-  // TODO обновление везде
   var userToUpdate = req.body.userToUpdate;
 
   if (!userToUpdate) {
@@ -105,7 +128,6 @@ exports.updateUser = async function (req, res) {
   }
   try {
     await Users.findOneAndUpdate(
-      // TODO восстановление пароля
       { username: userToUpdate },
       req.body.newData,
       { new: true },
@@ -195,47 +217,64 @@ exports.deleteUser = async function (req, res) {
         chats: false,
         repor: false,
       };
-      await Projects.find(
-        { "projectMembers.username": userToDelete },
-        (err, project) => {
-          if (err) {
-            return res
-              .status(500)
-              .json({ err: err.message, status: INTERNAL_ERROR })
-              .end();
-          }
-          if (!project) {
-            stat.proj = false;
-          } else {
-            project.projectMembers.forEach((element) => {
-              if (element.username === userFromBD.username) {
-                project.projectMembers.pull(element);
-              }
-            });
-            project.save();
-            stat.proj = true;
-          }
-        }
-      );
-      await Chats.find(
-        { "chatMembers.username": userToDelete },
-        (err, chat) => {
-          if (err) {
-            return;
-          }
-          if (!chat) {
-            stat.chats = false;
-          } else {
-            chat.chatMembers.forEach((element) => {
-              if (element.username === userFromBD.username) {
-                chat.chatMembers.pull(element);
-              }
-            });
-            chat.save();
-            stat.chats = true;
-          }
-        }
-      );
+
+      try {
+        // await pr.requests.pull({ _id: req.body.id });
+        await Projects.findOneAndUpdate(
+          // TODO протестировать
+          { "projectMembers.username": userToDelete },
+          { $pull: { projectMembers: { username: user.username } } }
+        );
+        await Chats.findOneAndUpdate(
+          // TODO протестировать
+          { "chatMembers.username": userToDelete },
+          { $pull: { chatMembers: { username: user.username } } }
+        );
+      } catch (ex) {
+        exeptionPullRequests = ex;
+      }
+
+      // await Projects.find(
+      //   { "projectMembers.username": userToDelete },
+      //   (err, project) => {
+      //     if (err) {
+      //       return res
+      //         .status(500)
+      //         .json({ err: err.message, status: INTERNAL_ERROR })
+      //         .end();
+      //     }
+      //     if (!project) {
+      //       stat.proj = false;
+      //     } else {
+      //       project.projectMembers.forEach((element) => {
+      //         if (element.username === userFromBD.username) {
+      //           project.projectMembers.pull(element);
+      //         }
+      //       });
+      //       project.save();
+      //       stat.proj = true;
+      //     }
+      //   }
+      // );
+      // await Chats.find(
+      //   { "chatMembers.username": userToDelete },
+      //   (err, chat) => {
+      //     if (err) {
+      //       return;
+      //     }
+      //     if (!chat) {
+      //       stat.chats = false;
+      //     } else {
+      //       chat.chatMembers.forEach((element) => {
+      //         if (element.username === userFromBD.username) {
+      //           chat.chatMembers.pull(element);
+      //         }
+      //       });
+      //       chat.save();
+      //       stat.chats = true;
+      //     }
+      //   }
+      // );
       await ReportedUsers.findOneAndRemove(
         { username: userToDelete },
         { multi: true },
