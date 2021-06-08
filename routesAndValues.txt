@@ -94,6 +94,17 @@ Response:
       projects: projects,
 
 
+Route - /lightUserData
+Method - GET
+Auth needed - yes
+Values: 
+    username (ник пользователя)
+Response: 
+      username
+      role
+      image
+
+
 Route - /updateUser
 Method - POST
 Auth needed - yes
