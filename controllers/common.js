@@ -237,7 +237,8 @@ exports.getFiles = async function (req, res) {
       console.log("CHUNK: ", chunk);
     })
     .on("error", function (err) {
-      res.send("No image found with that title");
+      console.log("ERR: ", err);
+      return res.send("No image found with that title");
     })
     .pipe(res);
 };
