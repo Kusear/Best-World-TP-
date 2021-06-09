@@ -323,7 +323,7 @@ app.post(
   }
   // controllersCommon.saveFiles
 );
-app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
+app.post(api_route + "/getFile", controllersCommon.getFiles);
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);

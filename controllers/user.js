@@ -72,6 +72,7 @@ exports.userData = async function (req, res) {
 };
 
 exports.lightUserData = async (req, res) => {
+  // TODO сделать получение инфы о пользователях в проекте
   await Users.findOne({ username: req.query.username }, async (err, user) => {
     if (err) {
       return res
@@ -87,10 +88,19 @@ exports.lightUserData = async (req, res) => {
         .end();
     }
 
-    return res
-      .status(200)
-      .json({ username: user.username, image: user.image, role: user.role })
-      .end();
+    await Projects.findOne(
+      { "projectMembers.username": user.username },
+      (err, prUser) => {
+        return res
+          .status(200)
+          .json({
+            username: user.username,
+            image: user.image,
+            role: prUser.role,
+          })
+          .end();
+      }
+    );
   });
 };
 
