@@ -232,7 +232,7 @@ exports.getFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   gfs
-    .openDownloadStreamByName(req.body.filename)
+    .openDownloadStreamByName(req.body.filename, { revision: -1 })
     .on("data", (chunk) => {
       console.log("CHUNK: ", chunk);
     })
