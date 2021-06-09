@@ -7,14 +7,11 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("../config/nodemailer");
 const slugify = require("slugify");
 
-exports.login = async function (req, res) {
-  // req.body.email
-  // req.body.password
-
+exports.login = async (req, res) => {
   await Users.findOne({ email: req.body.email }, async function (err, user) {
     var isAuthenticated =
       user &&
-      ((await bcrypt.compare(req.body.password, user.password)) ||
+      (await bcrypt.compare(req.body.password, user.password) ||
         req.body.password === user.password);
     if (!isAuthenticated) {
       return res.status(510).json({ err: "Не авторизован" }).end();

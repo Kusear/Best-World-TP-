@@ -82,7 +82,7 @@ app.post("/api/", async function (req, res) {
 });
 
 // Common routes
-app.post(api_route + "/login", midleware.routeLog, controllersCommon.login);
+app.post(api_route + "/login", controllersCommon.login);
 app.post(
   api_route + "/logout",
   midleware.auth,

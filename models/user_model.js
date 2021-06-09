@@ -4,7 +4,7 @@ var jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 var JWT_SECRET = process.env.JWT_SECRET;
-var salt = 5;
+var salt = 10;
 
 var UserSchema = new mongoose.Schema({
   username: {
@@ -58,7 +58,8 @@ var UserSchema = new mongoose.Schema({
 });
 
 UserSchema.method.hashPassword = async function (newpassword) {
-  return await bcrypt.hash(newpassword, salt);
+  var saltRounds = await bcrypt.genSalt(salt);
+  return await bcrypt.hash(newpassword, saltRounds);
 };
 
 UserSchema.methods.getToken = function () {
@@ -75,7 +76,8 @@ UserSchema.methods.getToken = function () {
 };
 
 UserSchema.pre("save", async function (next) {
-  this.password = await bcrypt.hash(this.password, salt);
+  var saltRounds = await bcrypt.genSalt(salt);
+  this.password = await bcrypt.hash(this.password, saltRounds);
   next();
 });
 
