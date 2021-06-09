@@ -230,15 +230,19 @@ exports.saveFiles = async function (req, res) {
 
 exports.getFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+  var endSTR = "";
 
   gfs
     .openDownloadStreamByName(req.body.filename, { revision: -1 })
     .on("data", (chunk) => {
       console.log("CHUNK: ", chunk);
+      endSTR += Buffer.from(chunk, 'hex').toString('base64');
     })
     .on("error", function (err) {
       console.log("ERR: ", err);
       return res.send("No image found with that title");
+    }).on("close", ()=>{
+      return res.status(200).json({base64Image: endSTR}).end();
     })
-    .pipe(res);
+    // .pipe(res);
 };
