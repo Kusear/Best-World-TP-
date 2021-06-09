@@ -554,3 +554,29 @@ Response:
     err: "Chat not found"
     or
     message: "success"
+
+
+
+############## Image routes ##############
+
+
+Route - /saveFile
+Method - GET
+Auth needed - yes
+Values: 
+   req.query.filename
+   req.query.userID
+   req.query.contentType 
+   в bindle картинку
+Response: 
+   status: "saved",
+   imageName: filenameSlug,
+
+
+Route - /getFile
+Method - POST
+Auth needed - yes
+Values: 
+   req.body.filename
+Response: 
+    картинка

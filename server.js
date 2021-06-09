@@ -20,6 +20,7 @@ const controllersProjectBoard = require("./controllers/todoList");
 const controllersChat = require("./controllers/chat_contr");
 const controllersReportUser = require("./controllers/reportedUser");
 const controllersReportProject = require("./controllers/reportedProject");
+const controllersBan = require("./controllers/userBan");
 const { Project } = require("./models/project");
 const app = express();
 const server = http.createServer(app);
@@ -98,19 +99,14 @@ app.post(
   midleware.routeLog,
   controllersCommon.emailAuth
 );
-app.post(
-  api_route + "/sendRecoveryEmail",
-  controllersCommon.sendRecoveryEmail
-);
-app.post(
-  api_route + "/recoveryPassword",
-  controllersCommon.recoveryPassword
-);
+app.post(api_route + "/sendRecoveryEmail", controllersCommon.sendRecoveryEmail);
+app.post(api_route + "/recoveryPassword", controllersCommon.recoveryPassword);
 
 // Project routes
 app.post(
   api_route + "/createProject",
   midleware.auth,
+  midleware.banCheck,
   midleware.routeLog,
   controllersProject.createProject
 );
@@ -166,6 +162,7 @@ app.post(
   api_route + "/addRequest",
   midleware.routeLog,
   midleware.auth,
+  midleware.banCheck,
   midleware.roleCheck("user", "superadmin"),
   controllersProject.addReqest
 );
@@ -295,8 +292,9 @@ app.get(
 app.post(
   api_route + "/createUserReport",
   midleware.auth,
+  midleware.banCheck,
   midleware.roleCheck("user", "superadmin"),
-  controllersReportUser.createRoportUser
+  controllersReportUser.createReportUser
 );
 app.get(
   api_route + "/getReportedUsers",
@@ -315,6 +313,7 @@ app.post(
 app.post(
   api_route + "/createProjectReport",
   midleware.auth,
+  midleware.banCheck,
   midleware.roleCheck("user", "superadmin"),
   controllersReportProject.createRoportProject
 );
@@ -329,6 +328,26 @@ app.post(
   midleware.auth,
   midleware.roleCheck("user", "superadmin"),
   controllersReportProject.deleteReportProject
+);
+
+// Ban routes
+app.post(
+  api_route + "/getBannedUsers",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersBan.getBannedUsers
+);
+app.post(
+  api_route + "/banUser",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersBan.banUser
+);
+app.post(
+  api_route + "/unbanUser",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersBan.unbanUser
 );
 
 // Chat routes

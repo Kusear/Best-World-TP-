@@ -86,3 +86,38 @@ exports.registrationValidation = async (req, res, next) => {
   }
   return next();
 };
+
+exports.banCheck = async (req, res, next) => {
+  if (req.body.username || req.body.reportFrom) {
+    await Users.findOne(
+      { username: req.body.username || req.body.reportFrom },
+      (err, user) => {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+        if (!user) {
+          return res.status(500).json({ err: "User not found!" }).end();
+        }
+        if (user.ban) {
+          return res.status(500).json({ message: "You'r banned!" }).end();
+        } else {
+          next();
+        }
+      }
+    );
+  } else if (req.body.creatorid) {
+    await Users.findById(req.body.creatorid, (err, user) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
+      }
+      if (!user) {
+        return res.status(500).json({ err: "User not found!" }).end();
+      }
+      if (user.ban) {
+        return res.status(500).json({ message: "You'r banned!" }).end();
+      } else {
+        next();
+      }
+    });
+  }
+};

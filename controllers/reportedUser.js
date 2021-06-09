@@ -1,6 +1,6 @@
 const ReportedUsers = require("../models/reported_users").ReportedUser;
 
-exports.createRoportUser = async (req, res) => {
+exports.createReportUser = async (req, res) => {
   if (!req.body.reportFrom) {
     return res.status(500).json({ message: "reportFrom are required" }).end();
   }
