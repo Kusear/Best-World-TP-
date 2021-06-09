@@ -7,10 +7,37 @@ const cors = require("cors");
 const MongoStore = require("connect-mongo");
 const soketio = require("socket.io");
 const http = require("http");
-const path = require("path");
+const path = require("path"); // TODO удалить
+const formData = require("express-form-data");
+const multer = require("multer");
 const nodemailer = require("./config/nodemailer");
+const slugify = require("slugify");
 require("dotenv").config();
 require("./config/config-passport");
+
+const MONGO_URL = process.env.MONGO_URL;
+const api_route = "/api";
+
+const GridFsStorage = require("multer-gridfs-storage");
+
+const storage = new GridFsStorage({
+  url: MONGO_URL,
+  file: (req, file) => {
+    return {
+      filename:
+        slugify(req.body.filename, {
+          replacement: "-",
+          remove: undefined,
+          lower: false,
+          strict: false,
+          locale: "ru",
+        }) +
+        "-" +
+        req.body.userID,
+    };
+  },
+});
+const upload = multer({ storage: storage });
 
 const midleware = require("./midleware/midleware");
 const controllersCommon = require("./controllers/common");
@@ -32,8 +59,9 @@ const io = soketio(server, {
 require("./sockets/chat")(io);
 require("./sockets/task_lists")(io);
 
-const MONGO_URL = process.env.MONGO_URL;
-const api_route = "/api";
+const options = {
+  autoClean: true,
+};
 
 mongoose.set("useFindAndModify", false);
 app.use(express.json());
@@ -72,12 +100,12 @@ app.use(express.static(path.join(__dirname, "public"))); // TODO удалить 
 app.use(passport.initialize());
 app.use(passport.session());
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 app.get("/", (req, res) => {});
 
 app.post("/api/", async function (req, res) {
-  // await Project.findOne({ slug: req.body.slug }, (err, pr) => {
-  //   console.log(pr.projectMembers[0]);
-  // });
+  console.log("body: ", req.body);
   return res.status(200).json({}).end();
 });
 
@@ -257,11 +285,17 @@ app.post(
   controllersProjectBoard.deleteTask
 );
 
-// files routes
-/////
-app.get(api_route + "/saveFile", midleware.auth, controllersCommon.saveFiles);
+// files routes // TODO сделать route для файлов
+app.post(
+  api_route + "/saveFile",
+  midleware.auth,
+  upload.single("image"),
+  (req, res, next) => {
+    return res.send("bruh");
+  }
+  // controllersCommon.saveFiles
+);
 app.post(api_route + "/getFile", midleware.auth, controllersCommon.getFiles);
-/////
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);

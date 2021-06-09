@@ -11,7 +11,7 @@ exports.login = async (req, res) => {
   await Users.findOne({ email: req.body.email }, async function (err, user) {
     var isAuthenticated =
       user &&
-      (await bcrypt.compare(req.body.password, user.password) ||
+      ((await bcrypt.compare(req.body.password, user.password)) ||
         req.body.password === user.password);
     if (!isAuthenticated) {
       return res.status(510).json({ err: "Не авторизован" }).end();
@@ -165,7 +165,7 @@ exports.saveFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   var filenameSlug =
-    (await slugify(req.query.filename, {
+    (await slugify(req.body.filename, {
       replacement: "-",
       remove: undefined,
       lower: false,
@@ -173,7 +173,7 @@ exports.saveFiles = async function (req, res) {
       locale: "ru",
     })) +
     "-" +
-    req.query.userID;
+    req.body.userID;
 
   console.log("slug: ", filenameSlug);
 
@@ -181,14 +181,14 @@ exports.saveFiles = async function (req, res) {
     image: filenameSlug,
   };
 
-  var user = await Users.findById(req.query.userID, (err) => {
+  var user = await Users.findById(req.body.userID, (err) => {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }
   });
 
   await Users.findByIdAndUpdate(
-    req.query.userID,
+    req.body.userID,
     image,
     { new: true },
     (err) => {
@@ -198,9 +198,12 @@ exports.saveFiles = async function (req, res) {
     }
   );
 
-  req.pipe(
+  req.file(
     gfs
-      .openUploadStream(filenameSlug, { contentType: req.query.contentType })
+      .openUploadStream(filenameSlug, { contentType: req.body.contentType })
+      .on("error", () => {
+        console.log("ERR");
+      })
       .on("close", function (savedFile) {
         console.log("file saved", savedFile);
         return res.json({
