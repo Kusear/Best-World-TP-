@@ -48,6 +48,7 @@ const controllersChat = require("./controllers/chat_contr");
 const controllersReportUser = require("./controllers/reportedUser");
 const controllersReportProject = require("./controllers/reportedProject");
 const controllersBan = require("./controllers/userBan");
+const Users = require("./models/user_model").User;
 const { Project } = require("./models/project");
 const app = express();
 const server = http.createServer(app);
@@ -290,8 +291,35 @@ app.post(
   api_route + "/saveFile",
   midleware.auth,
   upload.single("image"),
-  (req, res, next) => {
-    return res.send("bruh");
+  async (req, res, next) => {
+    var filenameSlug =
+      (await slugify(req.body.filename, {
+        replacement: "-",
+        remove: undefined,
+        lower: false,
+        strict: false,
+        locale: "ru",
+      })) +
+      "-" +
+      req.body.userID;
+
+    console.log("slug: ", filenameSlug);
+
+    var image = {
+      image: filenameSlug,
+    };
+
+    await Users.findByIdAndUpdate(
+      req.body.userID,
+      image,
+      { new: true },
+      (err) => {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+        return res.status(200).json({ message: "Image updated" }).end();
+      }
+    );
   }
   // controllersCommon.saveFiles
 );
