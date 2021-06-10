@@ -284,7 +284,7 @@ exports.addProjectMember = async (req, res) => {
     }
 
     var newMember;
-    if (pr.projectMembers[0] == undefined && pr.needHelp == true) {
+    if (pr.projectMembers[1] == undefined && pr.needHelp == true) {
       newMember = new Members();
       newMember.username = req.body.username;
       newMember.role = req.body.role;
