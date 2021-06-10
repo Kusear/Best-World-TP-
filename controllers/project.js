@@ -29,38 +29,21 @@ exports.projectData = async function (req, res) {
 };
 
 exports.createProject = async function (req, res) {
-  //     IDcreator: req.body.creatorid, //required
-  //     creatorName: req.body.creatorUsername,
-  //     IDmanager: req.body.managerid,
-  //     managerName: req.body.creatorUsername,
-  //     needManager: req.body.neededManager,
-  //     title: req.body.projectTitle, // required
-  //     description: req.body.projectDescription,
-  //     projectHashTag: req.body.projectHashTag,
-  //     picture: req.body.filename,
-  //     countOfMembers: req.body.membersCount,
-  //     creationDate: new Date(),
-  //     endTeamGathering: new Date(req.body.endGathering), // required
-  //     endProjectDate: new Date(req.body.endProject), // required
-  //     requiredRoles: req.body.requredRoles,
-  //     projectMembers: req.body.projectMembers,
-  //     requests: req.body.requests,
 
   try {
     var newProject = await new Projects({
-      IDcreator: req.body.creatorid, //required
+      IDcreator: req.body.creatorid, 
       creatorName: req.body.creatorUsername,
       IDmanager: req.body.managerid,
       managerName: req.body.creatorUsername,
       needManager: req.body.neededManager,
-      title: req.body.projectTitle, // required
+      title: req.body.projectTitle,
       description: req.body.projectDescription,
       projectHashTag: req.body.projectHashTag,
-      picture: req.body.filename,
       countOfMembers: req.body.membersCount,
       creationDate: new Date(),
-      endTeamGathering: new Date(req.body.endGathering), // required
-      endProjectDate: new Date(req.body.endProject), // required
+      endTeamGathering: new Date(req.body.endGathering), 
+      endProjectDate: new Date(req.body.endProject), 
       requiredRoles: req.body.requredRoles,
       projectMembers: req.body.projectMembers,
       requests: req.body.requests,
