@@ -14,7 +14,7 @@ exports.login = async (req, res) => {
     if (!user) {
       return res
         .status(500)
-        .json({ err: "Такого профиля не существует." })
+        .json({ err: "Такого профиля не существует" })
         .end();
     }
 
@@ -26,7 +26,7 @@ exports.login = async (req, res) => {
       return res
         .status(510)
         .json({
-          err: "Ошибка авторизации. Неправильно введены адрес электронный почты или пароль.",
+          err: "Неверный адрес электронной почты или пароль",
         })
         .end();
     }
@@ -166,9 +166,11 @@ exports.recoveryPassword = async (req, res) => {
     }
     link.remove();
 
+    var saltR = await bcrypt.genSalt(10);
+
     await Users.findByIdAndUpdate(
       req.body.userID,
-      { password: bcrypt.hash(req.body.newPassword) },
+      { password: await bcrypt.hash(req.body.newPassword, saltR) },
       { new: true },
       (err, result) => {
         if (err) {
