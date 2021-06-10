@@ -95,44 +95,11 @@ exports.createProject = async function (req, res) {
 };
 
 exports.updateProject = async function (req, res) {
-  // req.body.projectSlug / string
-  // ManagerID: req.body.managerID, / string
-  // title: req.body.projectTitle, / string
-  // description: req.body.projectDescription, / string
-  // subject: req.body.projectHashTag, / string
-  // picture: req.body.filename,  / string
-  // countMembers: req.body.membersCount, / number
-  // endTeamGathering: req.body.endGathering, / date
-  // endProjectDate: req.body.endProject, / date
-  // requareRoles: req.body.requredRoles, / array
-  // projectMembers: req.body.projectMembers, / array
-  // archive: req.body.archive  / bool
-  // needHelp: req.body.needHelp, / bool
-  // needChanges: req.body.needChanges / bool
-  // managerName: req.body.managerName, / string
-
   var projectToUpdate = req.body.projectSlug;
 
   if (!projectToUpdate) {
     return res.status(500).json({ err: "no project to edit" }).end();
   }
-
-  // var newProjectData = {
-  //   ManagerID: req.body.managerID,
-  //   managerName: req.body.managerName, //
-  //   title: req.body.projectTitle,
-  //   description: req.body.projectDescription,
-  //   subject: req.body.projectHashTag,
-  //   picture: req.body.filename,
-  //   countMembers: req.body.membersCount,
-  //   endTeamGathering: req.body.endGathering,
-  //   endProjectDate: req.body.endProject,
-  //   requareRoles: req.body.requredRoles,
-  //   projectMembers: req.body.projectMembers,
-  //   archive: req.body.archive, //
-  //   needHelp: req.body.needHelp, //
-  //   needChanges: req.body.needChanges, //
-  // };
 
   var projectA = await Projects.findOne({ slug: projectToUpdate }, (err) => {
     if (err) {

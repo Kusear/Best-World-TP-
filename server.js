@@ -20,7 +20,7 @@ const api_route = "/api";
 
 const GridFsStorage = require("multer-gridfs-storage");
 
-const storage = new GridFsStorage({
+const storageIMG = new GridFsStorage({
   url: MONGO_URL,
   file: (req, file) => {
     return {
@@ -32,12 +32,30 @@ const storage = new GridFsStorage({
           strict: false,
           locale: "ru",
         }) +
-        "-" +
-        req.body.userID,
+          "-IMAGE-" +
+          req.body.userID || req.body.projectID,
     };
   },
 });
-const upload = multer({ storage: storage });
+const storageFILE = new GridFsStorage({
+  url: MONGO_URL,
+  file: (req, file) => {
+    return {
+      filename:
+        slugify(req.body.filename, {
+          replacement: "-",
+          remove: undefined,
+          lower: false,
+          strict: false,
+          locale: "ru",
+        }) +
+        "-FILE-" +
+        req.body.projectID,
+    };
+  },
+});
+const upload = multer({ storage: storageIMG });
+const uploadFiles = multer({ storage: storageFILE });
 
 const midleware = require("./midleware/midleware");
 const controllersCommon = require("./controllers/common");
@@ -300,26 +318,69 @@ app.post(
         strict: false,
         locale: "ru",
       })) +
-      "-" +
-      req.body.userID;
+        "-IMAGE-" +
+        req.body.userID || req.body.projectID;
 
     console.log("slug: ", filenameSlug);
 
     var image = {
       image: filenameSlug,
     };
-
-    await Users.findByIdAndUpdate(
-      req.body.userID,
-      image,
-      { new: true },
-      (err) => {
-        if (err) {
-          return res.status(500).json({ err: err.message }).end();
+    if (req.body.userID) {
+      await Users.findByIdAndUpdate(
+        req.body.userID,
+        image,
+        { new: true },
+        (err) => {
+          if (err) {
+            return res.status(500).json({ err: err.message }).end();
+          }
+          return res.status(200).json({ message: "Image updated" }).end();
         }
-        return res.status(200).json({ message: "Image updated" }).end();
+      );
+    } else {
+      await Project.findByIdAndUpdate(
+        req.body.projectID,
+        image,
+        { new: true },
+        (err) => {
+          if (err) {
+            return res.status(500).json({ err: err.message }).end();
+          }
+          return res.status(200).json({ message: "Image updated" }).end();
+        }
+      );
+    }
+  }
+);
+app.post(
+  api_route + "/addFileToProject",
+  midleware.auth,
+  uploadFiles.array("file", 5),
+  async (req, res, next) => {
+    var filenameSlug =
+      (await slugify(req.body.filename, {
+        replacement: "-",
+        remove: undefined,
+        lower: false,
+        strict: false,
+        locale: "ru",
+      })) +
+      "-FILE-" +
+      req.body.projectID;
+
+    console.log("slug: ", filenameSlug);
+
+    var file = {
+      file: filenameSlug,
+    };
+    await Project.findById(req.body.projectID, async (err, pr) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
       }
-    );
+      pr.projectFiles.push(file);
+      return res.status(200).json({ message: "File added" }).end();
+    });
   }
 );
 app.post(api_route + "/getFile", controllersCommon.getFiles);

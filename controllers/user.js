@@ -138,6 +138,7 @@ exports.updateUser = async function (req, res) {
   }
   try {
     Users.findOneAndUpdate(
+      // TODO исправить
       { username: userToUpdate },
       req.body.newData,
       { new: true },

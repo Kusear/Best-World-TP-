@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const User = require("./user_model");
+const Chat = require("./chats_model").Chat;
 const slugify = require("slugify");
 
 const RequestsSchema = new mongoose.Schema({
@@ -32,8 +32,8 @@ const ProjectMembers = new mongoose.Schema({
   },
   canChange: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const ProjectSchema = new mongoose.Schema({
@@ -67,7 +67,7 @@ const ProjectSchema = new mongoose.Schema({
     type: [],
     required: true,
   },
-  picture: {
+  image: {
     type: String,
   },
   countOfMembers: {
@@ -94,6 +94,10 @@ const ProjectSchema = new mongoose.Schema({
     type: [RequestsSchema],
     default: [],
   },
+  projectFiles: {
+    type: [],
+    default: [],
+  },
   needChanges: {
     type: Boolean,
     default: false,
@@ -118,6 +122,31 @@ ProjectSchema.pre("save", async function (next) {
     })) +
     "-" +
     this._id;
+  next();
+});
+
+ProjectSchema.pre("updateOne", async (next) => {
+  try {
+    var chat = await Chat.findOne({ chatRoom: this.slug }, (err) => {
+      if (err) {
+        console.log("CHAT ERR: ", err.message);
+      }
+    });
+    this.slug =
+      (await slugify(this.title, {
+        replacement: "-",
+        remove: undefined,
+        lower: false,
+        strict: false,
+        locale: "ru",
+      })) +
+      "-" +
+      this._id;
+    chat.chatRoom = this.slug;
+    chat.save();
+  } catch (e) {
+    console.log("EX: ", e);
+  }
   next();
 });
 
