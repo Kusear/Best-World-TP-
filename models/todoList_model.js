@@ -10,6 +10,14 @@ const Tasks = new mongoose.Schema({
   description: {
     type: String,
   },
+  timeStartWork: {
+    type: Date,
+    required: true,
+  },
+  timeEndWork: {
+    type: Date,
+    required: true,
+  },
 });
 
 const BoardsSchema = new mongoose.Schema({

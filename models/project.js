@@ -61,9 +61,11 @@ const ProjectSchema = new mongoose.Schema({
   },
   description: {
     type: String,
+    required: true,
   },
   projectHashTag: {
     type: [],
+    required: true,
   },
   picture: {
     type: String,
@@ -103,7 +105,7 @@ const ProjectSchema = new mongoose.Schema({
   slug: {
     type: String,
   },
-});
+}); // TODO добавить поле документов
 
 ProjectSchema.pre("save", async function (next) {
   this.slug =
