@@ -75,7 +75,7 @@ exports.createProject = async function (req, res) {
       privateChat: false,
     }).save();
 
-    var newToDoList = await new TODOList({
+    var newToDoList = await new ToDoLists({
       projectSlug: newProject.slug,
       boards: [
         new Boards({ name: "Board 1" }),
