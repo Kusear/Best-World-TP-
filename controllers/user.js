@@ -148,10 +148,6 @@ exports.updateUser = async function (req, res) {
             .json({ err: err.message, status: INTERNAL_ERROR })
             .end();
         }
-        return res
-          .status(200)
-          .json({ message: "updated", status: SUCCESS })
-          .end();
       }
     );
     try {
@@ -185,6 +181,7 @@ exports.updateUser = async function (req, res) {
     } catch (e) {
       console.log("ERROR WITH updateMany");
     }
+    return res.status(200).json({ message: "updated", status: SUCCESS }).end();
   } catch (error) {
     if (error.code === 11000) {
       return res
