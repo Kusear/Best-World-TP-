@@ -44,10 +44,13 @@ exports.logout = function (req, res) {
 
 exports.registration = async function (req, res) {
   try {
+    var saltR = await bcrypt.genSalt(10);
+    var hash = await  bcrypt.hash(req.body.password, saltR);
+
     var newUser = await new Users({
       username: req.body.username,
       email: req.body.email,
-      password: req.body.password,
+      password: hash,
       image: req.body.filename,
     }).save();
 

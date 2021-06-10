@@ -75,11 +75,11 @@ UserSchema.methods.getToken = function () {
   );
 };
 
-UserSchema.pre("save", async function (next) {
-  var saltRounds = await bcrypt.genSalt(salt);
-  this.password = await bcrypt.hash(this.password, saltRounds);
-  next();
-});
+// UserSchema.pre("save", async function (next) {
+//   var saltRounds = await bcrypt.genSalt(salt);
+//   this.password = await bcrypt.hash(this.password, saltRounds);
+//   next();
+// });
 
 exports.userCollection = "users";
 exports.User = mongoose.model("users", UserSchema);
