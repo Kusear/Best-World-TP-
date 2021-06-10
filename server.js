@@ -311,7 +311,8 @@ app.post(
   upload.single("image"),
   async (req, res, next) => {
     var objID = req.body.userID || req.body.projectID;
-    console.log("OBJID: ", objID);
+    console.log("USERID: ", req.body.userID);
+    console.log("PROJECTID: ", req.body.projectID);
     var filenameSlug =
       (await slugify(req.body.filename, {
         replacement: "-",
