@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongodb = require("mongodb");
 const Projects = require("../models/project").Project;
 const Members = require("../models/project").Members;
 const Requests = require("../models/project").Requests;
@@ -217,16 +218,53 @@ exports.deleteProject = async function (req, res) {
 
 exports.getProjects = async function (req, res) {
   // req.query.currentPage
+  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+
+  var listProjects = [];
+  var counter = 0;
 
   var projects = await Projects.find({}, null, function (err, result) {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
   })
-    .skip(20 * req.query.currentPage)
-    .limit(20);
+    .skip(10 * req.query.currentPage)
+    .limit(10);
+  console.log(projects.length);
+  projects.forEach((element) => {
+    var endSTR = "";
 
-  return res.status(200).json(projects).end();
+    var pr = {
+      project: element,
+      image: "",
+    };
+
+    gfs
+      .openDownloadStreamByName(element.image, { revision: -1 })
+      .on("data", (chunk) => {
+        console.log("CHUNK: ", chunk);
+        endSTR += Buffer.from(chunk, "hex").toString("base64");
+      })
+      .on("error", function (err) {
+        console.log("ERR: ", err);
+        pr.image = "default";
+        listProjects.push(pr);
+        if (counter == projects.length - 1) {
+          return res.status(200).json(listProjects).end();
+        }
+        console.log("e: ", counter);
+        counter++;
+      })
+      .on("close", () => {
+        pr.image = endSTR;
+        listProjects.push(pr);
+        if (counter == projects.length - 1) {
+          return res.status(200).json(listProjects).end();
+        }
+        console.log("c: ", counter);
+        counter++;
+      });
+  });
 };
 
 exports.getProjectsByTag = async (req, res) => {

@@ -23,6 +23,7 @@ const GridFsStorage = require("multer-gridfs-storage");
 const storageIMG = new GridFsStorage({
   url: MONGO_URL,
   file: (req, file) => {
+    var objID = req.body.userID || req.body.projectID;
     return {
       filename:
         slugify(req.body.filename, {
@@ -33,7 +34,7 @@ const storageIMG = new GridFsStorage({
           locale: "ru",
         }) +
           "-IMAGE-" +
-          req.body.userID || req.body.projectID,
+          objID,
     };
   },
 });
