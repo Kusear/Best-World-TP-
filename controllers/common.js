@@ -9,15 +9,26 @@ const slugify = require("slugify");
 
 exports.login = async (req, res) => {
   await Users.findOne({ email: req.body.email }, async function (err, user) {
-
     console.log("login body: ", req.body); // TODO delete
+
+    if (!user) {
+      return res
+        .status(500)
+        .json({ err: "Такого профиля не существует." })
+        .end();
+    }
 
     var isAuthenticated =
       user &&
       ((await bcrypt.compare(req.body.password, user.password)) ||
         req.body.password === user.password);
     if (!isAuthenticated) {
-      return res.status(510).json({ err: "Не авторизован" }).end();
+      return res
+        .status(510)
+        .json({
+          err: "Ошибка авторизации. Неправильно введены email или пароль.",
+        })
+        .end();
     }
     if (user.emailConfirm) {
       return res
@@ -26,7 +37,7 @@ exports.login = async (req, res) => {
           _id: user._id,
           username: user.username,
           role: user.role,
-          emailConfirm: user.emailConfirm, 
+          emailConfirm: user.emailConfirm,
           image: user.image,
           token: user.getToken(),
         })
@@ -45,7 +56,7 @@ exports.logout = function (req, res) {
 exports.registration = async function (req, res) {
   try {
     var saltR = await bcrypt.genSalt(10);
-    var hash = await  bcrypt.hash(req.body.password, saltR);
+    var hash = await bcrypt.hash(req.body.password, saltR);
 
     var newUser = await new Users({
       username: req.body.username,
@@ -169,73 +180,73 @@ exports.recoveryPassword = async (req, res) => {
   });
 };
 
-exports.saveFiles = async function (req, res) {
-  // TODO сделать разделение на проектные файлы и картинки
-  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+// exports.saveFiles = async function (req, res) {
+//   // TODO сделать разделение на проектные файлы и картинки
+//   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
-  var filenameSlug =
-    (await slugify(req.body.filename, {
-      replacement: "-",
-      remove: undefined,
-      lower: false,
-      strict: false,
-      locale: "ru",
-    })) +
-    "-" +
-    req.body.userID;
+//   var filenameSlug =
+//     (await slugify(req.body.filename, {
+//       replacement: "-",
+//       remove: undefined,
+//       lower: false,
+//       strict: false,
+//       locale: "ru",
+//     })) +
+//     "-" +
+//     req.body.userID;
 
-  console.log("slug: ", filenameSlug);
+//   console.log("slug: ", filenameSlug);
 
-  var image = {
-    image: filenameSlug,
-  };
+//   var image = {
+//     image: filenameSlug,
+//   };
 
-  var user = await Users.findById(req.body.userID, (err) => {
-    if (err) {
-      return res.status(500).json({ err: err.message }).end();
-    }
-  });
+//   var user = await Users.findById(req.body.userID, (err) => {
+//     if (err) {
+//       return res.status(500).json({ err: err.message }).end();
+//     }
+//   });
 
-  await Users.findByIdAndUpdate(
-    req.body.userID,
-    image,
-    { new: true },
-    (err) => {
-      if (err) {
-        return res.status(500).json({ err: err.message }).end();
-      }
-    }
-  );
+//   await Users.findByIdAndUpdate(
+//     req.body.userID,
+//     image,
+//     { new: true },
+//     (err) => {
+//       if (err) {
+//         return res.status(500).json({ err: err.message }).end();
+//       }
+//     }
+//   );
 
-  req.file(
-    gfs
-      .openUploadStream(filenameSlug, { contentType: req.body.contentType })
-      .on("error", () => {
-        console.log("ERR");
-      })
-      .on("close", function (savedFile) {
-        console.log("file saved", savedFile);
-        return res.json({
-          file: savedFile,
-          status: "saved",
-          imageName: filenameSlug,
-        });
-      })
-  );
-  // var file = gfs.find(
-  //   { filename: user.image },
-  //   { contentType: req.query.contentType }
-  // );
+//   req.file(
+//     gfs
+//       .openUploadStream(filenameSlug, { contentType: req.body.contentType })
+//       .on("error", () => {
+//         console.log("ERR");
+//       })
+//       .on("close", function (savedFile) {
+//         console.log("file saved", savedFile);
+//         return res.json({
+//           file: savedFile,
+//           status: "saved",
+//           imageName: filenameSlug,
+//         });
+//       })
+//   );
+//   // var file = gfs.find(
+//   //   { filename: user.image },
+//   //   { contentType: req.query.contentType }
+//   // );
 
-  // if (file) {
-  //   file.forEach((element) => {
-  //     if (element.filename === user.image) {
-  //       gfs.delete(element._id);
-  //       console.log(element.filename);
-  //     }
-  //   });
-  // }
-};
+//   // if (file) {
+//   //   file.forEach((element) => {
+//   //     if (element.filename === user.image) {
+//   //       gfs.delete(element._id);
+//   //       console.log(element.filename);
+//   //     }
+//   //   });
+//   // }
+// };
 
 exports.getFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
