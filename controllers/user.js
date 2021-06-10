@@ -137,7 +137,7 @@ exports.updateUser = async function (req, res) {
       .end();
   }
   try {
-    await Users.findOneAndUpdate(
+    Users.findOneAndUpdate(
       { username: userToUpdate },
       req.body.newData,
       { new: true },
@@ -148,7 +148,7 @@ exports.updateUser = async function (req, res) {
             .json({ err: err.message, status: INTERNAL_ERROR })
             .end();
         }
-        
+
         try {
           if (req.body.newData.username) {
             await Projects.updateMany(
