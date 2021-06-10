@@ -310,6 +310,8 @@ app.post(
   midleware.auth,
   upload.single("image"),
   async (req, res, next) => {
+    var objID = req.body.userID || req.body.projectID;
+    console.log("OBJID: ", objID);
     var filenameSlug =
       (await slugify(req.body.filename, {
         replacement: "-",
@@ -318,8 +320,8 @@ app.post(
         strict: false,
         locale: "ru",
       })) +
-        "-IMAGE-" +
-        req.body.userID || req.body.projectID;
+      "-IMAGE-" +
+      objID;
 
     console.log("slug: ", filenameSlug);
 
