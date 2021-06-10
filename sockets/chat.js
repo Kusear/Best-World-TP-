@@ -138,13 +138,13 @@ module.exports = (io) => {
                 var obj = {
                   username: "",
                   image: "",
-                  chunks: [],
+                  base64: "",
                 };
                 console.log("gfs");
                 gfs
                   .openDownloadStreamByName(element.image, { revision: -1 })
                   .on("data", (chunk) => {
-                    obj.chunks.push(chunk);
+                    obj.base64 += Buffer.from(chunk, "hex").toString("base64");
                     // console.log("CHUNK: ", chunk);
                   })
                   .on("error", function (err) {
@@ -213,12 +213,12 @@ module.exports = (io) => {
                   username: "",
                   image: "",
                   role: "",
-                  chunks: [],
+                  base64: "",
                 };
                 gfs
                   .openDownloadStreamByName(element.image, { revision: -1 })
                   .on("data", (chunk) => {
-                    obj.chunks.push(chunk);
+                    obj.base64 += Buffer.from(chunk, "hex").toString("base64");
                     // console.log("CHUNK: ", chunk);
                   })
                   .on("error", function (err) {

@@ -9,6 +9,9 @@ const slugify = require("slugify");
 
 exports.login = async (req, res) => {
   await Users.findOne({ email: req.body.email }, async function (err, user) {
+
+    console.log("login body: ", req.body); // TODO delete
+
     var isAuthenticated =
       user &&
       ((await bcrypt.compare(req.body.password, user.password)) ||
@@ -23,7 +26,8 @@ exports.login = async (req, res) => {
           _id: user._id,
           username: user.username,
           role: user.role,
-          emailConfirm: user.emailConfirm,
+          emailConfirm: user.emailConfirm, 
+          image: user.image,
           token: user.getToken(),
         })
         .end();
@@ -46,6 +50,8 @@ exports.registration = async function (req, res) {
       password: req.body.password,
       image: req.body.filename,
     }).save();
+
+    console.log("registration body: ", req.body); // TODO delete
 
     var mailAuthMessage = {
       to: newUser.email,
@@ -236,13 +242,13 @@ exports.getFiles = async function (req, res) {
     .openDownloadStreamByName(req.body.filename, { revision: -1 })
     .on("data", (chunk) => {
       console.log("CHUNK: ", chunk);
-      endSTR += Buffer.from(chunk, 'hex').toString('base64');
+      endSTR += Buffer.from(chunk, "hex").toString("base64");
     })
     .on("error", function (err) {
       console.log("ERR: ", err);
       return res.send("No image found with that title");
-    }).on("close", ()=>{
-      return res.status(200).json({base64Image: endSTR}).end();
     })
-    // .pipe(res);
+    .on("close", () => {
+      return res.status(200).json({ base64Image: endSTR }).end();
+    });
 };
