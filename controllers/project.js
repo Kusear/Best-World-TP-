@@ -29,10 +29,9 @@ exports.projectData = async function (req, res) {
 };
 
 exports.createProject = async function (req, res) {
-
   try {
     var newProject = await new Projects({
-      IDcreator: req.body.creatorid, 
+      IDcreator: req.body.creatorid,
       creatorName: req.body.creatorUsername,
       IDmanager: req.body.managerid,
       managerName: req.body.creatorUsername,
@@ -42,8 +41,8 @@ exports.createProject = async function (req, res) {
       projectHashTag: req.body.projectHashTag,
       countOfMembers: req.body.membersCount,
       creationDate: new Date(),
-      endTeamGathering: new Date(req.body.endGathering), 
-      endProjectDate: new Date(req.body.endProject), 
+      endTeamGathering: new Date(req.body.endGathering),
+      endProjectDate: new Date(req.body.endProject),
       requiredRoles: req.body.requredRoles,
       projectMembers: req.body.projectMembers,
       requests: req.body.requests,

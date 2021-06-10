@@ -188,8 +188,7 @@ Values:
     managerName, 
     projectTitle,
     projectDescription,
-    projectSubject,
-    filename,
+    projectHashTag,
     membersCount,
     endGathering,
     endProject,
@@ -198,6 +197,7 @@ Values:
     archive, 
     needHelp, 
     needChanges, 
+    userWhoUpdate
 Response: 
     message: "updated"
 
