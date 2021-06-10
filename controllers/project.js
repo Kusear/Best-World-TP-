@@ -30,24 +30,44 @@ exports.projectData = async function (req, res) {
 
 exports.createProject = async function (req, res) {
   try {
-    var newProject = await new Projects({
-      IDcreator: req.body.creatorid,
-      creatorName: req.body.creatorUsername,
-      IDmanager: req.body.managerid,
-      managerName: req.body.creatorUsername,
-      needManager: req.body.neededManager,
-      title: req.body.projectTitle,
-      description: req.body.projectDescription,
-      projectHashTag: req.body.projectHashTag,
-      countOfMembers: req.body.membersCount,
-      creationDate: new Date(),
-      endTeamGathering: new Date(req.body.endGathering),
-      endProjectDate: new Date(req.body.endProject),
-      requiredRoles: req.body.requredRoles,
-      projectMembers: req.body.projectMembers,
-      requests: req.body.requests,
-      needChanges: req.body.needChanges,
-    }).save();
+    var newProject;
+    if (!req.body.needHelp) {
+      newProject = await new Projects({
+        IDcreator: req.body.creatorid,
+        creatorName: req.body.creatorUsername,
+        IDmanager: req.body.managerid,
+        managerName: req.body.creatorUsername,
+        needHelp: req.body.needHelp,
+        title: req.body.projectTitle,
+        description: req.body.projectDescription,
+        projectHashTag: req.body.projectHashTag,
+        countOfMembers: req.body.membersCount,
+        creationDate: new Date(),
+        endTeamGathering: new Date(req.body.endGathering),
+        endProjectDate: new Date(req.body.endProject),
+        requiredRoles: req.body.requredRoles,
+        projectMembers: req.body.projectMembers,
+        requests: req.body.requests,
+        needChanges: req.body.needChanges,
+      }).save();
+    } else {
+      newProject = await new Projects({
+        IDcreator: req.body.creatorid,
+        creatorName: req.body.creatorUsername,
+        IDmanager: req.body.managerid,
+        managerName: req.body.creatorUsername,
+        needHelp: req.body.needHelp,
+        title: req.body.projectTitle,
+        description: req.body.projectDescription,
+        projectHashTag: req.body.projectHashTag,
+        countOfMembers: req.body.membersCount,
+        creationDate: new Date(),
+        requiredRoles: req.body.requredRoles,
+        projectMembers: req.body.projectMembers,
+        requests: req.body.requests,
+        needChanges: req.body.needChanges,
+      }).save();
+    }
 
     var newProjectChat = await new Chat({
       chatRoom: newProject.slug,
