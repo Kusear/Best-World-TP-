@@ -39,6 +39,21 @@ exports.userData = async function (req, res) {
     var endSTR = "";
     var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
+    gfs
+      .openDownloadStreamByName(user.image, { revision: -1 })
+      .on("data", (chunk) => {
+        console.log("Filename: ", user.image, "CHUNK: ", chunk);
+        endSTR += Buffer.from(chunk, "hex").toString("base64");
+      })
+      .on("error", function (err) {
+        console.log("ERR: ", err);
+        user.image = "default";
+      })
+      .on("close", () => {
+        user.image = endSTR;
+        console.log("aboba");
+      });
+
     var projects = [];
     memberInProjects.forEach((element) => {
       var construction = {
@@ -48,102 +63,166 @@ exports.userData = async function (req, res) {
       };
       construction.role = element.projectMembers[0].role;
       projects.push(construction);
-    }); // TODO сделать получение картинок проектов в которых участвует пользователь
-    for (let i = 0; i < projects.length; i++) {
-      projects[i].project = memberInProjects[i];
+    });
 
+    var i = 0;
+    var i3 = 0;
+    projects.forEach((element) => {
+      element.project = memberInProjects[i];
+      var endSTR2 = "";
       gfs
-        .openDownloadStreamByName(projects[i].project.image, { revision: -1 })
+        .openDownloadStreamByName(element.project.image, { revision: -1 })
         .on("data", (chunk) => {
-          console.log(
-            "Filename: ",
-            projects[i].project.image,
-            "CHUNK: ",
-            chunk
-          );
-          endSTR += Buffer.from(chunk, "hex").toString("base64");
+          console.log("Filename: ", element.project.image, "CHUNK: ", chunk);
+          endSTR2 += Buffer.from(chunk, "hex").toString("base64");
         })
         .on("error", (err) => {
           console.log("ERR: ", err);
-          projects[i].project.image = "default";
+          element.project.image = "default";
 
           gfs
-            .openDownloadStreamByName(projects[i].project.image, {
+            .openDownloadStreamByName("default", {
               revision: -1,
             })
             .on("data", (chunk) => {
               console.log(
                 "Filename: ",
-                projects[i].project.image,
+                element.project.image,
                 "CHUNK: ",
                 chunk
               );
-              endSTR += Buffer.from(chunk, "hex").toString("base64");
+              endSTR2 += Buffer.from(chunk, "hex").toString("base64");
             })
             .on("error", function (err) {
               console.log("ERR: ", err);
-              projects[i].project.image = "default";
+              element.project.image = "ERR in image";
             })
             .on("close", () => {
-              projects[i].project.image = endSTR;
+              element.project.image = endSTR2;
+              console.log(i3);
+              if (i3 == projects.length - 1) {
+                return res
+                  .status(200)
+                  .json({
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    preferredRole: user.preferredRole,
+                    info: user.info,
+                    image: user.image,
+                    projects: projects,
+                    emailConfirm: user.emailConfirm,
+                    status: SUCCESS,
+                  })
+                  .end();
+              }
+              i3++;
             });
         })
         .on("close", () => {
-          projects[i].project.image = endSTR;
+          element.project.image = endSTR2;
+          if (i3 == projects.length - 1) {
+            return res
+              .status(200)
+              .json({
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                preferredRole: user.preferredRole,
+                info: user.info,
+                image: user.image,
+                projects: projects,
+                emailConfirm: user.emailConfirm,
+                status: SUCCESS,
+              })
+              .end();
+          }
+          i3++;
         });
 
       if (memberInProjects[i].archived) {
-        projects[i].archived = true;
+        element.archived = true;
       }
-    }
+      i++;
+    });
+
+    // projects.forEach((element) => {
+    //   console.log("PR: ", element.project);
+    //   if (element.image === "default") {
+    //     gfs
+    //       .openDownloadStreamByName("default", {
+    //         revision: -1,
+    //       })
+    //       .on("data", (chunk) => {
+    //         console.log(
+    //           "Filename: ",
+    //           projects[i].project.image,
+    //           "CHUNK: ",
+    //           chunk
+    //         );
+    //         endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+    //       })
+    //       .on("error", function (err) {
+    //         console.log("ERR: ", err);
+    //         projects[i].project.image = "ERR in image";
+    //       })
+    //       .on("close", () => {
+    //         projects[i].project.image = endSTR2;
+    //       });
+    //   }
+    // });
 
     console.log("\nprojects: ", projects);
-    gfs
-      .openDownloadStreamByName(user.image, { revision: -1 })
-      .on("data", (chunk) => {
-        console.log("CHUNK: ", chunk);
-        endSTR += Buffer.from(chunk, "hex").toString("base64");
-      })
-      .on("error", function (err) {
-        console.log("ERR: ", err);
-        user.image = "default";
-        return res
-          .status(200)
-          .json({
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            preferredRole: user.preferredRole,
-            info: user.info,
-            image: user.image,
-            projects: projects,
-            emailConfirm: user.emailConfirm,
-            status: SUCCESS,
-          })
-          .end();
-      })
-      .on("close", () => {
-        user.image = endSTR;
-        console.log("aboba");
-        return res
-          .status(200)
-          .json({
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            preferredRole: user.preferredRole,
-            info: user.info,
-            image: user.image,
-            projects: projects,
-            emailConfirm: user.emailConfirm,
-            status: SUCCESS,
-          })
-          .end();
-      });
+    // gfs
+    //   .openDownloadStreamByName(user.image, { revision: -1 })
+    //   .on("data", (chunk) => {
+    //     console.log("Filename: ", user.image, "CHUNK: ", chunk);
+    //     endSTR += Buffer.from(chunk, "hex").toString("base64");
+    //   })
+    //   .on("error", function (err) {
+    //     console.log("ERR: ", err);
+    //     user.image = "default";
+    //     return res
+    //       .status(200)
+    //       .json({
+    //         id: user._id,
+    //         username: user.username,
+    //         email: user.email,
+    //         name: user.name,
+    //         role: user.role,
+    //         preferredRole: user.preferredRole,
+    //         info: user.info,
+    //         image: user.image,
+    //         projects: projects,
+    //         emailConfirm: user.emailConfirm,
+    //         status: SUCCESS,
+    //       })
+    //       .end();
+    //   })
+    //   .on("close", () => {
+    //     user.image = endSTR;
+    //     console.log("aboba");
+    //     return res
+    //       .status(200)
+    //       .json({
+    //         id: user._id,
+    //         username: user.username,
+    //         email: user.email,
+    //         name: user.name,
+    //         role: user.role,
+    //         preferredRole: user.preferredRole,
+    //         info: user.info,
+    //         image: user.image,
+    //         projects: projects,
+    //         emailConfirm: user.emailConfirm,
+    //         status: SUCCESS,
+    //       })
+    //       .end();
+    //   });
   });
 };
 
