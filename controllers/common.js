@@ -43,31 +43,17 @@ exports.login = async (req, res) => {
         .on("error", function (err) {
           console.log("ERR: ", err);
           user.image = "default";
-
-          gfs
-            .openDownloadStreamByName(user.image, { revision: -1 })
-            .on("data", (chunk) => {
-              console.log("CHUNK: ", chunk);
-              endSTR += Buffer.from(chunk, "hex").toString("base64");
+          return res
+            .status(200)
+            .json({
+              _id: user._id,
+              username: user.username,
+              role: user.role,
+              emailConfirm: user.emailConfirm,
+              image: user.image,
+              token: user.getToken(),
             })
-            .on("error", function (err) {
-              console.log("ERR: ", err);
-              user.image = "default";
-            })
-            .on("close", () => {
-              user.image = endSTR;
-              return res
-                .status(200)
-                .json({
-                  _id: user._id,
-                  username: user.username,
-                  role: user.role,
-                  emailConfirm: user.emailConfirm,
-                  image: user.image,
-                  token: user.getToken(),
-                })
-                .end();
-            });
+            .end();
         })
         .on("close", () => {
           user.image = endSTR;
