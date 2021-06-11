@@ -24,7 +24,8 @@ exports.projectData = async function (req, res) {
       console.log(project.description);
 
       var endSTR = "";
-
+      var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+      
       gfs
         .openDownloadStreamByName(project.image, { revision: -1 })
         .on("data", (chunk) => {
