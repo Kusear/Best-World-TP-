@@ -170,7 +170,7 @@ exports.deleteProject = async function (req, res) {
 
   var todolist = await ToDoLists.findOneAndDelete(
     {
-      parojectsSlug: project.slug,
+      projectSlug: projectToDelete,
     },
     (err) => {
       if (err) {
@@ -179,7 +179,7 @@ exports.deleteProject = async function (req, res) {
     }
   );
 
-  var chat = await Chat.findOneAndDelete({ chatRoom: project.slug }, (err) => {
+  var chat = await Chat.findOneAndDelete({ chatRoom: projectToDelete }, (err) => {
     if (err) {
       responce.chatStatus = err.message;
     }
