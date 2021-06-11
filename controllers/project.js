@@ -159,61 +159,37 @@ exports.deleteProject = async function (req, res) {
     return res.status(500).json({ err: "no projectID to edit" }).end();
   }
 
-  await Projects.findOne(
+  var project = await Projects.findOneAndDelete(
     { slug: projectToDelete },
-    async function (err, project) {
+    (err) => {
       if (err) {
-        return res.status(520).json({ err: err.message }).end();
+        responce.projectStatus = err.message;
       }
-
-      if (!project) {
-        return res.status(500).json({ err: "Project not found" }).end();
-      }
-
-      await ToDoLists.findOne(
-        { projectSlug: project.slug },
-        async (err, list) => {
-          if (err) {
-            return res.status(520).json({ err: err.message }).end();
-          }
-
-          if (list) {
-            await list.remove((err) => {
-              if (err) {
-                return res.status(520).json({ err: err.message }).end();
-              }
-              responce.todoListStatus = "deleted";
-            });
-          } else {
-            responce.todoListStatus = "todo not found";
-          }
-        }
-      );
-
-      await Chat.findOne({ chatRoom: project.slug }, async (err, chat) => {
-        if (err) {
-          responce.chatStatus = err.message;
-        }
-        if (!chat) {
-          responce.chatStatus = "Chat not found";
-        }
-        await chat.remove((err, result) => {
-          if (err) {
-            responce.chatStatus = err.message;
-          }
-          responce.chatStatus = "deleted";
-        });
-      });
-
-      await project.remove(function (err, doc) {
-        if (err) {
-          return res.status(500).json({ err: err.message }).end();
-        }
-        responce.projectStatus = "deleted";
-        return res.status(200).json(responce).end();
-      });
     }
   );
+
+  var todolist = await ToDoLists.findOneAndDelete(
+    {
+      parojectsSlug: project.slug,
+    },
+    (err) => {
+      if (err) {
+        responce.todoListStatus = err.message;
+      }
+    }
+  );
+
+  var chat = await Chat.findOneAndDelete({ chatRoom: project.slug }, (err) => {
+    if (err) {
+      responce.chatStatus = err.message;
+    }
+  });
+
+  if (project && todolist && chat) {
+    return res.status(200).json({ message: "deleted" }).end();
+  } else {
+    return res.status(500).json({ message: responce }).end();
+  }
 };
 
 exports.getProjects = async function (req, res) {
@@ -317,16 +293,6 @@ exports.getArchivedProjects = async function (req, res) {
 
 exports.addProjectMember = async (req, res) => {
   // TODO удалять все реквесты принатого пользователся
-  // req.body.projectSlug
-  // req.body.role
-  // req.body.id (request id)
-  // req.body.roleID
-  // reqRole.name = req.body.name; // optional
-  // reqRole.count = req.body.count; // optional
-  // reqRole.alreadyEnter = req.body.alreadyEnter; // optional
-
-  // https://docs.mongodb.com/manual/reference/operator/update/pull/
-  // прочитать ссылку про pull
 
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
@@ -555,3 +521,59 @@ exports.deleteRequest = async (req, res) => {
       .end();
   });
 };
+
+// await Projects.findOne(
+//   { slug: projectToDelete },
+//   async function (err, project) {
+//     if (err) {
+//       return res.status(520).json({ err: err.message }).end();
+//     }
+
+//     if (!project) {
+//       return res.status(500).json({ err: "Project not found" }).end();
+//     }
+
+//     await ToDoLists.findOne(
+//       { projectSlug: project.slug },
+//       async (err, list) => {
+//         if (err) {
+//           return res.status(520).json({ err: err.message }).end();
+//         }
+
+//         if (list) {
+//           await list.remove((err) => {
+//             if (err) {
+//               return res.status(520).json({ err: err.message }).end();
+//             }
+//             responce.todoListStatus = "deleted";
+//           });
+//         } else {
+//           responce.todoListStatus = "todo not found";
+//         }
+//       }
+//     );
+
+//     await Chat.findOne({ chatRoom: project.slug }, async (err, chat) => {
+//       if (err) {
+//         responce.chatStatus = err.message;
+//       }
+//       if (!chat) {
+//         responce.chatStatus = "Chat not found";
+//       }
+//       await chat.remove((err, result) => {
+//         if (err) {
+//           responce.chatStatus = err.message;
+//         }
+//         responce.chatStatus = "deleted";
+//       });
+//     });
+
+//     await project.remove(function (err, doc) {
+//       if (err) {
+//         return res.status(500).json({ err: err.message }).end();
+//       }
+//       responce.projectStatus = "deleted";
+//       return res.status(200).json(responce).end();
+//     });
+//   }
+// );
