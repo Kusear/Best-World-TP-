@@ -34,6 +34,7 @@ exports.login = async (req, res) => {
         mongoose.connection.db,
         mongoose.mongo
       );
+
       gfs
         .openDownloadStreamByName(user.image, { revision: -1 })
         .on("data", (chunk) => {
@@ -56,7 +57,9 @@ exports.login = async (req, res) => {
             .end();
         })
         .on("close", () => {
-          user.image = endSTR;
+          if (user.image !== "default") {
+            user.image = endSTR;
+          }
           return res
             .status(200)
             .json({

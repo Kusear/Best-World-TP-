@@ -61,186 +61,226 @@ exports.userData = async function (req, res) {
         user.image = "default";
         var i = 0;
         var i3 = 0;
-        projects.forEach((element) => {
-          element.project = memberInProjects[i];
-          var endSTR2 = "";
-          gfs
-            .openDownloadStreamByName(element.project.image, { revision: -1 })
-            .on("data", (chunk) => {
-              console.log(
-                "Filename: ",
-                element.project.image,
-                "CHUNK: ",
-                chunk
-              );
-              endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-            })
-            .on("error", (err) => {
-              console.log("ERR: ", err);
-              element.project.image = "default";
+        if (projects.length != 0) {
+          projects.forEach((element) => {
+            element.project = memberInProjects[i];
+            var endSTR2 = "";
+            gfs
+              .openDownloadStreamByName(element.project.image, { revision: -1 })
+              .on("data", (chunk) => {
+                console.log(
+                  "Filename: ",
+                  element.project.image,
+                  "CHUNK: ",
+                  chunk
+                );
+                endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+              })
+              .on("error", (err) => {
+                console.log("ERR: ", err);
+                element.project.image = "default";
 
-              gfs
-                .openDownloadStreamByName("default", {
-                  revision: -1,
-                })
-                .on("data", (chunk) => {
-                  console.log(
-                    "Filename: ",
-                    element.project.image,
-                    "CHUNK: ",
-                    chunk
-                  );
-                  endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-                })
-                .on("error", function (err) {
-                  console.log("ERR: ", err);
-                  element.project.image = "ERR in image";
-                })
-                .on("close", () => {
-                  element.project.image = endSTR2;
-                  console.log(i3);
-                  if (i3 == projects.length - 1) {
-                    return res
-                      .status(200)
-                      .json({
-                        id: user._id,
-                        username: user.username,
-                        email: user.email,
-                        name: user.name,
-                        role: user.role,
-                        preferredRole: user.preferredRole,
-                        info: user.info,
-                        image: user.image,
-                        projects: projects,
-                        emailConfirm: user.emailConfirm,
-                        status: SUCCESS,
-                      })
-                      .end();
-                  }
-                  i3++;
-                });
-            })
-            .on("close", () => {
-              element.project.image = endSTR2;
-              if (i3 == projects.length - 1) {
-                return res
-                  .status(200)
-                  .json({
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                    preferredRole: user.preferredRole,
-                    info: user.info,
-                    image: user.image,
-                    projects: projects,
-                    emailConfirm: user.emailConfirm,
-                    status: SUCCESS,
+                gfs
+                  .openDownloadStreamByName("default", {
+                    revision: -1,
                   })
-                  .end();
-              }
-              i3++;
-            });
+                  .on("data", (chunk) => {
+                    console.log(
+                      "Filename: ",
+                      element.project.image,
+                      "CHUNK: ",
+                      chunk
+                    );
+                    endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+                  })
+                  .on("error", function (err) {
+                    console.log("ERR: ", err);
+                    element.project.image = "ERR in image";
+                  })
+                  .on("close", () => {
+                    element.project.image = endSTR2;
+                    console.log(i3);
+                    if (i3 == projects.length - 1) {
+                      return res
+                        .status(200)
+                        .json({
+                          id: user._id,
+                          username: user.username,
+                          email: user.email,
+                          name: user.name,
+                          role: user.role,
+                          preferredRole: user.preferredRole,
+                          info: user.info,
+                          image: user.image,
+                          projects: projects,
+                          emailConfirm: user.emailConfirm,
+                          status: SUCCESS,
+                        })
+                        .end();
+                    }
+                    i3++;
+                  });
+              })
+              .on("close", () => {
+                element.project.image = endSTR2;
+                if (i3 == projects.length - 1) {
+                  return res
+                    .status(200)
+                    .json({
+                      id: user._id,
+                      username: user.username,
+                      email: user.email,
+                      name: user.name,
+                      role: user.role,
+                      preferredRole: user.preferredRole,
+                      info: user.info,
+                      image: user.image,
+                      projects: projects,
+                      emailConfirm: user.emailConfirm,
+                      status: SUCCESS,
+                    })
+                    .end();
+                }
+                i3++;
+              });
 
-          if (memberInProjects[i].archived) {
-            element.archived = true;
-          }
-          i++;
-        });
+            if (memberInProjects[i].archived) {
+              element.archived = true;
+            }
+            i++;
+          });
+        } else {
+          return res
+            .status(200)
+            .json({
+              id: user._id,
+              username: user.username,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              preferredRole: user.preferredRole,
+              info: user.info,
+              image: user.image,
+              projects: projects,
+              emailConfirm: user.emailConfirm,
+              status: SUCCESS,
+            })
+            .end();
+        }
       })
       .on("close", () => {
-        user.image = endSTR;
+        if (user.image !== "default") {
+          user.image = endSTR;
+        }
         console.log("aboba");
         var i = 0;
         var i3 = 0;
-        projects.forEach((element) => {
-          element.project = memberInProjects[i];
-          var endSTR2 = "";
-          gfs
-            .openDownloadStreamByName(element.project.image, { revision: -1 })
-            .on("data", (chunk) => {
-              console.log(
-                "Filename: ",
-                element.project.image,
-                "CHUNK: ",
-                chunk
-              );
-              endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-            })
-            .on("error", (err) => {
-              console.log("ERR: ", err);
-              element.project.image = "default";
+        if (projects.length != 0) {
+          projects.forEach((element) => {
+            element.project = memberInProjects[i];
+            var endSTR2 = "";
+            gfs
+              .openDownloadStreamByName(element.project.image, { revision: -1 })
+              .on("data", (chunk) => {
+                console.log(
+                  "Filename: ",
+                  element.project.image,
+                  "CHUNK: ",
+                  chunk
+                );
+                endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+              })
+              .on("error", (err) => {
+                console.log("ERR: ", err);
+                element.project.image = "default";
 
-              gfs
-                .openDownloadStreamByName("default", {
-                  revision: -1,
-                })
-                .on("data", (chunk) => {
-                  console.log(
-                    "Filename: ",
-                    element.project.image,
-                    "CHUNK: ",
-                    chunk
-                  );
-                  endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-                })
-                .on("error", function (err) {
-                  console.log("ERR: ", err);
-                  element.project.image = "ERR in image";
-                })
-                .on("close", () => {
-                  element.project.image = endSTR2;
-                  console.log(i3);
-                  if (i3 == projects.length - 1) {
-                    return res
-                      .status(200)
-                      .json({
-                        id: user._id,
-                        username: user.username,
-                        email: user.email,
-                        name: user.name,
-                        role: user.role,
-                        preferredRole: user.preferredRole,
-                        info: user.info,
-                        image: user.image,
-                        projects: projects,
-                        emailConfirm: user.emailConfirm,
-                        status: SUCCESS,
-                      })
-                      .end();
-                  }
-                  i3++;
-                });
-            })
-            .on("close", () => {
-              element.project.image = endSTR2;
-              if (i3 == projects.length - 1) {
-                return res
-                  .status(200)
-                  .json({
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                    preferredRole: user.preferredRole,
-                    info: user.info,
-                    image: user.image,
-                    projects: projects,
-                    emailConfirm: user.emailConfirm,
-                    status: SUCCESS,
+                gfs
+                  .openDownloadStreamByName("default", {
+                    revision: -1,
                   })
-                  .end();
-              }
-              i3++;
-            });
+                  .on("data", (chunk) => {
+                    console.log(
+                      "Filename: ",
+                      element.project.image,
+                      "CHUNK: ",
+                      chunk
+                    );
+                    endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+                  })
+                  .on("error", function (err) {
+                    console.log("ERR: ", err);
+                    element.project.image = "ERR in image";
+                  })
+                  .on("close", () => {
+                    element.project.image = endSTR2;
+                    console.log(i3);
+                    if (i3 == projects.length - 1) {
+                      return res
+                        .status(200)
+                        .json({
+                          id: user._id,
+                          username: user.username,
+                          email: user.email,
+                          name: user.name,
+                          role: user.role,
+                          preferredRole: user.preferredRole,
+                          info: user.info,
+                          image: user.image,
+                          projects: projects,
+                          emailConfirm: user.emailConfirm,
+                          status: SUCCESS,
+                        })
+                        .end();
+                    }
+                    i3++;
+                  });
+              })
+              .on("close", () => {
+                element.project.image = endSTR2;
+                if (i3 == projects.length - 1) {
+                  return res
+                    .status(200)
+                    .json({
+                      id: user._id,
+                      username: user.username,
+                      email: user.email,
+                      name: user.name,
+                      role: user.role,
+                      preferredRole: user.preferredRole,
+                      info: user.info,
+                      image: user.image,
+                      projects: projects,
+                      emailConfirm: user.emailConfirm,
+                      status: SUCCESS,
+                    })
+                    .end();
+                }
+                i3++;
+              });
 
-          if (memberInProjects[i].archived) {
-            element.archived = true;
-          }
-          i++;
-        });
+            if (memberInProjects[i].archived) {
+              element.archived = true;
+            }
+            i++;
+          });
+        } else {
+          return res
+            .status(200)
+            .json({
+              id: user._id,
+              username: user.username,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              preferredRole: user.preferredRole,
+              info: user.info,
+              image: user.image,
+              projects: projects,
+              emailConfirm: user.emailConfirm,
+              status: SUCCESS,
+            })
+            .end();
+        }
       });
 
     // projects.forEach((element) => {
