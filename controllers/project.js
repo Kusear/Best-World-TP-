@@ -223,7 +223,7 @@ exports.deleteProject = async function (req, res) {
     }
   );
 
-  if (project && todolist && chat) {
+  if (!project && !todolist && !chat) {
     return res.status(200).json({ message: "deleted" }).end();
   } else {
     return res.status(500).json({ message: responce }).end();
