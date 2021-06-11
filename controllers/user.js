@@ -55,10 +55,15 @@ exports.userData = async function (req, res) {
       gfs
         .openDownloadStreamByName(projects[i].project.image, { revision: -1 })
         .on("data", (chunk) => {
-          console.log("CHUNK: ", chunk);
+          console.log(
+            "Filename: ",
+            projects[i].project.image,
+            "CHUNK: ",
+            chunk
+          );
           endSTR += Buffer.from(chunk, "hex").toString("base64");
         })
-        .on("error", function (err) {
+        .on("error", (err) => {
           console.log("ERR: ", err);
           projects[i].project.image = "default";
 
@@ -116,6 +121,7 @@ exports.userData = async function (req, res) {
       })
       .on("close", () => {
         user.image = endSTR;
+        console.log("aboba");
         return res
           .status(200)
           .json({

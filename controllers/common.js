@@ -212,7 +212,8 @@ exports.recoveryPassword = async (req, res) => {
 exports.getFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
   var endSTR = "";
-
+  console.log("body: ", req.body);
+  console.log("query: ", req.query);
   gfs
     .openDownloadStreamByName(req.body.filename, { revision: -1 })
     .on("data", (chunk) => {
@@ -221,7 +222,10 @@ exports.getFiles = async function (req, res) {
     })
     .on("error", function (err) {
       console.log("ERR: ", err);
-      return res.status(500).json({base64Image: "No image found with that title"}).end();
+      return res
+        .status(500)
+        .json({ base64Image: "No image found with that title" })
+        .end();
     })
     .on("close", () => {
       return res.status(200).json({ base64Image: endSTR }).end();

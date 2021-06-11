@@ -396,7 +396,7 @@ app.post(
     });
   }
 );
-app.post(api_route + "/getFile", controllersCommon.getFiles);
+app.post(api_route + "/getFile", midleware.routeLog, controllersCommon.getFiles);
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);
@@ -493,7 +493,7 @@ app.post(api_route + "/deleteChat", midleware.auth, controllersChat.deleteChat);
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
   .then(
-    server.listen(process.env.PORT || 3000, function () {
+    server.listen(process.env.PORT || 7000, function () {
       console.log("API Working!");
       nodemailer.transport.verify();
     })
