@@ -53,7 +53,7 @@ var UserSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    default: "",
+    default: "default",
   },
 });
 
