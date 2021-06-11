@@ -24,8 +24,11 @@ exports.projectData = async function (req, res) {
       console.log(project.description);
 
       var endSTR = "";
-      var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
-      
+      var gfs = new mongodb.GridFSBucket(
+        mongoose.connection.db,
+        mongoose.mongo
+      );
+
       gfs
         .openDownloadStreamByName(project.image, { revision: -1 })
         .on("data", (chunk) => {
@@ -35,6 +38,21 @@ exports.projectData = async function (req, res) {
         .on("error", function (err) {
           console.log("ERR: ", err);
           project.image = "default";
+
+          gfs
+            .openDownloadStreamByName(project.image, { revision: -1 })
+            .on("data", (chunk) => {
+              console.log("CHUNK: ", chunk);
+              endSTR += Buffer.from(chunk, "hex").toString("base64");
+            })
+            .on("error", function (err) {
+              console.log("ERR: ", err);
+              project.image = "default";
+            })
+            .on("close", () => {
+              project.image = endSTR;
+              return res.status(200).json(project).end();
+            });
         })
         .on("close", () => {
           project.image = endSTR;
@@ -244,7 +262,23 @@ exports.getProjects = async function (req, res) {
       .on("error", function (err) {
         console.log("ERR: ", err);
         pr.project.image = "default";
-        listProjects.push(pr);
+
+        gfs
+          .openDownloadStreamByName(pr.project.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR += Buffer.from(chunk, "hex").toString("base64");
+          })
+          .on("error", function (err) {
+            pr.project.image = "Err on image";
+            listProjects.push(pr);
+          })
+          .on("close", () => {
+            pr.project.image = endSTR;
+            listProjects.push(pr);
+            console.log("c: ", counter);
+          });
+
         if (counter == projects.length - 1) {
           return res.status(200).json(listProjects).end();
         }

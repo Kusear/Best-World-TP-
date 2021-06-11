@@ -23,16 +23,28 @@ module.exports = (io) => {
     cUser.id = socket.id;
 
     socket.on("joinRoom", async ({ username, token, room }) => {
-      // await Users.findOne({username: username}, (err, user)=>{
-      //   if (err) {
-      //     io.to(cUser.id).emit("err", { err: err.message });
-      //     return socket.disconnect();
-      //   }
-      //   if (!user) {
-      //     io.to(cUser.id).emit("err", { err: "" });
-      //     return socket.disconnect();
-      //   }
-      // });
+      var banned = false;
+      await Users.findOne({ username: username }, (err, user) => {
+        if (err) {
+          io.to(cUser.id).emit("err", { err: err.message });
+          return socket.disconnect();
+        }
+        if (!user) {
+          io.to(cUser.id).emit("err", { err: "" });
+          return socket.disconnect();
+        }
+        if (user.ban) {
+          banned = true;
+        }
+      });
+
+      if (banned) {
+        io.to(cUser.id).emit("err", {
+          err: "Banned user",
+          status: DISCONNECTED,
+        });
+        return socket.disconnect();
+      }
 
       cUser.Room = room;
       cUser.username = username;
