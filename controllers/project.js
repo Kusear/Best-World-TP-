@@ -22,7 +22,23 @@ exports.projectData = async function (req, res) {
     }
     if (project) {
       console.log(project.description);
-      return res.status(200).json(project).end();
+
+      var endSTR = "";
+
+      gfs
+        .openDownloadStreamByName(project.image, { revision: -1 })
+        .on("data", (chunk) => {
+          console.log("CHUNK: ", chunk);
+          endSTR += Buffer.from(chunk, "hex").toString("base64");
+        })
+        .on("error", function (err) {
+          console.log("ERR: ", err);
+          project.image = "default";
+        })
+        .on("close", () => {
+          project.image = endSTR;
+          return res.status(200).json(project).end();
+        });
     } else {
       return res.status(500).json("Project not found").end();
     }
@@ -179,11 +195,14 @@ exports.deleteProject = async function (req, res) {
     }
   );
 
-  var chat = await Chat.findOneAndDelete({ chatRoom: projectToDelete }, (err) => {
-    if (err) {
-      responce.chatStatus = err.message;
+  var chat = await Chat.findOneAndDelete(
+    { chatRoom: projectToDelete },
+    (err) => {
+      if (err) {
+        responce.chatStatus = err.message;
+      }
     }
-  });
+  );
 
   if (project && todolist && chat) {
     return res.status(200).json({ message: "deleted" }).end();
@@ -212,7 +231,7 @@ exports.getProjects = async function (req, res) {
 
     var pr = {
       project: element,
-      image: "",
+      // image: "",
     };
 
     gfs
@@ -223,7 +242,7 @@ exports.getProjects = async function (req, res) {
       })
       .on("error", function (err) {
         console.log("ERR: ", err);
-        pr.image = "default";
+        pr.project.image = "default";
         listProjects.push(pr);
         if (counter == projects.length - 1) {
           return res.status(200).json(listProjects).end();
@@ -232,7 +251,7 @@ exports.getProjects = async function (req, res) {
         counter++;
       })
       .on("close", () => {
-        pr.image = endSTR;
+        pr.project.image = endSTR;
         listProjects.push(pr);
         if (counter == projects.length - 1) {
           return res.status(200).json(listProjects).end();
