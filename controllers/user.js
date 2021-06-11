@@ -72,7 +72,12 @@ exports.userData = async function (req, res) {
               revision: -1,
             })
             .on("data", (chunk) => {
-              console.log("CHUNK: ", chunk);
+              console.log(
+                "Filename: ",
+                projects[i].project.image,
+                "CHUNK: ",
+                chunk
+              );
               endSTR += Buffer.from(chunk, "hex").toString("base64");
             })
             .on("error", function (err) {
