@@ -36,6 +36,9 @@ exports.userData = async function (req, res) {
       }
     );
 
+    var endSTR = "";
+    var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+
     var projects = [];
     memberInProjects.forEach((element) => {
       var construction = {
@@ -48,16 +51,43 @@ exports.userData = async function (req, res) {
     }); // TODO сделать получение картинок проектов в которых участвует пользователь
     for (let i = 0; i < projects.length; i++) {
       projects[i].project = memberInProjects[i];
+
+      gfs
+        .openDownloadStreamByName(projects[i].project.image, { revision: -1 })
+        .on("data", (chunk) => {
+          console.log("CHUNK: ", chunk);
+          endSTR += Buffer.from(chunk, "hex").toString("base64");
+        })
+        .on("error", function (err) {
+          console.log("ERR: ", err);
+          projects[i].project.image = "default";
+
+          gfs
+            .openDownloadStreamByName(projects[i].project.image, {
+              revision: -1,
+            })
+            .on("data", (chunk) => {
+              console.log("CHUNK: ", chunk);
+              endSTR += Buffer.from(chunk, "hex").toString("base64");
+            })
+            .on("error", function (err) {
+              console.log("ERR: ", err);
+              projects[i].project.image = "default";
+            })
+            .on("close", () => {
+              projects[i].project.image = endSTR;
+            });
+        })
+        .on("close", () => {
+          projects[i].project.image = endSTR;
+        });
+
       if (memberInProjects[i].archived) {
         projects[i].archived = true;
       }
     }
 
     console.log("\nprojects: ", projects);
-
-    var endSTR = "";
-    var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
-
     gfs
       .openDownloadStreamByName(user.image, { revision: -1 })
       .on("data", (chunk) => {
