@@ -305,7 +305,7 @@ app.post(
   controllersProjectBoard.deleteTask
 );
 
-// files routes // TODO сделать route для файлов
+// files routes
 app.post(
   api_route + "/saveFile",
   midleware.auth,

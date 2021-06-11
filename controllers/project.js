@@ -344,8 +344,6 @@ exports.getArchivedProjects = async function (req, res) {
 };
 
 exports.addProjectMember = async (req, res) => {
-  // TODO удалять все реквесты принатого пользователся
-
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -401,7 +399,6 @@ exports.addProjectMember = async (req, res) => {
     try {
       // await pr.requests.pull({ _id: req.body.id });
       await Projects.findOneAndUpdate(
-        // TODO протестировать
         { slug: projectSlug },
         { $pull: { requests: { username: user.username } } }
       );

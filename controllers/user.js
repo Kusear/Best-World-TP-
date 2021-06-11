@@ -45,7 +45,7 @@ exports.userData = async function (req, res) {
       };
       construction.role = element.projectMembers[0].role;
       projects.push(construction);
-    });
+    }); // TODO сделать получение картинок проектов в которых участвует пользователь
     for (let i = 0; i < projects.length; i++) {
       projects[i].project = memberInProjects[i];
       if (memberInProjects[i].archived) {
@@ -121,7 +121,6 @@ exports.userData = async function (req, res) {
 };
 
 exports.lightUserData = async (req, res) => {
-  // TODO сделать получение инфы о пользователях в проекте
   await Users.findOne({ username: req.query.username }, async (err, user) => {
     if (err) {
       return res
@@ -140,14 +139,54 @@ exports.lightUserData = async (req, res) => {
     await Projects.findOne(
       { "projectMembers.username": user.username },
       (err, prUser) => {
-        return res
-          .status(200)
-          .json({
-            username: user.username,
-            image: user.image,
-            role: prUser.role,
+        var endSTR = "";
+        var gfs = new mongodb.GridFSBucket(
+          mongoose.connection.db,
+          mongoose.mongo
+        );
+        gfs
+          .openDownloadStreamByName(user.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR += Buffer.from(chunk, "hex").toString("base64");
           })
-          .end();
+          .on("error", function (err) {
+            console.log("ERR: ", err);
+            user.image = "default";
+
+            gfs
+              .openDownloadStreamByName(user.image, { revision: -1 })
+              .on("data", (chunk) => {
+                console.log("CHUNK: ", chunk);
+                endSTR += Buffer.from(chunk, "hex").toString("base64");
+              })
+              .on("error", function (err) {
+                console.log("ERR: ", err);
+                user.image = "ERR";
+              })
+              .on("close", () => {
+                user.image = endSTR;
+                return res
+                  .status(200)
+                  .json({
+                    username: user.username,
+                    image: user.image,
+                    role: prUser.role,
+                  })
+                  .end();
+              });
+          })
+          .on("close", () => {
+            user.image = endSTR;
+            return res
+              .status(200)
+              .json({
+                username: user.username,
+                image: user.image,
+                role: prUser.role,
+              })
+              .end();
+          });
       }
     );
   });
@@ -187,7 +226,6 @@ exports.updateUser = async function (req, res) {
   }
   try {
     Users.findOneAndUpdate(
-      // TODO исправить
       { username: userToUpdate },
       req.body.newData,
       { new: true },

@@ -25,7 +25,7 @@ exports.createChat = async (req, res) => {
   }
 };
 
-exports.getChats = async (req, res) => { // TODO подумать как защитить от получения чатов других пользователей (мб как-то достать из токена username)
+exports.getChats = async (req, res) => { 
   // if (req.query.username === req.headers.username)
   var userChats = await Chat.find(
     { "chatMembers.username": req.query.username },

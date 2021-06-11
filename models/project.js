@@ -110,7 +110,7 @@ const ProjectSchema = new mongoose.Schema({
   slug: {
     type: String,
   },
-}); // TODO добавить поле документов
+});
 
 ProjectSchema.pre("save", async function (next) {
   this.slug =
