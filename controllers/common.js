@@ -221,7 +221,7 @@ exports.getFiles = async function (req, res) {
     })
     .on("error", function (err) {
       console.log("ERR: ", err);
-      return res.send("No image found with that title");
+      return res.status(500).json({base64Image: "No image found with that title"}).end();
     })
     .on("close", () => {
       return res.status(200).json({ base64Image: endSTR }).end();

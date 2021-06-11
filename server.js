@@ -33,8 +33,8 @@ const storageIMG = new GridFsStorage({
           strict: false,
           locale: "ru",
         }) +
-          "-IMAGE-" +
-          objID,
+        "-IMAGE-" +
+        objID,
     };
   },
 });
@@ -339,7 +339,10 @@ app.post(
           if (err) {
             return res.status(500).json({ err: err.message }).end();
           }
-          return res.status(200).json({ message: "Image updated" }).end();
+          return res
+            .status(200)
+            .json({ message: "Image saved", filename: filenameSlug })
+            .end();
         }
       );
     } else {
@@ -351,7 +354,10 @@ app.post(
           if (err) {
             return res.status(500).json({ err: err.message }).end();
           }
-          return res.status(200).json({ message: "Image updated" }).end();
+          return res
+            .status(200)
+            .json({ message: "Image saved", filename: filenameSlug })
+            .end();
         }
       );
     }
@@ -383,7 +389,10 @@ app.post(
         return res.status(500).json({ err: err.message }).end();
       }
       pr.projectFiles.push(file);
-      return res.status(200).json({ message: "File added" }).end();
+      return res
+        .status(200)
+        .json({ message: "File added", filename: filenameSlug })
+        .end();
     });
   }
 );
