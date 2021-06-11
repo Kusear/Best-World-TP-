@@ -10,8 +10,6 @@ const Chat = require("../models/chats_model").Chat;
 const ChatMembers = require("../models/chats_model").ChatMembers;
 
 exports.projectData = async function (req, res) {
-  //  req.body.projectSlug
-
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -182,8 +180,6 @@ exports.updateProject = async function (req, res) {
 };
 
 exports.deleteProject = async function (req, res) {
-  // req.body.projectSlug
-
   var projectToDelete = req.body.projectSlug;
   var responce = {
     todoListStatus: "",
@@ -231,7 +227,6 @@ exports.deleteProject = async function (req, res) {
 };
 
 exports.getProjects = async function (req, res) {
-  // req.query.currentPage
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   var listProjects = [];
@@ -250,7 +245,6 @@ exports.getProjects = async function (req, res) {
 
     var pr = {
       project: element,
-      // image: "",
     };
 
     gfs
@@ -276,14 +270,18 @@ exports.getProjects = async function (req, res) {
           .on("close", () => {
             pr.project.image = endSTR;
             listProjects.push(pr);
-            console.log("c: ", counter);
+            console.log("d c: ", counter);
+            if (counter == projects.length - 1) {
+              return res.status(200).json(listProjects).end();
+            }
+            console.log("e: ", counter);
+            counter++;
           });
 
-        if (counter == projects.length - 1) {
-          return res.status(200).json(listProjects).end();
-        }
-        console.log("e: ", counter);
-        counter++;
+        // if (counter == projects.length - 1) {
+        //   return res.status(200).json(listProjects).end();
+        // }
+        // console.log("e: ", counter);
       })
       .on("close", () => {
         pr.project.image = endSTR;

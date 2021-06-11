@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+const mongodb = require("mongodb");
 const Users = require("../models/user_model").User;
 const Chats = require("../models/chats_model").Chat;
 const Projects = require("../models/project").Project;
@@ -52,22 +54,69 @@ exports.userData = async function (req, res) {
     }
 
     console.log("\nprojects: ", projects);
-    return res
-      .status(200)
-      .json({
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        preferredRole: user.preferredRole,
-        info: user.info,
-        image: user.image,
-        projects: projects,
-        emailConfirm: user.emailConfirm,
-        status: SUCCESS,
+
+    var endSTR = "";
+    var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+
+    gfs
+      .openDownloadStreamByName(user.image, { revision: -1 })
+      .on("data", (chunk) => {
+        console.log("CHUNK: ", chunk);
+        endSTR += Buffer.from(chunk, "hex").toString("base64");
       })
-      .end();
+      .on("error", function (err) {
+        console.log("ERR: ", err);
+        user.image = "default";
+
+        gfs
+          .openDownloadStreamByName(user.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR += Buffer.from(chunk, "hex").toString("base64");
+          })
+          .on("error", function (err) {
+            console.log("ERR: ", err);
+            user.image = "default";
+          })
+          .on("close", () => {
+            user.image = endSTR;
+            return res
+              .status(200)
+              .json({
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                preferredRole: user.preferredRole,
+                info: user.info,
+                image: user.image,
+                projects: projects,
+                emailConfirm: user.emailConfirm,
+                status: SUCCESS,
+              })
+              .end();
+          });
+      })
+      .on("close", () => {
+        user.image = endSTR;
+        return res
+          .status(200)
+          .json({
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            preferredRole: user.preferredRole,
+            info: user.info,
+            image: user.image,
+            projects: projects,
+            emailConfirm: user.emailConfirm,
+            status: SUCCESS,
+          })
+          .end();
+      });
   });
 };
 
@@ -249,48 +298,6 @@ exports.deleteUser = async function (req, res) {
       } catch (ex) {
         exeptionPullRequests = ex;
       }
-
-      // await Projects.find(
-      //   { "projectMembers.username": userToDelete },
-      //   (err, project) => {
-      //     if (err) {
-      //       return res
-      //         .status(500)
-      //         .json({ err: err.message, status: INTERNAL_ERROR })
-      //         .end();
-      //     }
-      //     if (!project) {
-      //       stat.proj = false;
-      //     } else {
-      //       project.projectMembers.forEach((element) => {
-      //         if (element.username === userFromBD.username) {
-      //           project.projectMembers.pull(element);
-      //         }
-      //       });
-      //       project.save();
-      //       stat.proj = true;
-      //     }
-      //   }
-      // );
-      // await Chats.find(
-      //   { "chatMembers.username": userToDelete },
-      //   (err, chat) => {
-      //     if (err) {
-      //       return;
-      //     }
-      //     if (!chat) {
-      //       stat.chats = false;
-      //     } else {
-      //       chat.chatMembers.forEach((element) => {
-      //         if (element.username === userFromBD.username) {
-      //           chat.chatMembers.pull(element);
-      //         }
-      //       });
-      //       chat.save();
-      //       stat.chats = true;
-      //     }
-      //   }
-      // );
       await ReportedUsers.findOneAndRemove(
         { username: userToDelete },
         { multi: true },
