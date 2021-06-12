@@ -219,7 +219,11 @@ exports.deleteProject = async function (req, res) {
     }
   );
 
-  if (!project && !todolist && !chat) {
+  if (
+    !responce.projectStatus &&
+    !responce.todoListStatus &&
+    !responce.chatStatus
+  ) {
     return res.status(200).json({ message: "deleted" }).end();
   } else {
     return res.status(500).json({ message: responce }).end();
@@ -396,15 +400,15 @@ exports.addProjectMember = async (req, res) => {
     }
 
     var exeptionPullRequests = "null";
-    try {
-      // await pr.requests.pull({ _id: req.body.id });
-      await Projects.findOneAndUpdate(
-        { slug: projectSlug },
-        { $pull: { requests: { username: user.username } } }
-      );
-    } catch (ex) {
-      exeptionPullRequests = ex;
-    }
+    await Projects.findOneAndUpdate(
+      { slug: projectSlug },
+      { $pull: { requests: { username: req.body.username } } },
+      (err) => {
+        if (err) {
+          exeptionPullRequests = err.message;
+        }
+      }
+    );
 
     await pr.save();
     return res
@@ -419,12 +423,6 @@ exports.addProjectMember = async (req, res) => {
 };
 
 exports.deleteProjectMember = async (req, res) => {
-  // req.body.projectSlug
-  // req.body.memberID
-  // req.body.roleID
-  // reqRole.name = req.body.name; // optional
-  // reqRole.count = req.body.count; // optional
-  // reqRole.alreadyEnter = req.body.alreadyEnter; // optional
 
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
@@ -538,37 +536,24 @@ exports.addReqest = async (req, res) => {
 };
 
 exports.deleteRequest = async (req, res) => {
-  // req.body.projectSlug
-  // req.body.requestID
-
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
-  await Projects.findOne({ slug: projectSlug }, async (err, project) => {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
-    }
-    await project.requests.pull(req.body.requestID);
-
-    var exeption = "null";
-    try {
-      var chat = Chat.findOne({ chatRoom: project.slug });
-      if (!chat) {
-        return res.status(500).json({ err: "Chat not found" }).end();
+  await Projects.findOneAndUpdate(
+    { slug: projectSlug },
+    { $pull: { requests: { username: req.body.username } } },
+    (err) => {
+      if (err) {
+        return res
+          .status(200)
+          .json({ message: "failed", err: err.message })
+          .end();
       }
-      await chat.chatMembers.pull(req.body.requestID);
-      await chat.save();
-    } catch (ex) {
-      exeption = ex;
+      return res.status(200).json({ message: "success" }).end();
     }
+  );
 
-    await project.save();
-    return res
-      .status(200)
-      .json({ message: "success", exeption: exeption })
-      .end();
-  });
 };
 
 // await Projects.findOne(
