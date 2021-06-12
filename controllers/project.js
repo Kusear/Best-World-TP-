@@ -50,13 +50,14 @@ exports.projectData = async function (req, res) {
             })
             .on("close", () => {
               project.image = endSTR;
-
               var usersInProject = [];
               var i = 0;
               project.projectMembers.forEach(async (element) => {
+                var endSTR2 = "";
                 var user = {
                   username: element.username,
                   role: element.role,
+                  canChange: element.canChange,
                   image: "",
                 };
                 console.log("USER: ", element);
@@ -67,29 +68,23 @@ exports.projectData = async function (req, res) {
                       .openDownloadStreamByName(userBD.image, { revision: -1 })
                       .on("data", (chunk) => {
                         console.log("CHUNK: ", chunk);
-                        endSTR += Buffer.from(chunk, "hex").toString("base64");
+                        endSTR2 += Buffer.from(chunk, "hex").toString("base64");
                       })
                       .on("error", function (err) {
                         console.log("ERR: ", err);
                         user.image = "default";
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          return res
-                            .status(200)
-                            .json({ project: project, users: usersInProject })
-                            .end();
+                          return res.status(200).json({project: project, members: usersInProject}).end();
                         }
                       })
                       .on("close", () => {
                         if (userBD.image !== "default") {
-                          user.image = endSTR;
+                          user.image = endSTR2;
                         }
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          return res
-                            .status(200)
-                            .json({ project: project, users: usersInProject })
-                            .end();
+                          return res.status(200).json({project: project, members: usersInProject}).end();
                         }
                       });
                   }
@@ -102,9 +97,11 @@ exports.projectData = async function (req, res) {
           var usersInProject = [];
           var i = 0;
           project.projectMembers.forEach(async (element) => {
+            var endSTR2 = "";
             var user = {
               username: element.username,
               role: element.role,
+              canChange: element.canChange,
               image: "",
             };
             console.log("USER: ", element);
@@ -113,29 +110,23 @@ exports.projectData = async function (req, res) {
                 .openDownloadStreamByName(userBD.image, { revision: -1 })
                 .on("data", (chunk) => {
                   console.log("CHUNK: ", chunk);
-                  endSTR += Buffer.from(chunk, "hex").toString("base64");
+                  endSTR2 += Buffer.from(chunk, "hex").toString("base64");
                 })
                 .on("error", function (err) {
                   console.log("ERR: ", err);
                   user.image = "default";
                   usersInProject.push(user);
                   if (i == project.projectMembers.length - 1) {
-                    return res
-                      .status(200)
-                      .json({ project: project, users: usersInProject })
-                      .end();
+                    return res.status(200).json({project: project, members: usersInProject}).end();
                   }
                 })
                 .on("close", () => {
                   if (userBD.image !== "default") {
-                    user.image = endSTR;
+                    user.image = endSTR2;
                   }
                   usersInProject.push(user);
                   if (i == project.projectMembers.length - 1) {
-                    return res
-                      .status(200)
-                      .json({ project: project, users: usersInProject })
-                      .end();
+                    return res.status(200).json({project: project, members: usersInProject}).end();
                   }
                 });
             });
