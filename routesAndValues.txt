@@ -185,13 +185,13 @@ Auth needed - yes
 Values: 
     projectSlug
     newProjectData: {
-        projectTitle,
-        projectDescription,
+        title,
+        description,
         projectHashTag,
-        membersCount,
-        endGathering,
-        endProject,
-        requredRoles,
+        countOfMembers,
+        endTeamGathering,
+        endProjectDate,
+        requiredRoles,
         projectMembers,
         archive, 
         needHelp, 
