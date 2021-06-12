@@ -142,6 +142,7 @@ exports.updateProject = async function (req, res) {
       console.log("ERR: ", err.message);
     }
   });
+  console.log("user update: ", req.body.userWhoUpdate);
 
   if (
     req.body.userWhoUpdate.username === projectA.creatorName ||
@@ -160,7 +161,7 @@ exports.updateProject = async function (req, res) {
     );
   } else {
     if (
-      req.body.userWhoUpdate.role === "helper" &&
+      req.body.userWhoUpdate.role === "Помощь в заполнении проекта" &&
       req.body.userWhoUpdate.canChange == true
     ) {
       await Projects.findOneAndUpdate(
