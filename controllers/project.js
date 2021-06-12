@@ -365,7 +365,7 @@ exports.addProjectMember = async (req, res) => {
     if (req.body.helper && pr.needHelp) {
       newMember = new Members();
       newMember.username = req.body.username;
-      newMember.role = "helper";
+      newMember.role = "Помощь в заполнении проекта";
       newMember.canChange = true;
     } else {
       newMember = new Members();
