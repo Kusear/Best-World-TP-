@@ -329,7 +329,9 @@ exports.lightUserData = async (req, res) => {
               .end();
           })
           .on("close", () => {
-            user.image = endSTR;
+            if (user.image !== "default") {
+              user.image = endSTR;
+            }
             return res
               .status(200)
               .json({

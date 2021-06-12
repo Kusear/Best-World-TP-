@@ -7,6 +7,7 @@ const ToDoLists = require("../models/todoList_model").TODOList;
 const Boards = require("../models/todoList_model").Boards;
 const Users = require("../models/user_model").User;
 const Chat = require("../models/chats_model").Chat;
+const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
 
 exports.projectData = async function (req, res) {
@@ -49,12 +50,96 @@ exports.projectData = async function (req, res) {
             })
             .on("close", () => {
               project.image = endSTR;
-              return res.status(200).json(project).end();
+
+              var usersInProject = [];
+              var i = 0;
+              project.projectMembers.forEach(async (element) => {
+                var user = {
+                  username: element.username,
+                  role: element.role,
+                  image: "",
+                };
+                console.log("USER: ", element);
+                await Users.findOne(
+                  { username: user.username },
+                  (err, userBD) => {
+                    gfs
+                      .openDownloadStreamByName(userBD.image, { revision: -1 })
+                      .on("data", (chunk) => {
+                        console.log("CHUNK: ", chunk);
+                        endSTR += Buffer.from(chunk, "hex").toString("base64");
+                      })
+                      .on("error", function (err) {
+                        console.log("ERR: ", err);
+                        user.image = "default";
+                        usersInProject.push(user);
+                        if (i == project.projectMembers.length - 1) {
+                          return res
+                            .status(200)
+                            .json({ project: project, users: usersInProject })
+                            .end();
+                        }
+                      })
+                      .on("close", () => {
+                        if (userBD.image !== "default") {
+                          user.image = endSTR;
+                        }
+                        usersInProject.push(user);
+                        if (i == project.projectMembers.length - 1) {
+                          return res
+                            .status(200)
+                            .json({ project: project, users: usersInProject })
+                            .end();
+                        }
+                      });
+                  }
+                );
+              });
             });
         })
         .on("close", () => {
           project.image = endSTR;
-          return res.status(200).json(project).end();
+          var usersInProject = [];
+          var i = 0;
+          project.projectMembers.forEach(async (element) => {
+            var user = {
+              username: element.username,
+              role: element.role,
+              image: "",
+            };
+            console.log("USER: ", element);
+            await Users.findOne({ username: user.username }, (err, userBD) => {
+              gfs
+                .openDownloadStreamByName(userBD.image, { revision: -1 })
+                .on("data", (chunk) => {
+                  console.log("CHUNK: ", chunk);
+                  endSTR += Buffer.from(chunk, "hex").toString("base64");
+                })
+                .on("error", function (err) {
+                  console.log("ERR: ", err);
+                  user.image = "default";
+                  usersInProject.push(user);
+                  if (i == project.projectMembers.length - 1) {
+                    return res
+                      .status(200)
+                      .json({ project: project, users: usersInProject })
+                      .end();
+                  }
+                })
+                .on("close", () => {
+                  if (userBD.image !== "default") {
+                    user.image = endSTR;
+                  }
+                  usersInProject.push(user);
+                  if (i == project.projectMembers.length - 1) {
+                    return res
+                      .status(200)
+                      .json({ project: project, users: usersInProject })
+                      .end();
+                  }
+                });
+            });
+          });
         });
     } else {
       return res.status(500).json("Project not found").end();
@@ -142,12 +227,12 @@ exports.updateProject = async function (req, res) {
       console.log("ERR: ", err.message);
     }
   });
-  console.log("user update: ", req.body);
-
+  console.log("A: ", projectA);
   if (
     req.body.userWhoUpdate.username === projectA.creatorName ||
     req.body.userWhoUpdate.username === projectA.managerName
   ) {
+    console.log("creator");
     await Projects.findOneAndUpdate(
       { slug: projectToUpdate },
       req.body.newProjectData,
@@ -156,6 +241,31 @@ exports.updateProject = async function (req, res) {
         if (err) {
           return res.status(500).json({ err: err.message }).end();
         }
+        var newSlug =
+          (await slugify(project.title, {
+            replacement: "-",
+            remove: undefined,
+            lower: false,
+            strict: false,
+            locale: "ru",
+          })) +
+          "-" +
+          project._id;
+
+        await Chat.findOneAndUpdate(
+          { chatRoom: project.slug },
+          { chatRoom: newSlug },
+          { new: true }
+        );
+        await ToDoLists.findOneAndUpdate(
+          { projectSlug: project.slug },
+          { projectSlug: newSlug },
+          { new: true }
+        );
+
+        project.slug = newSlug;
+        project.save();
+        console.log("C: ", req.body.newProjectData);
         return res.status(200).json({ message: "updated" }).end();
       }
     );
@@ -164,6 +274,7 @@ exports.updateProject = async function (req, res) {
       req.body.userWhoUpdate.role === "Помощь в заполнении проекта" &&
       req.body.userWhoUpdate.canChange == true
     ) {
+      console.log("someone else");
       await Projects.findOneAndUpdate(
         { slug: projectToUpdate },
         req.body.newProjectData,
@@ -172,14 +283,38 @@ exports.updateProject = async function (req, res) {
           if (err) {
             return res.status(500).json({ err: err.message }).end();
           }
-          projectA.projectMembers.pull(req.body.userWhoUpdate);
-          projectA.save();
+
+          var newSlug =
+            (await slugify(project.title, {
+              replacement: "-",
+              remove: undefined,
+              lower: false,
+              strict: false,
+              locale: "ru",
+            })) +
+            "-" +
+            project._id;
+
+          await Chat.findOneAndUpdate(
+            { chatRoom: project.slug },
+            { chatRoom: newSlug },
+            { new: true }
+          );
+          await ToDoLists.findOneAndUpdate(
+            { projectSlug: project.slug },
+            { projectSlug: newSlug },
+            { new: true }
+          );
+
+          project.slug = newSlug;
+          project.projectMembers.pull(req.body.userWhoUpdate);
+          project.save();
           return res.status(200).json({ message: "updated" }).end();
         }
       );
-    }else {
+    } else {
       return res.status(200).json({ message: "failed" }).end();
-  } 
+    }
   }
 };
 

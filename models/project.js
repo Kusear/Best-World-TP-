@@ -126,31 +126,6 @@ ProjectSchema.pre("save", async function (next) {
   next();
 });
 
-ProjectSchema.pre("updateOne", async (next) => {
-  try {
-    var chat = await Chat.findOne({ chatRoom: this.slug }, (err) => {
-      if (err) {
-        console.log("CHAT ERR: ", err.message);
-      }
-    });
-    this.slug =
-      (await slugify(this.title, {
-        replacement: "-",
-        remove: undefined,
-        lower: false,
-        strict: false,
-        locale: "ru",
-      })) +
-      "-" +
-      this._id;
-    chat.chatRoom = this.slug;
-    chat.save();
-  } catch (e) {
-    console.log("EX: ", e);
-  }
-  next();
-});
-
 exports.projectCollection = "project";
 exports.Project = mongoose.model("project", ProjectSchema);
 exports.Members = mongoose.model("members", ProjectMembers);
