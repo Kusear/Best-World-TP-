@@ -142,7 +142,7 @@ exports.updateProject = async function (req, res) {
       console.log("ERR: ", err.message);
     }
   });
-  console.log("user update: ", req.body.userWhoUpdate);
+  console.log("user update: ", req.body);
 
   if (
     req.body.userWhoUpdate.username === projectA.creatorName ||
