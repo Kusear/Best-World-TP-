@@ -52,6 +52,7 @@ exports.projectData = async function (req, res) {
               project.image = endSTR;
               var usersInProject = [];
               var i = 0;
+              var creatorImage;
               project.projectMembers.forEach(async (element) => {
                 var endSTR2 = "";
                 var user = {
@@ -73,18 +74,24 @@ exports.projectData = async function (req, res) {
                       .on("error", function (err) {
                         console.log("ERR: ", err);
                         user.image = "default";
+                        if (element.username === project.creatorName) {
+                          creatorImage = user.image;
+                        }
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          return res.status(200).json({project: project, members: usersInProject}).end();
+                          return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
                         }
                       })
                       .on("close", () => {
                         if (userBD.image !== "default") {
                           user.image = endSTR2;
                         }
+                        if (element.username === project.creatorName) {
+                          creatorImage = user.image;
+                        }
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          return res.status(200).json({project: project, members: usersInProject}).end();
+                          return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
                         }
                       });
                   }
@@ -96,6 +103,7 @@ exports.projectData = async function (req, res) {
           project.image = endSTR;
           var usersInProject = [];
           var i = 0;
+          var creatorImage;
           project.projectMembers.forEach(async (element) => {
             var endSTR2 = "";
             var user = {
@@ -115,18 +123,24 @@ exports.projectData = async function (req, res) {
                 .on("error", function (err) {
                   console.log("ERR: ", err);
                   user.image = "default";
+                  if (element.username === project.creatorName) {
+                    creatorImage = user.image;
+                  }
                   usersInProject.push(user);
                   if (i == project.projectMembers.length - 1) {
-                    return res.status(200).json({project: project, members: usersInProject}).end();
+                    return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
                   }
                 })
                 .on("close", () => {
                   if (userBD.image !== "default") {
                     user.image = endSTR2;
                   }
+                  if (element.username === project.creatorName) {
+                    creatorImage = user.image;
+                  }
                   usersInProject.push(user);
                   if (i == project.projectMembers.length - 1) {
-                    return res.status(200).json({project: project, members: usersInProject}).end();
+                    return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
                   }
                 });
             });
