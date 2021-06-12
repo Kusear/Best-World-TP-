@@ -184,20 +184,20 @@ Method - POST
 Auth needed - yes
 Values: 
     projectSlug
-    managerID,
-    managerName, 
-    projectTitle,
-    projectDescription,
-    projectHashTag,
-    membersCount,
-    endGathering,
-    endProject,
-    requredRoles,
-    projectMembers,
-    archive, 
-    needHelp, 
-    needChanges, 
-    userWhoUpdate
+    newProjectData: {
+        projectTitle,
+        projectDescription,
+        projectHashTag,
+        membersCount,
+        endGathering,
+        endProject,
+        requredRoles,
+        projectMembers,
+        archive, 
+        needHelp, 
+        needChanges, 
+    }
+    userWhoUpdate (объект projectMember со всеми полями)
 Response: 
     message: "updated"
 

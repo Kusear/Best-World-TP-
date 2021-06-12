@@ -176,7 +176,9 @@ exports.updateProject = async function (req, res) {
           return res.status(200).json({ message: "updated" }).end();
         }
       );
-    }
+    }else {
+      return res.status(200).json({ message: "failed" }).end();
+  } 
   }
 };
 
