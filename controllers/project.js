@@ -144,8 +144,8 @@ exports.updateProject = async function (req, res) {
   });
 
   if (
-    req.body.userWhoUpdate === projectA.creatorName ||
-    req.body.userWhoUpdate === projectA.managerName
+    req.body.userWhoUpdate.username === projectA.creatorName ||
+    req.body.userWhoUpdate.username === projectA.managerName
   ) {
     await Projects.findOneAndUpdate(
       { slug: projectToUpdate },
@@ -159,23 +159,24 @@ exports.updateProject = async function (req, res) {
       }
     );
   } else {
-    projectA.projectMembers.forEach((element) => {
-      if (element.canChange == true) {
-        Projects.findOneAndUpdate(
-          { slug: projectToUpdate },
-          req.body.newProjectData,
-          { new: true },
-          async (err, project) => {
-            if (err) {
-              return res.status(500).json({ err: err.message }).end();
-            }
-            return res.status(200).json({ message: "updated" }).end();
+    if (
+      req.body.userWhoUpdate.role === "helper" &&
+      req.body.userWhoUpdate.canChange == true
+    ) {
+      await Projects.findOneAndUpdate(
+        { slug: projectToUpdate },
+        req.body.newProjectData,
+        { new: true },
+        async (err, project) => {
+          if (err) {
+            return res.status(500).json({ err: err.message }).end();
           }
-        );
-        element.canChange = false;
-      }
-    });
-    projectA.save();
+          projectA.projectMembers.pull(req.body.userWhoUpdate);
+          projectA.save();
+          return res.status(200).json({ message: "updated" }).end();
+        }
+      );
+    }
   }
 };
 
@@ -361,10 +362,10 @@ exports.addProjectMember = async (req, res) => {
     }
 
     var newMember;
-    if (pr.projectMembers[1] == undefined && pr.needHelp == true) {
+    if (req.body.helper && pr.needHelp) {
       newMember = new Members();
       newMember.username = req.body.username;
-      newMember.role = req.body.role;
+      newMember.role = "helper";
       newMember.canChange = true;
     } else {
       newMember = new Members();
@@ -423,7 +424,6 @@ exports.addProjectMember = async (req, res) => {
 };
 
 exports.deleteProjectMember = async (req, res) => {
-
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -553,7 +553,6 @@ exports.deleteRequest = async (req, res) => {
       return res.status(200).json({ message: "success" }).end();
     }
   );
-
 };
 
 // await Projects.findOne(
