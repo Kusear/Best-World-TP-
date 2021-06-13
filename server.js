@@ -493,7 +493,7 @@ app.post(
 
 // Chat routes
 app.post(api_route + "/createChat", midleware.auth, controllersChat.createChat);
-app.get(api_route + "/getChats", midleware.auth, controllersChat.getChats);
+app.post(api_route + "/getChats", midleware.auth, controllersChat.getChats);
 app.post(api_route + "/deleteChat", midleware.auth, controllersChat.deleteChat);
 
 mongoose

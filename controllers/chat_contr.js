@@ -26,10 +26,10 @@ exports.createChat = async (req, res) => {
   }
 };
 
-exports.getChats = async (req, res) => { 
+exports.getChats = async (req, res) => {
   // if (req.query.username === req.headers.username)
   var userChats = await Chat.find(
-    { "chatMembers.username": req.query.username },
+    { "chatMembers.username": req.body.username },
     (err) => {
       if (err) {
         return res.status(520).json({ err: err.message }).end();
