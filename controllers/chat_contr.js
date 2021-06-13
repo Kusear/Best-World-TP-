@@ -1,4 +1,5 @@
 const Chat = require("../models/chats_model").Chat;
+const slugify = require("slugify");
 
 exports.createChat = async (req, res) => {
   try {
