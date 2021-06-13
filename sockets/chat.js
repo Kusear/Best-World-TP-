@@ -115,11 +115,6 @@ module.exports = (io) => {
 
         socket.join(chat.chatRoom);
         console.log("Room: ", cUser.Room);
-
-        io.to(chat.chatRoom).emit("message", {
-          status: CONNECTED,
-          user: cUser.username,
-        });
       });
     });
 
@@ -322,7 +317,7 @@ module.exports = (io) => {
         }
       );
       var messagesH = [];
-      if (messagesHistory.messages.length > 29) {
+      if (messagesHistory.messages.length >= 30) {
         for (
           i = messagesHistory.messages.length - 30 * page;
           i < messagesHistory.messages.length;
