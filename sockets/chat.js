@@ -322,15 +322,18 @@ module.exports = (io) => {
         }
       );
       var messagesH = [];
-      for (
-        i = messagesHistory.messages.length;
-        i > messagesHistory.messages.length - 30 * page;
-        i--
-      ) {
-        messagesH.push(messagesHistory.messages[i]);
+      if (messagesHistory.messages.length > 29) {
+        for (
+          i = messagesHistory.messages.length - 30 * page;
+          i < messagesHistory.messages.length;
+          i++
+        ) {
+          messagesH.push(messagesHistory.messages[i]);
+        }
+        io.to(cUser.id).emit("history", { history: messagesH });
+      } else {
+        io.to(cUser.id).emit("history", { history: messagesHistory.messages });
       }
-
-      io.to(cUser.id).emit("history", { history: messagesH });
     });
 
     socket.on("blockUser", async ({ userID }) => {
