@@ -3,7 +3,7 @@ const slugify = require("slugify");
 
 exports.createChat = async (req, res) => {
   try {
-    var chat = await Chat.findOne({ chatRoom: req.body.chatRoom }, (err) => {
+    var chat = await Chat.findOne({ chatName: req.body.chatName }, (err) => {
       if (err) {
         return res.status(520).json({ err: err.message }).end();
       }
