@@ -2,6 +2,7 @@ const Chat = require("../models/chats_model").Chat;
 const Project = require("../models/project").Project;
 const Messages = require("../models/chats_model").ChatMessages;
 const Users = require("../models/user_model").User;
+const nodemailer = require("../config/nodemailer");
 
 const mongodb = require("mongodb");
 const mongoose = require("mongoose");
@@ -10,6 +11,29 @@ const mongoose = require("mongoose");
 const CONNECTED = 0;
 const DISCONNECTED = 1;
 
+var i = 0;
+
+var emailMessage = async (room, socketArray) => {
+  socketArray.forEach((element) => {
+    var info = {
+      notificationID: -1,
+      email: element.data.email,
+      // title: project.title,
+      subject: "Новое сообщение в чате",
+      theme: "Новое сообщение в чате " + element.data.chatName,
+      text:
+        "<div><br>У вас новое сообщение в чате '" +
+        element.data.chatName +
+        "'. </div>" +
+        "<div><br>Благодарим за внимание, Start-Up.</div>",
+    };
+    if (!element.connected) {
+      nodemailer.sendMessageEmail(info);
+    }
+  });
+  i = 0;
+};
+
 module.exports = (io) => {
   var counter = 0; //
   var cUser = {
@@ -17,6 +41,8 @@ module.exports = (io) => {
     username: "",
     Room: "",
   };
+
+
   io.on("connection", (socket) => {
     console.log("socket io connected " + socket.id + " " + counter);
 
@@ -35,6 +61,9 @@ module.exports = (io) => {
         }
         if (user.ban) {
           banned = true;
+        } else {
+          socket.data.username = user.username;
+          socket.data.email = user.email;
         }
       });
 
@@ -83,6 +112,8 @@ module.exports = (io) => {
           return socket.disconnect();
         }
 
+        socket.data.chatName = chat.chatName;
+
         socket.join(chat.chatRoom);
         console.log("Room: ", cUser.Room);
 
@@ -115,6 +146,12 @@ module.exports = (io) => {
         await chat.save();
         io.to(chat.chatRoom).emit("message", text);
         console.log("text: ", text);
+
+        if (i == 10) {
+          var sok = await io.in(room).fetchSockets();
+          emailMessage(cUser.Room, sok);
+        }
+        i++;
       });
     });
 
@@ -357,51 +394,5 @@ module.exports = (io) => {
         return socket.disconnect();
       });
     });
-    counter++; //
   });
 };
-
-/**
- *  получение картинок участников чата
-        // var gfs = new mongodb.GridFSBucket(
-        //   mongoose.connection.db,
-        //   mongoose.mongo
-        // );
-
-        // var a = req.body.filename;
-
-        // var list = {
-        //   count: 0,
-        //   array: [],
-        // };
-
-        // var c = 0;
-        // await a.forEach(async (element) => {
-        //   c++;
-        //   var obj = {
-        //     username: "",
-        //     image: "",
-        //     chunks: [],
-        //   };
-        //   gfs
-        //     .openDownloadStreamByName(element.image, { revision: -1 })
-        //     .on("data", (chunk) => {
-        //       obj.chunks.push(chunk);
-        //       // console.log("CHUNK: ", chunk);
-        //     })
-        //     .on("error", function (err) {
-        //       res.send("No image found with that title");
-        //     })
-        //     .on("close", () => {
-        //       obj.image = element.image;
-        //       obj.username = element.username;
-        //       list.count++;
-        //       list.array.push(obj);
-        //       if (list.count == c) {
-        //         return res.status(200).json({ list: list.array }).end();
-        //       }
-        //     });
-
-        //   // .pipe(res);
-        // });
- */

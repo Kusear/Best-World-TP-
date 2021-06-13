@@ -28,6 +28,9 @@ const Chat = new mongoose.Schema({
   chatRoom: {
     type: String,
   },
+  chatName: {
+    type: String,
+  },
   chatMembers: [ChatMembers],
   messages: { type: [ChatMessages], default: [] },
   privateChat: {

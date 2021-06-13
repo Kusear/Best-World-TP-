@@ -99,14 +99,16 @@ exports.registration = async function (req, res) {
 
     var mailAuthMessage = {
       to: newUser.email,
-      subject: "Test message",
+      subject: "Подтверждение электронной почты",
       html:
-        "<h1>Test message</h1>" +
-        "<br>Bruh</br>" +
-        "<div><a href =" +
+        "<div>Поздравляем! Вы успешно зарегистрированы на сайте Start-Up!</div>" +
+        "<div><br>Для активации всех возможностей сайта требуется подтвердить Ваш электронный адрес. Сделать это можно, перейдя по следующей ссылке:</div>" +
+        "<div><br><a href =" +
         process.env.CONFIRM_URL +
         newUser.id +
-        ">Verify email</a></div>",
+        ">Подтвердить электронную почту</a></div>" +
+        "<div><br>Полный функционал сайта, включающий возможности создавать свои проекты, общаться с другими людьми, а также участвовать в разработке других проектов, доступен только для аккаунтов с подтвержденным e-mail.</div>" +
+        "<div><br>С уважением, команда разработчиков Start-Up!</div>",
     };
     nodemailer.transport.sendMail(mailAuthMessage, function (error, resp) {
       if (error) {

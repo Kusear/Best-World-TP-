@@ -75,6 +75,7 @@ const io = soketio(server, {
   cors: {
     origin: "*",
   },
+  pingTimeout: 30000,
 });
 require("./sockets/chat")(io);
 require("./sockets/task_lists")(io);
@@ -85,7 +86,6 @@ const options = {
 
 mongoose.set("useFindAndModify", false);
 app.use(express.json());
-app.options("*", cors());
 app.use(
   cors({
     credentials: true,
@@ -162,7 +162,6 @@ app.post(
 );
 app.post(
   api_route + "/projectData",
-  cors(),
   midleware.routeLog,
   controllersProject.projectData
 );

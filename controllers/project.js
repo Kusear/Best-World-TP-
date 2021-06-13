@@ -9,6 +9,7 @@ const Users = require("../models/user_model").User;
 const Chat = require("../models/chats_model").Chat;
 const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
+const { User } = require("../models/user_model");
 
 exports.projectData = async function (req, res) {
   var projectSlug = req.body.projectSlug;
@@ -245,6 +246,7 @@ exports.createProject = async function (req, res) {
 
     var newProjectChat = await new Chat({
       chatRoom: newProject.slug,
+      chatName: newProject.title,
       chatMembers: newProject.projectMembers,
       privateChat: false,
     }).save();
@@ -309,7 +311,7 @@ exports.updateProject = async function (req, res) {
 
         await Chat.findOneAndUpdate(
           { chatRoom: project.slug },
-          { chatRoom: newSlug },
+          { chatRoom: newSlug, chatName: project.title },
           { new: true }
         );
         await ToDoLists.findOneAndUpdate(
@@ -603,6 +605,45 @@ exports.addProjectMember = async (req, res) => {
         }
       }
     );
+    var exptionChatAddMember = "null";
+    await Chat.findOne({ chatRoom: projectSlug }, (err, chat) => {
+      if (err) {
+        exptionChatAddMember = err.message;
+      }
+      var newChatUser = new ChatMembers({
+        username: newMember.username,
+        role: newMember.role,
+      });
+      chat.chatMembers.push(newChatUser);
+      chat.save();
+    });
+
+    pr.projectMembers.forEach(async (element) => {
+      await User.findOne({ username: element.username }, (err, user) => {
+        if (err) {
+          return res.status().json({}).end();
+        }
+        var info = {
+          notificationID: -1,
+          email: element.email,
+          // title: project.title,
+          subject: "Пользователь присоединился к одному из ваших проектов",
+          theme:
+            element.username + " к вашему проекту присоединился пользователь",
+          text:
+            "<div><br>К вашему '" +
+            pr.title +
+            "' проекту присоединился пользователь с никнеймом '" +
+            newMember.username +
+            "'.</div>" +
+            "<div>Роль: " +
+            newMember.role +
+            ".</div>" +
+            "<div><br>Благодарим за внимание, Start-Up.</div>",
+        };
+        nodemailer.sendMessageEmail(info);
+      });
+    });
 
     await pr.save();
     return res
@@ -611,6 +652,7 @@ exports.addProjectMember = async (req, res) => {
         message: "success",
         exeptionReqRole: exeptionReqRole,
         exeptionPullRequests: exeptionPullRequests,
+        exptionChatAddMember: exptionChatAddMember,
       })
       .end();
   });
@@ -618,6 +660,7 @@ exports.addProjectMember = async (req, res) => {
 
 exports.deleteProjectMember = async (req, res) => {
   var projectSlug = req.body.projectSlug;
+  console.log(req.body);
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
@@ -640,7 +683,9 @@ exports.deleteProjectMember = async (req, res) => {
         { projectSlug: projectSlug },
         { $pull: { boards: { items: { performer: user.username } } } }
       );
-    } catch (err) {}
+    } catch (error) {
+      console.log("DELETE MEMBER: ", error.message);
+    }
 
     await project.projectMembers.pull(req.body.memberID);
 
@@ -735,7 +780,9 @@ exports.deleteRequest = async (req, res) => {
   }
   await Projects.findOneAndUpdate(
     { slug: projectSlug },
-    { $pull: { requests: { username: req.body.username } } },
+    {
+      $pull: { requests: { _id: mongoose.Types.ObjectId(req.body.requestID) } },
+    },
     (err) => {
       if (err) {
         return res

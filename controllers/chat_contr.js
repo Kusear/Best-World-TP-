@@ -12,6 +12,7 @@ exports.createChat = async (req, res) => {
     }
     var newChat = await Chat({
       chatRoom: req.body.chatRoom,
+      chatName: req.body.chatName,
       chatMembers: req.body.chatMembers,
       privateChat: true,
     }).save();
