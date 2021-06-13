@@ -19,6 +19,18 @@ exports.createChat = async (req, res) => {
       chatMembers: req.body.chatMembers,
       privateChat: true,
     }).save();
+
+    newChat.chatRoom =
+      (await slugify(newChat.chatName, {
+        replacement: "-",
+        remove: undefined,
+        lower: false,
+        strict: false,
+        locale: "ru",
+      })) +
+      "-" +
+      newChat._id;
+    newChat.save();
     return res.status(200).json({ chat: newChat }).end();
   } catch (err) {
     if (err.code === 11000) {

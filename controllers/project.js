@@ -324,7 +324,14 @@ exports.updateProject = async function (req, res) {
         project.slug = newSlug;
         project.save();
         console.log("C: ", req.body.newProjectData);
-        return res.status(200).json({ message: "updated", projectID: project._id, projectSlug:  project.slug}).end();
+        return res
+          .status(200)
+          .json({
+            message: "updated",
+            projectID: project._id,
+            projectSlug: project.slug,
+          })
+          .end();
       }
     );
   } else {
@@ -367,7 +374,14 @@ exports.updateProject = async function (req, res) {
           project.slug = newSlug;
           project.projectMembers.pull(req.body.userWhoUpdate);
           project.save();
-          return res.status(200).json({ message: "updated", projectID: project._id, projectSlug:  project.slug}).end();
+          return res
+            .status(200)
+            .json({
+              message: "updated",
+              projectID: project._id,
+              projectSlug: project.slug,
+            })
+            .end();
         }
       );
     } else {
