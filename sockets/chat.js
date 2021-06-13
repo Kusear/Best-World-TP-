@@ -147,7 +147,7 @@ module.exports = (io) => {
         console.log("text: ", text);
 
         if (i == 10) {
-          var sok = await io.in(room).fetchSockets();
+          var sok = await io.in(cUser.Room).fetchSockets();
           emailMessage(cUser.Room, sok);
         }
         i++;
@@ -304,9 +304,9 @@ module.exports = (io) => {
       }
     });
 
-    socket.on("getHistory", async ({ username2, page }) => {
-      console.log(username2, " : ", page);
-      if (!username2) {
+    socket.on("getHistory", async ({ username, page }) => {
+      console.log(username, " : ", page);
+      if (!username) {
         io.to(cUser.id).emit("err", {
           err: "username are required",
         });
@@ -320,10 +320,10 @@ module.exports = (io) => {
             return;
           }
         }
-      )
+      ) // TODO сделать обратное получение
         .skip(30 * page)
         .limit(30);
-      io.to(cUser.id).emit("history", { history: messagesHistory });
+      io.to(cUser.id).emit("history", { history: messagesHistory.messages });
     });
 
     socket.on("blockUser", async ({ userID }) => {
