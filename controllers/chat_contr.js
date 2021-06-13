@@ -8,7 +8,10 @@ exports.createChat = async (req, res) => {
       }
     });
     if (chat) {
-      return res.status(500).json({ err: "Chat already exist" }).end();
+      return res
+        .status(500)
+        .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
+        .end();
     }
     var newChat = await Chat({
       chatRoom: req.body.chatRoom,
@@ -19,7 +22,7 @@ exports.createChat = async (req, res) => {
     return res.status(200).json({ chat: newChat }).end();
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(500).json({ err: "Chat already exist" }).end();
+      return res.status(500).json({ message: "Chat already exist" }).end();
     } else {
       return res.status(520).json({ err: err.message }).end();
     }
