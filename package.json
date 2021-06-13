@@ -25,7 +25,7 @@
     "passport-local": "^1.0.0",
     "session-file-store": "^1.5.0",
     "slugify": "^1.5.1",
-    "socket.io": "^4.0.1",
+    "socket.io": "^4.1.2",
     "validator": "^13.6.0"
   },
   "engines": {

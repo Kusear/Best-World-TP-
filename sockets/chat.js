@@ -42,7 +42,6 @@ module.exports = (io) => {
     Room: "",
   };
 
-
   io.on("connection", (socket) => {
     console.log("socket io connected " + socket.id + " " + counter);
 
@@ -155,6 +154,10 @@ module.exports = (io) => {
       });
     });
 
+    socket.on("disconnect", () => {
+      return socket.disconnect();
+    });
+
     socket.on("getUsersInChat", async ({ chat, project }) => {
       var gfs = new mongodb.GridFSBucket(
         mongoose.connection.db,
@@ -162,7 +165,6 @@ module.exports = (io) => {
       );
       var users = [];
       if (chat) {
-        console.log("chat");
         await Chat.findOne({ chatRoom: cUser.Room }, async (err, chatBD) => {
           if (err) {
             io.to(cUser.id).emit("err", { err: err.message });
@@ -182,14 +184,12 @@ module.exports = (io) => {
                 count: 0,
                 array: [],
               };
-              console.log("users: ", users);
               users.forEach((element) => {
                 var obj = {
                   username: "",
                   image: "",
                   base64: "",
                 };
-                console.log("gfs");
                 gfs
                   .openDownloadStreamByName(element.image, { revision: -1 })
                   .on("data", (chunk) => {
