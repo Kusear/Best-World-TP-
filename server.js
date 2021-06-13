@@ -85,6 +85,7 @@ const options = {
 
 mongoose.set("useFindAndModify", false);
 app.use(express.json());
+app.options("*", cors());
 app.use(
   cors({
     credentials: true,
@@ -120,6 +121,7 @@ app.use(express.static(path.join(__dirname, "public"))); // TODO удалить 
 app.use(passport.initialize());
 app.use(passport.session());
 
+// TODO удалить все выводы в консоль
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.get("/", (req, res) => {});
@@ -160,6 +162,7 @@ app.post(
 );
 app.post(
   api_route + "/projectData",
+  cors(),
   midleware.routeLog,
   controllersProject.projectData
 );
@@ -396,7 +399,11 @@ app.post(
     });
   }
 );
-app.post(api_route + "/getFile", midleware.routeLog, controllersCommon.getFiles);
+app.post(
+  api_route + "/getFile",
+  midleware.routeLog,
+  controllersCommon.getFiles
+);
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);

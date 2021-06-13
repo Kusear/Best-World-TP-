@@ -26,24 +26,81 @@ module.exports = (io) => {
       user.TaskList = slug;
       user.username = username;
       console.log("List: ", slug);
-      await ToDoLists.findOne({ projectSlug: user.TaskList }, (err, list) => {
-        if (err) {
-          io.to(user.id).emit("err", { err: err.message });
-          return;
-        }
+      await ToDoLists.findOne(
+        { projectSlug: user.TaskList },
+        async (err, list) => {
+          if (err) {
+            io.to(user.id).emit("err", { err: err.message });
+            return;
+          }
 
-        if (!list) {
-          console.log("list not found");
-          socket.emit("err", {
-            err: "list not found",
+          if (!list) {
+            console.log("list not found");
+            socket.emit("err", {
+              err: "list not found",
+            });
+            return socket.disconnect();
+          }
+
+          await Projects.findOne({ slug: user.TaskList }, (err, project) => {
+            var endSTR = "";
+            var gfs = new mongodb.GridFSBucket(
+              mongoose.connection.db,
+              mongoose.mongo
+            );
+            var membersList = [];
+            var i = 0;
+            project.projectMembers.forEach(async (element) => {
+              var user = {
+                username: element.username,
+                role: element.role,
+                image: "",
+              };
+
+              await Users.findOne(
+                { username: element.username },
+                (err, userBD) => {
+                  gfs
+                    .openDownloadStreamByName(userBD.image, { revision: -1 })
+                    .on("data", (chunk) => {
+                      console.log("CHUNK: ", chunk);
+                      endSTR += Buffer.from(chunk, "hex").toString("base64");
+                    })
+                    .on("error", function (err) {
+                      console.log("ERR: ", err);
+                      user.image = "default";
+                      membersList.push(user);
+                      if (i == project.projectMembers.length - 1) {
+                        socket.join(list.projectSlug);
+                        io.to(user.id).emit("listData", {
+                          list: list,
+                          members: membersList,
+                        });
+                        return;
+                      }
+                      i++;
+                    })
+                    .on("close", () => {
+                      if (userBD.image !== "default") {
+                        user.image = endSTR;
+                      }
+                      membersList.push(user);
+                      if (i == project.projectMembers.length - 1) {
+                        socket.join(list.projectSlug);
+                        io.to(user.id).emit("listData", {
+                          list: list,
+                          members: membersList,
+                        });
+                        return;
+                      }
+                      i++;
+                    });
+                }
+              );
+            });
           });
-          return socket.disconnect();
         }
-
-        socket.join(list.projectSlug);
-        // console.log("List: ", user.TaskList);
-        io.to(user.id).emit("listData", { list });
-      });
+      );
     });
 
     socket.on("create-board", async ({ crtBoard }) => {

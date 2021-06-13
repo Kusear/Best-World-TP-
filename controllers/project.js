@@ -79,7 +79,14 @@ exports.projectData = async function (req, res) {
                         }
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
+                          return res
+                            .status(200)
+                            .json({
+                              project: project,
+                              members: usersInProject,
+                              creatorImage: creatorImage,
+                            })
+                            .end();
                         }
                       })
                       .on("close", () => {
@@ -91,7 +98,14 @@ exports.projectData = async function (req, res) {
                         }
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
+                          return res
+                            .status(200)
+                            .json({
+                              project: project,
+                              members: usersInProject,
+                              creatorImage: creatorImage,
+                            })
+                            .end();
                         }
                       });
                   }
@@ -128,7 +142,14 @@ exports.projectData = async function (req, res) {
                   }
                   usersInProject.push(user);
                   if (i == project.projectMembers.length - 1) {
-                    return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
+                    return res
+                      .status(200)
+                      .json({
+                        project: project,
+                        members: usersInProject,
+                        creatorImage: creatorImage,
+                      })
+                      .end();
                   }
                 })
                 .on("close", () => {
@@ -140,7 +161,14 @@ exports.projectData = async function (req, res) {
                   }
                   usersInProject.push(user);
                   if (i == project.projectMembers.length - 1) {
-                    return res.status(200).json({project: project, members: usersInProject, creatorImage: creatorImage}).end();
+                    return res
+                      .status(200)
+                      .json({
+                        project: project,
+                        members: usersInProject,
+                        creatorImage: creatorImage,
+                      })
+                      .end();
                   }
                 });
             });
@@ -155,6 +183,20 @@ exports.projectData = async function (req, res) {
 exports.createProject = async function (req, res) {
   try {
     var newProject;
+
+    var userBD = await Users.findOne(
+      { username: req.body.creatorUsername },
+      (err) => {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+      }
+    );
+
+    if (userBD.ban == true) {
+      return res.status(500).json({ message: "User banned" }).end();
+    }
+
     if (!req.body.needHelp) {
       newProject = await new Projects({
         IDcreator: req.body.creatorid,
