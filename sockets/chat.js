@@ -320,10 +320,17 @@ module.exports = (io) => {
             return;
           }
         }
-      ) // TODO сделать обратное получение
-        .skip(30 * page)
-        .limit(30);
-      io.to(cUser.id).emit("history", { history: messagesHistory.messages });
+      );
+      var messagesH = [];
+      for (
+        i = messagesHistory.messages.length;
+        i > messagesHistory.messages.length - 30 * page;
+        i--
+      ) {
+        messagesH.push(messagesHistory.messages[i]);
+      }
+
+      io.to(cUser.id).emit("history", { history: messagesH });
     });
 
     socket.on("blockUser", async ({ userID }) => {
