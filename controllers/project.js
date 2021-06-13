@@ -27,7 +27,7 @@ exports.projectData = async function (req, res) {
         mongoose.connection.db,
         mongoose.mongo
       );
-
+      var creatorImage;
       gfs
         .openDownloadStreamByName(project.image, { revision: -1 })
         .on("data", (chunk) => {
@@ -52,7 +52,6 @@ exports.projectData = async function (req, res) {
               project.image = endSTR;
               var usersInProject = [];
               var i = 0;
-              var creatorImage;
               project.projectMembers.forEach(async (element) => {
                 var endSTR2 = "";
                 var user = {
@@ -74,6 +73,7 @@ exports.projectData = async function (req, res) {
                       .on("error", function (err) {
                         console.log("ERR: ", err);
                         user.image = "default";
+
                         if (element.username === project.creatorName) {
                           creatorImage = user.image;
                         }
@@ -88,14 +88,18 @@ exports.projectData = async function (req, res) {
                             })
                             .end();
                         }
+                        i++;
                       })
                       .on("close", () => {
                         if (userBD.image !== "default") {
                           user.image = endSTR2;
+                        } else {
+                          user.image = "default";
                         }
                         if (element.username === project.creatorName) {
                           creatorImage = user.image;
                         }
+
                         usersInProject.push(user);
                         if (i == project.projectMembers.length - 1) {
                           return res
@@ -107,6 +111,7 @@ exports.projectData = async function (req, res) {
                             })
                             .end();
                         }
+                        i++;
                       });
                   }
                 );
@@ -117,7 +122,6 @@ exports.projectData = async function (req, res) {
           project.image = endSTR;
           var usersInProject = [];
           var i = 0;
-          var creatorImage;
           project.projectMembers.forEach(async (element) => {
             var endSTR2 = "";
             var user = {
@@ -151,10 +155,13 @@ exports.projectData = async function (req, res) {
                       })
                       .end();
                   }
+                  i++;
                 })
                 .on("close", () => {
                   if (userBD.image !== "default") {
                     user.image = endSTR2;
+                  } else {
+                    user.image = "default";
                   }
                   if (element.username === project.creatorName) {
                     creatorImage = user.image;
@@ -170,6 +177,7 @@ exports.projectData = async function (req, res) {
                       })
                       .end();
                   }
+                  i++;
                 });
             });
           });
