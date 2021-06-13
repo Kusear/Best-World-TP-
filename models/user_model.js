@@ -55,6 +55,15 @@ var UserSchema = new mongoose.Schema({
     type: String,
     default: "default",
   },
+  projectNotify: {
+    type: Boolean,
+    default: true
+  },
+  chatNotify: {
+    type: Boolean,
+    default: true
+  },
+  todoListNotify: {type: Boolean, default: true}
 });
 
 UserSchema.method.hashPassword = async function (newpassword) {

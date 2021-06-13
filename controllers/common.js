@@ -168,8 +168,8 @@ exports.sendRecoveryEmail = async (req, res) => {
   var info = {
     notificationID: -1,
     email: user.email,
-    subject: "Смена пароля.",
-    theme: "Смена пароля.",
+    subject: "Смена пароля",
+    theme: "Смена пароля",
     text:
       "Поступил запрос на смену пароля. Если вы не делали этого, не переходите по ссылке." +
       "<br>" +
@@ -189,29 +189,32 @@ exports.sendRecoveryEmail = async (req, res) => {
 };
 
 exports.recoveryPassword = async (req, res) => {
-  await Links.findOne({ userID: req.body.userID }, async (error, link) => {
-    if (error) {
-      return res.status(500).json({ err: error.message }).end();
-    }
-    if (!link) {
-      return res.status(500).json({ err: "Link has expired" }).end();
-    }
-    link.remove();
-
-    var saltR = await bcrypt.genSalt(10);
-
-    await Users.findByIdAndUpdate(
-      req.body.userID,
-      { password: await bcrypt.hash(req.body.newPassword, saltR) },
-      { new: true },
-      (err, result) => {
-        if (err) {
-          return res.status(500).json({ err: err.message }).end();
-        }
-        return res.status(200).json({ message: "success" }).end();
+  await Links.findOneAndDelete(
+    { userID: req.body.userID },
+    async (error, link) => {
+      if (error) {
+        return res.status(500).json({ err: error.message }).end();
       }
-    );
-  });
+      if (!link) {
+        return res.status(500).json({ err: "Link has expired" }).end();
+      }
+      link.remove();
+
+      var saltR = await bcrypt.genSalt(10);
+
+      await Users.findByIdAndUpdate(
+        req.body.userID,
+        { password: await bcrypt.hash(req.body.newPassword, saltR) },
+        { new: true },
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({ err: err.message }).end();
+          }
+          return res.status(200).json({ message: "success" }).end();
+        }
+      );
+    }
+  );
 };
 
 exports.getFiles = async function (req, res) {
