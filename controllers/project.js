@@ -9,6 +9,7 @@ const Users = require("../models/user_model").User;
 const Chat = require("../models/chats_model").Chat;
 const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
+const nodemailer = require("../config/nodemailer");
 const { User } = require("../models/user_model");
 
 exports.projectData = async function (req, res) {
@@ -619,17 +620,16 @@ exports.addProjectMember = async (req, res) => {
     });
 
     pr.projectMembers.forEach(async (element) => {
-      await User.findOne({ username: element.username }, (err, user) => {
+      await Users.findOne({ username: element.username }, (err, user) => {
         if (err) {
           return res.status().json({}).end();
         }
         var info = {
           notificationID: -1,
-          email: element.email,
+          email: user.email,
           // title: project.title,
           subject: "Пользователь присоединился к одному из ваших проектов",
-          theme:
-            element.username + " к вашему проекту присоединился пользователь",
+          theme: user.username + " к вашему проекту присоединился пользователь",
           text:
             "<div><br>К вашему '" +
             pr.title +
