@@ -36,26 +36,19 @@ var emailMessage = async (room, socketArray) => {
 
 module.exports = (io) => {
   var counter = 0; //
-  var cUser = {
-    id: "",
-    username: "",
-    Room: "",
-  };
 
   io.on("connection", (socket) => {
     console.log("socket io connected " + socket.id + " " + counter);
-
-    cUser.id = socket.id;
 
     socket.on("joinRoom", async ({ username, token, room }) => {
       var banned = false;
       await Users.findOne({ username: username }, (err, user) => {
         if (err) {
-          io.to(cUser.id).emit("err", { err: err.message });
+          io.to(socket.id).emit("err", { err: err.message });
           return socket.disconnect();
         }
         if (!user) {
-          io.to(cUser.id).emit("err", { err: "" });
+          io.to(socket.id).emit("err", { err: "" });
           return socket.disconnect();
         }
         if (user.ban) {
@@ -63,23 +56,22 @@ module.exports = (io) => {
         } else {
           socket.data.username = user.username;
           socket.data.email = user.email;
+          socket.data.room = room;
         }
       });
 
       if (banned) {
-        io.to(cUser.id).emit("err", {
+        io.to(socket.id).emit("err", {
           err: "Banned user",
           status: DISCONNECTED,
         });
         return socket.disconnect();
       }
 
-      cUser.Room = room;
-      cUser.username = username;
-      await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
+      await Chat.findOne({ chatRoom: room }, async (err, chat) => {
         if (err) {
           console.log("err: ", err);
-          io.to(cUser.id).emit("err", {
+          io.to(socket.id).emit("err", {
             err: err.message,
             status: DISCONNECTED,
           });
@@ -88,7 +80,7 @@ module.exports = (io) => {
 
         if (!chat) {
           console.log("chat not found");
-          io.to(cUser.id).emit("err", {
+          io.to(socket.id).emit("err", {
             err: "Chat not found",
             status: DISCONNECTED,
           });
@@ -104,30 +96,28 @@ module.exports = (io) => {
         });
 
         if (!s) {
-          io.to(cUser.id).emit("err", {
+          io.to(socket.id).emit("err", {
             err: "User not a member",
             status: DISCONNECTED,
           });
           return socket.disconnect();
         }
 
-        socket.data.chatName = chat.chatName;
-
         socket.join(chat.chatRoom);
-        console.log("Room: ", cUser.Room);
+        console.log("Room: ", socket.data.room);
       });
     });
 
     socket.on("chatMessage", async (text, cb) => {
-      await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
+      await Chat.findOne({ chatRoom: socket.data.room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", { err: err.message });
+          io.to(socket.id).emit("err", { err: err.message });
           return;
         }
 
         if (!chat) {
           console.log("chat not found");
-          io.to(cUser.id).emit("err", {
+          io.to(socket.id).emit("err", {
             err: "Chat not found",
           });
           return socket.disconnect();
@@ -142,14 +132,21 @@ module.exports = (io) => {
         console.log("text: ", text);
 
         if (i == 10) {
-          var sok = await io.in(cUser.Room).fetchSockets();
-          emailMessage(cUser.Room, sok);
+          var sok = await io.in(socket.data.room).fetchSockets();
+          emailMessage(socket.data.room, sok);
         }
         i++;
       });
     });
 
-    socket.on("disconnect", () => {
+    socket.on("leaveRoom", () => {
+      io.to(socket.data.room).emit("leavinRoom", {
+        message: "User left the room",
+      });
+      socket.leave(socket.data.room);
+    });
+
+    socket.on("disconnectUser", () => {
       return socket.disconnect();
     });
 
@@ -160,78 +157,83 @@ module.exports = (io) => {
       );
       var users = [];
       if (chat) {
-        await Chat.findOne({ chatRoom: cUser.Room }, async (err, chatBD) => {
-          if (err) {
-            io.to(cUser.id).emit("err", { err: err.message });
-            return;
-          }
-          console.log(chatBD.chatMembers);
-          await chatBD.chatMembers.forEach(async (element) => {
-            await Users.findOne({ username: element.username }, (err, u) => {
-              if (err) {
-                console.log("err user", err.message);
-              }
-              console.log(u.username);
-              users.push({ username: u.username, image: u.image });
+        await Chat.findOne(
+          { chatRoom: socket.data.room },
+          async (err, chatBD) => {
+            if (err) {
+              io.to(socket.id).emit("err", { err: err.message });
+              return;
+            }
+            console.log(chatBD.chatMembers);
+            await chatBD.chatMembers.forEach(async (element) => {
+              await Users.findOne({ username: element.username }, (err, u) => {
+                if (err) {
+                  console.log("err user", err.message);
+                }
+                console.log(u.username);
+                users.push({ username: u.username, image: u.image });
 
-              //
-              var list = {
-                count: 0,
-                array: [],
-              };
-              users.forEach((element) => {
-                var obj = {
-                  username: "",
-                  image: "",
-                  base64: "",
+                //
+                var list = {
+                  count: 0,
+                  array: [],
                 };
-                gfs
-                  .openDownloadStreamByName(element.image, { revision: -1 })
-                  .on("data", (chunk) => {
-                    obj.base64 += Buffer.from(chunk, "hex").toString("base64");
-                    // console.log("CHUNK: ", chunk);
-                  })
-                  .on("error", function (err) {
-                    console.log("err");
-                    obj.chunks.push("No image found with that title");
-                    //
-                    obj.image = element.image;
-                    obj.username = element.username;
-                    list.count++;
-                    list.array.push(obj);
-                    console.log(element);
-                    if (list.count == users.length) {
-                      console.log("io");
-                      io.to(cUser.id).emit("usersInChat", {
-                        users: list.array,
-                      });
-                      return;
-                    }
-                    //
-                  })
-                  .on("close", () => {
-                    obj.image = element.image;
-                    obj.username = element.username;
-                    list.count++;
-                    list.array.push(obj);
-                    console.log("a");
-                    if (list.count == users.length) {
-                      console.log("io");
-                      io.to(cUser.id).emit("usersInChat", {
-                        users: list.array,
-                      });
-                      return;
-                    }
-                  });
+                users.forEach((element) => {
+                  var obj = {
+                    username: "",
+                    image: "",
+                    base64: "",
+                  };
+                  gfs
+                    .openDownloadStreamByName(element.image, { revision: -1 })
+                    .on("data", (chunk) => {
+                      obj.base64 += Buffer.from(chunk, "hex").toString(
+                        "base64"
+                      );
+                      // console.log("CHUNK: ", chunk);
+                    })
+                    .on("error", function (err) {
+                      console.log("err");
+                      obj.chunks.push("No image found with that title");
+                      //
+                      obj.image = element.image;
+                      obj.username = element.username;
+                      list.count++;
+                      list.array.push(obj);
+                      console.log(element);
+                      if (list.count == users.length) {
+                        console.log("io");
+                        io.to(socket.id).emit("usersInChat", {
+                          users: list.array,
+                        });
+                        return;
+                      }
+                      //
+                    })
+                    .on("close", () => {
+                      obj.image = element.image;
+                      obj.username = element.username;
+                      list.count++;
+                      list.array.push(obj);
+                      console.log("a");
+                      if (list.count == users.length) {
+                        console.log("io");
+                        io.to(socket.id).emit("usersInChat", {
+                          users: list.array,
+                        });
+                        return;
+                      }
+                    });
+                });
+                //
               });
-              //
             });
-          });
-        });
+          }
+        );
       } else if (project) {
-        await Project.findOne({ slug: cUser.Room }, (err, pr) => {
+        await Project.findOne({ slug: socket.data.room }, (err, pr) => {
           if (err) {
-            io.to(cUser.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
 
@@ -273,7 +275,7 @@ module.exports = (io) => {
                     list.count++;
                     list.array.push(obj);
                     if (list.count == c) {
-                      io.to(cUser.id).emit("usersInChat", {
+                      io.to(socket.id).emit("usersInChat", {
                         users: list.array,
                       });
                       return;
@@ -286,7 +288,7 @@ module.exports = (io) => {
                     list.count++;
                     list.array.push(obj);
                     if (list.count == c) {
-                      io.to(cUser.id).emit("usersInChat", {
+                      io.to(socket.id).emit("usersInChat", {
                         users: list.array,
                       });
                       return;
@@ -302,16 +304,16 @@ module.exports = (io) => {
     socket.on("getHistory", async ({ username, page }) => {
       console.log(username, " : ", page);
       if (!username) {
-        io.to(cUser.id).emit("err", {
+        io.to(socket.id).emit("err", {
           err: "username are required",
         });
         return;
       }
       var messagesHistory = await Chat.findOne(
-        { chatRoom: cUser.Room },
+        { chatRoom: socket.data.room },
         async (err) => {
           if (err) {
-            io.to(cUser.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -325,9 +327,9 @@ module.exports = (io) => {
         ) {
           messagesH.push(messagesHistory.messages[i]);
         }
-        io.to(cUser.id).emit("history", { history: messagesH });
+        io.to(socket.id).emit("history", { history: messagesH });
       } else {
-        io.to(cUser.id).emit("history", { history: messagesHistory.messages });
+        io.to(socket.id).emit("history", { history: messagesHistory.messages });
       }
     });
 
@@ -338,9 +340,9 @@ module.exports = (io) => {
         });
         return;
       }
-      await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
+      await Chat.findOne({ chatRoom: socket.data.room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", { err: err.message });
+          io.to(socket.id).emit("err", { err: err.message });
           return;
         }
 
@@ -360,9 +362,9 @@ module.exports = (io) => {
         });
         return;
       }
-      await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
+      await Chat.findOne({ chatRoom: socket.data.room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", { err: err.message });
+          io.to(socket.id).emit("err", { err: err.message });
           return;
         }
 
@@ -382,19 +384,19 @@ module.exports = (io) => {
         });
         return;
       }
-      await Chat.findOne({ chatRoom: cUser.Room }, async (err, chat) => {
+      await Chat.findOne({ chatRoom: socket.data.room }, async (err, chat) => {
         if (err) {
-          io.to(cUser.id).emit("err", { err: err.message });
+          io.to(socket.id).emit("err", { err: err.message });
           return;
         }
 
         var user = await chat.chatMembers.id(userID);
         await chat.chatMembers.pull(user);
         await chat.save();
-        socket.leave(cUser.Room);
+        socket.leave(socket.data.room);
         io.to(chat.chatRoom).emit("userLeave", {
           status: DISCONNECTED,
-          username: cUser.username,
+          username: socket.data.username,
         });
         return socket.disconnect();
       });

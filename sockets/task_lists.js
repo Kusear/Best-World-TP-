@@ -12,25 +12,19 @@ const nodemailer = require("../config/nodemailer");
 
 module.exports = (io) => {
   var counter = 0; //
-  var user = {
-    id: "",
-    username: "",
-    TaskList: "",
-  };
 
   io.on("connection", (socket) => {
     console.log("socket io connected Task" + socket.id + " " + counter);
-    user.id = socket.id;
 
     socket.on("get-TaskList", async ({ username, token, slug }) => {
-      user.TaskList = slug;
-      user.username = username;
+      socket.data.TaskList = slug;
+      socket.data.username = username;
       console.log("List: ", slug);
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
 
@@ -42,7 +36,7 @@ module.exports = (io) => {
             return socket.disconnect();
           }
 
-          await Projects.findOne({ slug: user.TaskList }, (err, project) => {
+          await Projects.findOne({ slug: socket.data.TaskList }, (err, project) => {
             var endSTR = "";
             var gfs = new mongodb.GridFSBucket(
               mongoose.connection.db,
@@ -72,7 +66,7 @@ module.exports = (io) => {
                       membersList.push(user);
                       if (i == project.projectMembers.length - 1) {
                         socket.join(list.projectSlug);
-                        io.to(user.id).emit("listData", {
+                        io.to(socket.id).emit("listData", {
                           list: list,
                           members: membersList,
                         });
@@ -87,7 +81,7 @@ module.exports = (io) => {
                       membersList.push(user);
                       if (i == project.projectMembers.length - 1) {
                         socket.join(list.projectSlug);
-                        io.to(user.id).emit("listData", {
+                        io.to(socket.id).emit("listData", {
                           list: list,
                           members: membersList,
                         });
@@ -105,14 +99,14 @@ module.exports = (io) => {
 
     socket.on("create-board", async ({ crtBoard }) => {
       if (!crtBoard) {
-        io.to(user.id).emit("err", { err: "Board are require" });
+        io.to(socket.id).emit("err", { err: "Board are require" });
         return;
       }
 
       var limit = false;
       await ToDoLists.aggregate(
         [
-          { $match: { projectSlug: user.TaskList } },
+          { $match: { projectSlug: socket.data.TaskList } },
           { $unwind: "$boards" },
           { $group: { _id: null, count: { $sum: 1 } } },
         ],
@@ -127,15 +121,15 @@ module.exports = (io) => {
       );
 
       if (limit) {
-        io.to(user.id).emit("err", { err: "Limit of boards" });
+        io.to(socket.id).emit("err", { err: "Limit of boards" });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -144,17 +138,17 @@ module.exports = (io) => {
         { username: project.creatorName },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
           console.log("todolist");
@@ -164,7 +158,7 @@ module.exports = (io) => {
           newBoard.items = crtBoard.items;
           list.boards.push(newBoard);
           list.save();
-          if (user.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -174,7 +168,7 @@ module.exports = (io) => {
               theme: "Создание доски.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 " создал доску '" +
                 newBoard.name +
                 "'. В доске задач проекта '" +
@@ -191,7 +185,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(user.id).emit("created-board", {
+          io.to(socket.id).emit("created-board", {
             status: "success",
             board: newBoard,
           });
@@ -201,15 +195,15 @@ module.exports = (io) => {
 
     socket.on("update-board", async ({ updBoard }) => {
       if (!updBoard) {
-        io.to(user.id).emit("err", { err: "updBoard are require" });
+        io.to(socket.id).emit("err", { err: "updBoard are require" });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -218,17 +212,17 @@ module.exports = (io) => {
         { username: project.creatorName },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
 
@@ -250,11 +244,11 @@ module.exports = (io) => {
           }
           await list.save((err) => {
             if (err) {
-              io.to(user.id).emit("err", { err: err.message });
+              io.to(socket.id).emit("err", { err: err.message });
               return;
             }
           });
-          if (user.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -264,7 +258,7 @@ module.exports = (io) => {
               theme: "Создание доски.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 additionText +
                 ". В доске задач проекта " +
                 project.title +
@@ -279,7 +273,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(user.id).emit("updated-board", {
+          io.to(socket.id).emit("updated-board", {
             status: success,
             board: board,
           });
@@ -289,17 +283,17 @@ module.exports = (io) => {
 
     socket.on("delete-board", async ({ delBoard }) => {
       if (!delBoard) {
-        io.to(user.id).emit("err", {
+        io.to(socket.id).emit("err", {
           err: "delBoard are required",
         });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -308,23 +302,23 @@ module.exports = (io) => {
         { username: project.creatorName },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
           var bord = list.boards.id(delBoard._id);
           list.boards.pull(delBoard._id);
           await list.save();
-          if (user.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -334,7 +328,7 @@ module.exports = (io) => {
               theme: "Создание доски.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 " удалил доску '" +
                 bord.name +
                 "'. В доске задач проекта '" +
@@ -351,18 +345,18 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(user.id).emit("deleted-board", { status: "success" });
+          io.to(socket.id).emit("deleted-board", { status: "success" });
         }
       );
     });
 
     socket.on("create-task", async ({ board, crtTask }) => {
       if (!board) {
-        io.to(user.id).emit("err", { err: "Board are require" });
+        io.to(socket.id).emit("err", { err: "Board are require" });
         return;
       }
       if (!crtTask) {
-        io.to(user.id).emit("err", { err: "crtTask are require" });
+        io.to(socket.id).emit("err", { err: "crtTask are require" });
         return;
       }
 
@@ -391,7 +385,7 @@ module.exports = (io) => {
         ],
         async (err, countOfDocs) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
           await countOfDocs[0].boards.forEach((element) => {
@@ -403,15 +397,15 @@ module.exports = (io) => {
       );
 
       if (limit) {
-        io.to(user.id).emit("err", { err: "Limit of tasks" });
+        io.to(socket.id).emit("err", { err: "Limit of tasks" });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -420,17 +414,17 @@ module.exports = (io) => {
         { username: crtTask.performer },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
 
@@ -450,7 +444,7 @@ module.exports = (io) => {
               theme: "Создание задачи.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 " добавил вам задачу '" +
                 crtTask.text +
                 "'. В доске задач проекта '" +
@@ -467,26 +461,26 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(user.id).emit("created-task", { status: "success" });
+          io.to(socket.id).emit("created-task", { status: "success" });
         }
       );
     });
 
     socket.on("update-task", async ({ board, updTask }) => {
       if (!board) {
-        io.to(user.id).emit("err", { err: "Board are require" });
+        io.to(socket.id).emit("err", { err: "Board are require" });
         return;
       }
       if (!updTask) {
-        io.to(user.id).emit("err", { err: "updTask are require" });
+        io.to(socket.id).emit("err", { err: "updTask are require" });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -495,17 +489,17 @@ module.exports = (io) => {
         { username: project.creatorName },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
           var additionText = "";
@@ -525,12 +519,12 @@ module.exports = (io) => {
           }
           await list.save((err) => {
             if (err) {
-              io.to(user.id).emit("err", { err: err.message });
+              io.to(socket.id).emit("err", { err: err.message });
               return;
             }
           });
 
-          if (user.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -540,7 +534,7 @@ module.exports = (io) => {
               theme: "Изменение задачи.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 additionText +
                 "'. В доске задач проекта '" +
                 project.title +
@@ -557,30 +551,30 @@ module.exports = (io) => {
             nodemailer.sendMessageEmail(info);
           }
 
-          io.to(user.id).emit("updated-task", { status: "success" });
+          io.to(socket.id).emit("updated-task", { status: "success" });
         }
       );
     });
 
     socket.on("move-task", async ({ oldBoard, newBoard, mvTask }) => {
       if (!oldBoard) {
-        io.to(user.id).emit("err", { err: "oldBoard are require" });
+        io.to(socket.id).emit("err", { err: "oldBoard are require" });
         return;
       }
       if (!newBoard) {
-        io.to(user.id).emit("err", { err: "newBoard are require" });
+        io.to(socket.id).emit("err", { err: "newBoard are require" });
         return;
       }
       if (!mvTask) {
-        io.to(user.id).emit("err", { err: "mvTask are require" });
+        io.to(socket.id).emit("err", { err: "mvTask are require" });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -589,17 +583,17 @@ module.exports = (io) => {
         { username: project.creatorName },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
           var task = await list.boards.id(oldBoard._id).items.id(mvTask._id);
@@ -611,11 +605,11 @@ module.exports = (io) => {
           await list.boards.id(oldBoard._id).items.pull(task);
           await list.save((err) => {
             if (err) {
-              io.to(user.id).emit("err", { err: err.message });
+              io.to(socket.id).emit("err", { err: err.message });
               return;
             }
           });
-          if (user.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -625,7 +619,7 @@ module.exports = (io) => {
               theme: "Перемещение задачи.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 " переместил задачу '" +
                 task.text +
                 "' из '" +
@@ -646,26 +640,28 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(user.id).emit("moved-task", { status: "success" });
+          io.to(socket.id).emit("moved-task", { status: "success" });
         }
       );
     });
 
+    
+
     socket.on("delete-task", async ({ board, delTask }) => {
       if (!board) {
-        io.to(user.id).emit("err", { err: "Board are require" });
+        io.to(socket.id).emit("err", { err: "Board are require" });
         return;
       }
       if (!delTask) {
-        io.to(user.id).emit("err", { err: "delTask are require" });
+        io.to(socket.id).emit("err", { err: "delTask are require" });
         return;
       }
 
       var project = await Projects.findOne(
-        { slug: user.TaskList },
+        { slug: socket.data.TaskList },
         async (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
@@ -674,22 +670,22 @@ module.exports = (io) => {
         { username: project.creatorName },
         (err) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
         }
       );
 
       await ToDoLists.findOne(
-        { projectSlug: user.TaskList },
+        { projectSlug: socket.data.TaskList },
         async (err, list) => {
           if (err) {
-            io.to(user.id).emit("err", { err: err.message });
+            io.to(socket.id).emit("err", { err: err.message });
             return;
           }
           await list.boards.id(board._id).items.pull(delTask._id);
           await list.save();
-          if (user.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -699,7 +695,7 @@ module.exports = (io) => {
               theme: "Удаление задачи.",
               text:
                 "Пользователь " +
-                user.username +
+                socket.data.username +
                 " удалил задачу '" +
                 delTask.text +
                 "'. В доске задач проекта '" +
@@ -716,7 +712,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(user.id).emit("deleted-task", { status: "success" });
+          io.to(socket.id).emit("deleted-task", { status: "success" });
         }
       );
     });

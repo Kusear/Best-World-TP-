@@ -556,6 +556,19 @@ Response:
     message: "success"
 
 
+Route - /getUsersInChat
+Method - POST
+Auth needed - no
+Values: 
+   chatRoom
+Response: 
+    err: err.message
+    or
+    err: "Chat not found"
+    or
+    members: [{username: ..., role: ..., image: base64}] (массив пользователей в чате) 
+
+
 
 ############## Image routes ##############
 

@@ -495,6 +495,7 @@ app.post(
 app.post(api_route + "/createChat", midleware.auth, controllersChat.createChat);
 app.post(api_route + "/getChats", midleware.auth, controllersChat.getChats);
 app.post(api_route + "/deleteChat", midleware.auth, controllersChat.deleteChat);
+app.post(api_route + "/getUsersInChat", controllersChat.getUsersInChat);
 
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })
