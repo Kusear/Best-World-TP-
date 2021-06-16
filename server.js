@@ -306,6 +306,14 @@ app.post(
   midleware.checkProjectMember,
   controllersProjectBoard.deleteTask
 );
+app.post(
+  api_route + "/getProjectUsers",
+  midleware.routeLog,
+  // midleware.auth,
+  // midleware.roleCheck("user", "superadmin"),
+  // midleware.checkProjectMember,
+  controllersProjectBoard.getUsers
+);
 
 // files routes
 app.post(
