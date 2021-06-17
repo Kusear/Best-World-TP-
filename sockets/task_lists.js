@@ -39,63 +39,83 @@ module.exports = (io) => {
             return socket.disconnect();
           }
 
-          await Projects.findOne({ slug: socket.data.TaskList }, (err, project) => {
-            var endSTR = "";
-            var gfs = new mongodb.GridFSBucket(
-              mongoose.connection.db,
-              mongoose.mongo
-            );
-            var membersList = [];
-            var i = 0;
-            project.projectMembers.forEach(async (element) => {
-              var user = {
-                username: element.username,
-                role: element.role,
-                image: "",
-              };
-
-              await Users.findOne(
-                { username: element.username },
-                (err, userBD) => {
-                  gfs
-                    .openDownloadStreamByName(userBD.image, { revision: -1 })
-                    .on("data", (chunk) => {
-                      console.log("CHUNK: ", chunk);
-                      endSTR += Buffer.from(chunk, "hex").toString("base64");
-                    })
-                    .on("error", function (err) {
-                      console.log("ERR: ", err);
-                      user.image = "default";
-                      membersList.push(user);
-                      if (i == project.projectMembers.length - 1) {
-                        socket.join(list.projectSlug);
-                        io.to(socket.id).emit("listData", {
-                          list: list,
-                          members: membersList,
-                        });
-                        return;
-                      }
-                      i++;
-                    })
-                    .on("close", () => {
-                      if (userBD.image !== "default") {
-                        user.image = endSTR;
-                      }
-                      membersList.push(user);
-                      if (i == project.projectMembers.length - 1) {
-                        socket.join(list.projectSlug);
-                        io.to(socket.id).emit("listData", {
-                          list: list,
-                          members: membersList,
-                        });
-                        return;
-                      }
-                      i++;
-                    });
+          await Projects.findOne(
+            { slug: socket.data.TaskList },
+            (err, project) => {
+              var isMember = false;
+              project.projectMembers.forEach((element) => {
+                if (element.username === socket.data.username) {
+                  isMember = true;
+                  console.log("true in cycle");
                 }
+              });
+
+              if (!isMember) {
+                console.log("Not allowed");
+                io.to(socket.id).emit("err", { status: -1 });
+                return socket.disconnect();
+              }
+
+              var gfs = new mongodb.GridFSBucket(
+                mongoose.connection.db,
+                mongoose.mongo
               );
-            });
-          });
+              var membersList = [];
+              var i = 0;
+              project.projectMembers.forEach(async (element) => {
+                await Users.findOne(
+                  { username: element.username },
+                  (err, userBD) => {
+                    var endSTR = "";
+                    var user = {
+                      username: element.username,
+                      role: element.role,
+                      image: "",
+                    };
+                    gfs
+                      .openDownloadStreamByName(userBD.image, {
+                        revision: -1,
+                      })
+                      .on("data", (chunk) => {
+                        console.log("CHUNK: ", chunk);
+                        endSTR += Buffer.from(chunk, "hex").toString("base64");
+                      })
+                      .on("error", function (err) {
+                        console.log("ERR: ", err);
+                        user.image = "default";
+                        membersList.push(user);
+                        if (i == project.projectMembers.length - 1) {
+                          socket.join(list.projectSlug);
+                          io.to(socket.id).emit("listData", {
+                            list: list,
+                            title: project.title,
+                            members: membersList,
+                          });
+                          return;
+                        }
+                        i++;
+                      })
+                      .on("close", () => {
+                        if (userBD.image !== "default") {
+                          user.image = endSTR;
+                        }
+                        membersList.push(user);
+                        if (i == project.projectMembers.length - 1) {
+                          socket.join(list.projectSlug);
+                          io.to(socket.id).emit("listData", {
+                            list: list,
+                            title: project.title,
+                            members: membersList,
+                          });
+                          return;
+                        }
+                        i++;
+                      });
+                  }
+                );
+              });
+            }
+          );
         }
       );
     });
@@ -240,8 +260,7 @@ module.exports = (io) => {
               updBoard.name +
               "'";
             board.name = updBoard.name;
-          }
-          if (updBoard.color) {
+          } else if (updBoard.color) {
             additionText = " изменил доску '" + newBoard.name + "'";
             board.color = updBoard.color;
           }
@@ -266,7 +285,7 @@ module.exports = (io) => {
                 ". В доске задач проекта " +
                 project.title +
                 "<br>" +
-                "Для перехода к доске задач проекта необходимо перейти в ваш " +
+                "Для просмотра доски задач проекта необходимо перейти в ваш " +
                 "<div><a href =" +
                 process.env.FRONT_URL +
                 "profile/" +
@@ -348,7 +367,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("deleted-board", { status: "success" });
+          io.to(socket.id).emit("deleted-board", { board: board });
         }
       );
     });
@@ -464,7 +483,10 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("created-task", { status: "success" });
+          io.to(socket.id).emit("created-task", {
+            task: newTask,
+            board: board,
+          });
         }
       );
     });
@@ -554,7 +576,7 @@ module.exports = (io) => {
             nodemailer.sendMessageEmail(info);
           }
 
-          io.to(socket.id).emit("updated-task", { status: "success" });
+          io.to(socket.id).emit("updated-task", { task: task });
         }
       );
     });
@@ -643,12 +665,13 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("moved-task", { status: "success" });
+          io.to(socket.id).emit("moved-task", {
+            from: oldBoard._id,
+            to: newBoard._id,
+          });
         }
       );
     });
-
-    
 
     socket.on("delete-task", async ({ board, delTask }) => {
       if (!board) {
@@ -715,11 +738,43 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("deleted-task", { status: "success" });
+          io.to(socket.id).emit("deleted-task", { task: delTask });
         }
       );
     });
 
     counter++; //
+  });
+};
+
+// TODO переделать отправку объектов при изменении
+
+var isProjectMember = async (username, slug) => {
+  console.log("slug:", slug);
+  console.log("username:", username);
+  await Projects.findOne({ slug: slug }, async function (err, project) {
+    if (err) {
+      return false;
+    }
+    if (!project) {
+      return false;
+    }
+    var members = project.projectMembers;
+    var member = false;
+
+    members.forEach((element) => {
+      if (element.username === username) {
+        member = true;
+        console.log("true in cycle");
+      }
+    });
+
+    if (member) {
+      console.log("true");
+      return true;
+    } else {
+      console.log("false");
+      return false;
+    }
   });
 };
