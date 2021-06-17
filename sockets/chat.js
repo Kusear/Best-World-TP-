@@ -105,6 +105,10 @@ module.exports = (io) => {
 
         socket.join(chat.chatRoom);
         console.log("Room: ", socket.data.room);
+        io.to(socket.id).emit("joinedRoom", {
+          status: CONNECTED,
+          room: socket.data.room,
+        });
       });
     });
 
