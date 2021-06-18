@@ -56,6 +56,13 @@ module.exports = (io) => {
                 return socket.disconnect();
               }
 
+              if (
+                username === project.creatorName ||
+                username === project.managerName
+              ) {
+                socket.data.canChange = true;
+              }
+
               var gfs = new mongodb.GridFSBucket(
                 mongoose.connection.db,
                 mongoose.mongo
@@ -71,7 +78,13 @@ module.exports = (io) => {
                       username: element.username,
                       role: element.role,
                       image: "",
+                      canChange: false,
                     };
+
+                    if (element.username === project.creatorName || element.username === project.managerName) {
+                      user.canChange = true;
+                    }
+                    
                     gfs
                       .openDownloadStreamByName(userBD.image, {
                         revision: -1,
@@ -313,7 +326,7 @@ module.exports = (io) => {
 
       var project = await Projects.findOne(
         { slug: socket.data.TaskList },
-        async (err) => {
+        (err) => {
           if (err) {
             io.to(socket.id).emit("err", { err: err.message });
             return;
@@ -338,7 +351,7 @@ module.exports = (io) => {
             return;
           }
           var bord = list.boards.id(delBoard._id);
-          list.boards.pull(delBoard._id);
+          list.boards.pull(board._id);
           await list.save();
           if (socket.data.username !== project.creatorName) {
             console.log("send");

@@ -13,6 +13,8 @@ const DISCONNECTED = 1;
 
 var i = 0;
 
+// TODO сделать проверку на созданный чат двух пользователей
+
 var emailMessage = async (room, socketArray) => {
   socketArray.forEach((element) => {
     var info = {
