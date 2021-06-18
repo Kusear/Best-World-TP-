@@ -50,6 +50,8 @@ exports.userData = async function (req, res) {
       projects.push(construction);
     });
 
+    var userImage = gfs.find({ filename: user.image });
+
     gfs
       .openDownloadStreamByName(user.image, { revision: -1 })
       .on("data", (chunk) => {
@@ -62,9 +64,13 @@ exports.userData = async function (req, res) {
         var i = 0;
         var i3 = 0;
         if (projects.length != 0) {
+
           projects.forEach((element) => {
+
             element.project = memberInProjects[i];
+
             var endSTR2 = "";
+
             gfs
               .openDownloadStreamByName(element.project.image, { revision: -1 })
               .on("data", (chunk) => {
@@ -135,6 +141,7 @@ exports.userData = async function (req, res) {
                       preferredRole: user.preferredRole,
                       info: user.info,
                       image: user.image,
+                      imageType: userImage.contentType,
                       projects: projects,
                       emailConfirm: user.emailConfirm,
                       status: SUCCESS,

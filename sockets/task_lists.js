@@ -708,6 +708,7 @@ module.exports = (io) => {
           io.to(socket.id).emit("moved-task", {
             from: oldBoard._id,
             to: newBoard._id,
+            task: mvTask,
           });
         }
       );
@@ -778,7 +779,10 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("deleted-task", { task: delTask });
+          io.to(socket.id).emit("deleted-task", {
+            board: board,
+            task: delTask,
+          });
         }
       );
     });

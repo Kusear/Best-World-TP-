@@ -41,6 +41,7 @@ const storageIMG = new GridFsStorage({
 const storageFILE = new GridFsStorage({
   url: MONGO_URL,
   file: (req, file) => {
+    console.log(file);
     return {
       filename:
         slugify(req.body.filename, {
@@ -404,18 +405,6 @@ app.post(
         .json({ message: "File added", filename: filenameSlug })
         .end();
     });
-  }
-);
-app.post(
-  api_route + "/addFile",
-  // midleware.auth,
-  uploadFiles.single("file"),
-  async (req, res, next) => {
-    console.log("Bruh: ", req.body.filename);
-    return res
-      .status(200)
-      .json({ filename: req.body.filename, file: req.body.file })
-      .end();
   }
 );
 app.post(

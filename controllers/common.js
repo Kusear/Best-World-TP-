@@ -34,15 +34,15 @@ exports.login = async (req, res) => {
         mongoose.connection.db,
         mongoose.mongo
       );
+      var file = gfs.find({ filename: user.image });
 
       gfs
-        .openDownloadStreamByName(user.image, { revision: -1 })
+        .openDownloadStreamByName(file.filename, { revision: -1 })
         .on("data", (chunk) => {
           console.log("CHUNK: ", chunk);
           endSTR += Buffer.from(chunk, "hex").toString("base64");
         })
         .on("error", function (err) {
-          console.log("ERR: ", err);
           user.image = "default";
           return res
             .status(200)
@@ -68,6 +68,7 @@ exports.login = async (req, res) => {
               role: user.role,
               emailConfirm: user.emailConfirm,
               image: user.image,
+              imageType: file.contentType,
               token: user.getToken(),
             })
             .end();
@@ -220,8 +221,10 @@ exports.recoveryPassword = async (req, res) => {
 exports.getFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
   var endSTR = "";
-  console.log("body: ", req.body);
-  console.log("query: ", req.query);
+
+  // var files = await gfs.find({}, (err) => {});
+  // console.log(files);
+
   gfs
     .openDownloadStreamByName(req.body.filename, { revision: -1 })
     .on("data", (chunk) => {
