@@ -474,7 +474,7 @@ app.get(
   controllersReportProject.getReortedProjects
 );
 app.post(
-  api_route + "/deleteUserReport",
+  api_route + "/deleteProjectReport",
   midleware.auth,
   midleware.roleCheck("user", "superadmin"),
   controllersReportProject.deleteReportProject
