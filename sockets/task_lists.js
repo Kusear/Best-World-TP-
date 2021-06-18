@@ -159,8 +159,10 @@ module.exports = (io) => {
           if (err) {
             console.log("err: ", err.message);
           }
-          if (countOfDocs[0].count >= 10) {
-            limit = true;
+          if (countOfDocs[0].count) {
+            if (countOfDocs[0].count >= 10) {
+              limit = true;
+            }
           }
         }
       );
