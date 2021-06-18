@@ -316,7 +316,7 @@ app.post(
   controllersProjectBoard.getUsers
 );
 
-// files routes
+// files routes // TODO
 app.post(
   api_route + "/saveFile",
   midleware.auth,
@@ -400,6 +400,7 @@ app.post(
         return res.status(500).json({ err: err.message }).end();
       }
       pr.projectFiles.push(file);
+      pr.save();
       return res
         .status(200)
         .json({ message: "File added", filename: filenameSlug })

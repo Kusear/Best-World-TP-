@@ -37,7 +37,7 @@ exports.login = async (req, res) => {
       var file = gfs.find({ filename: user.image });
 
       gfs
-        .openDownloadStreamByName(file.filename, { revision: -1 })
+        .openDownloadStreamByName(user.image, { revision: -1 })
         .on("data", (chunk) => {
           console.log("CHUNK: ", chunk);
           endSTR += Buffer.from(chunk, "hex").toString("base64");
