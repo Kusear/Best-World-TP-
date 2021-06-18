@@ -407,6 +407,18 @@ app.post(
   }
 );
 app.post(
+  api_route + "/addFile",
+  // midleware.auth,
+  uploadFiles.single("file"),
+  async (req, res, next) => {
+    console.log("Bruh: ", req.body.filename);
+    return res
+      .status(200)
+      .json({ filename: req.body.filename, file: req.body.file })
+      .end();
+  }
+);
+app.post(
   api_route + "/getFile",
   midleware.routeLog,
   controllersCommon.getFiles

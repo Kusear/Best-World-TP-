@@ -422,7 +422,7 @@ module.exports = (io) => {
       await ToDoLists.aggregate(
         [
           {
-            $match: { projectSlug: projectSlug },
+            $match: { projectSlug: socket.data.TaskList },
           },
           {
             $project: {
@@ -490,6 +490,8 @@ module.exports = (io) => {
           newTask.text = crtTask.text;
           newTask.performer = crtTask.performer;
           newTask.description = crtTask.description;
+          newTask.timeStartWork = crtTask.timeStartWork;
+          newTask.timeEndWork = crtTask.timeEndWork;
           await list.boards.id(board._id).items.push(newTask);
           await list.save();
           if (newTask.performer) {
