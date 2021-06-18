@@ -84,7 +84,7 @@ module.exports = (io) => {
                     if (element.username === project.creatorName || element.username === project.managerName) {
                       user.canChange = true;
                     }
-                    
+
                     gfs
                       .openDownloadStreamByName(userBD.image, {
                         revision: -1,
@@ -343,6 +343,8 @@ module.exports = (io) => {
         }
       );
 
+      var bordItem;
+
       await ToDoLists.findOne(
         { projectSlug: socket.data.TaskList },
         async (err, list) => {
@@ -350,8 +352,8 @@ module.exports = (io) => {
             io.to(socket.id).emit("err", { err: err.message });
             return;
           }
-          var bord = list.boards.id(delBoard._id);
-          list.boards.pull(board._id);
+          bordItem = await list.boards.id(mongoose.Types.ObjectId(delBoard._id));
+          list.boards.pull(mongoose.Types.ObjectId(delBoard._id));
           await list.save();
           if (socket.data.username !== project.creatorName) {
             console.log("send");
@@ -380,7 +382,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("deleted-board", { board: board });
+          io.to(socket.id).emit("deleted-board", { board: bordItem });
         }
       );
     });
