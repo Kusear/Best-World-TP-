@@ -586,7 +586,7 @@ exports.addProjectMember = async (req, res) => {
     });
 
     if (!requestExist) {
-      return res.status(200).json({message: "No request"}).end();
+      return res.status(200).json({ message: "No request" }).end();
     }
 
     var newMember;

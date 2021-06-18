@@ -616,7 +616,7 @@ module.exports = (io) => {
             nodemailer.sendMessageEmail(info);
           }
 
-          io.to(socket.id).emit("updated-task", { task: task });
+          io.to(socket.id).emit("updated-task", { board: board, task: task });
         }
       );
     });
