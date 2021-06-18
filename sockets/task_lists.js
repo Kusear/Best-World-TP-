@@ -564,7 +564,9 @@ module.exports = (io) => {
             return;
           }
           var additionText = "";
-          var task = list.boards.id(board._id).items.id(updTask._id);
+          var task = await list.boards
+            .id(mongoose.Types.ObjectId(board._id))
+            .items.id(mongoose.Types.ObjectId(updTask._id));
           if (updTask.text) {
             additionText =
               " изменил текст задачи с '" + task.text + "' на '" + updTask.text;
@@ -659,8 +661,8 @@ module.exports = (io) => {
           }
           var task = await list.boards.id(oldBoard._id).items.id(mvTask._id);
 
-          var obord = list.boards.id(oldBoard._id);
-          var nbord = list.boards.id(newBoard._id);
+          var obord = await list.boards.id(oldBoard._id);
+          var nbord = await list.boards.id(newBoard._id);
 
           await list.boards.id(newBoard._id).items.push(task);
           await list.boards.id(oldBoard._id).items.pull(task);
