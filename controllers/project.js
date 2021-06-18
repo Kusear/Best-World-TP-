@@ -580,6 +580,7 @@ exports.addProjectMember = async (req, res) => {
         element.role === req.body.role &&
         element.username === req.body.username
       ) {
+        console.log("Requiest exist");
         requestExist = true;
       }
     });
