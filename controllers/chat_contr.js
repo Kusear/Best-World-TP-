@@ -5,19 +5,35 @@ const slugify = require("slugify");
 const mongodb = require("mongodb");
 const mongoose = require("mongoose");
 
+// TODO сделать проверку на созданный чат двух пользователей
+
 exports.createChat = async (req, res) => {
   try {
-    var chat = await Chat.findOne({ chatName: req.body.chatName }, (err) => {
-      if (err) {
-        return res.status(520).json({ err: err.message }).end();
+    var checkChatName = req.body.chatName;
+    var spaceIndex = checkChatName.indexOf(" ");
+    var str = [];
+    str.push(checkChatName.substring(0, spaceIndex));
+    str.push(checkChatName.substring(spaceIndex + 1, checkChatName.length));
+
+    var chat;
+    for (i = 0; i < 1; i++) {
+      var checkSTR = str[i] + " " + str[i + 1];
+      chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
+        if (err) {
+          return res.status(520).json({ err: err.message }).end();
+        }
+      });
+      if (chat) {
+        return res
+          .status(500)
+          .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
+          .end();
       }
-    });
-    if (chat) {
-      return res
-        .status(500)
-        .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
-        .end();
     }
+
+    // console.log(str.lastIndexOf("_"));
+    // console.log(str.substring(0, 6));
+
     var newChat = await Chat({
       chatRoom: req.body.chatRoom,
       chatName: req.body.chatName,

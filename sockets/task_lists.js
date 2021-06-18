@@ -61,6 +61,7 @@ module.exports = (io) => {
                 username === project.managerName
               ) {
                 socket.data.canChange = true;
+                console.log("Creator: ", socket.data.canChange);
               }
 
               var gfs = new mongodb.GridFSBucket(
@@ -81,7 +82,10 @@ module.exports = (io) => {
                       canChange: false,
                     };
 
-                    if (element.username === project.creatorName || element.username === project.managerName) {
+                    if (
+                      element.username === project.creatorName ||
+                      element.username === project.managerName
+                    ) {
                       user.canChange = true;
                     }
 
@@ -136,6 +140,11 @@ module.exports = (io) => {
     socket.on("create-board", async ({ crtBoard }) => {
       if (!crtBoard) {
         io.to(socket.id).emit("err", { err: "Board are require" });
+        return;
+      }
+
+      if (socket.data.canChange == false) {
+        io.to(socket.id).emit("err", { err: "Not allowed" });
         return;
       }
 
@@ -235,6 +244,11 @@ module.exports = (io) => {
         return;
       }
 
+      if (socket.data.canChange == false) {
+        io.to(socket.id).emit("err", { err: "Not allowed" });
+        return;
+      }
+
       var project = await Projects.findOne(
         { slug: socket.data.TaskList },
         async (err) => {
@@ -262,7 +276,7 @@ module.exports = (io) => {
             return;
           }
 
-          var board = list.boards.id(updBoard._id);
+          var board = await list.boards.id(updBoard._id);
           var boardname = board.name;
           var additionText = "";
           if (updBoard.name) {
@@ -271,10 +285,10 @@ module.exports = (io) => {
               board.name +
               "' на '" +
               updBoard.name +
-              "'";
+              "' и произвел некоторые изменения";
             board.name = updBoard.name;
-          } else if (updBoard.color) {
-            additionText = " изменил доску '" + newBoard.name + "'";
+          }
+          if (updBoard.color) {
             board.color = updBoard.color;
           }
           await list.save((err) => {
@@ -309,7 +323,7 @@ module.exports = (io) => {
             nodemailer.sendMessageEmail(info);
           }
           io.to(socket.id).emit("updated-board", {
-            status: success,
+            status: "success",
             board: board,
           });
         }
@@ -321,6 +335,11 @@ module.exports = (io) => {
         io.to(socket.id).emit("err", {
           err: "delBoard are required",
         });
+        return;
+      }
+
+      if (socket.data.canChange == false) {
+        io.to(socket.id).emit("err", { err: "Not allowed" });
         return;
       }
 
@@ -352,7 +371,9 @@ module.exports = (io) => {
             io.to(socket.id).emit("err", { err: err.message });
             return;
           }
-          bordItem = await list.boards.id(mongoose.Types.ObjectId(delBoard._id));
+          bordItem = await list.boards.id(
+            mongoose.Types.ObjectId(delBoard._id)
+          );
           list.boards.pull(mongoose.Types.ObjectId(delBoard._id));
           await list.save();
           if (socket.data.username !== project.creatorName) {

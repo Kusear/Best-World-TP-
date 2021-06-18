@@ -255,9 +255,9 @@ exports.createProject = async function (req, res) {
     var newToDoList = await new ToDoLists({
       projectSlug: newProject.slug,
       boards: [
-        new Boards({ name: "Board 1", color: "#FCA5A5" }),
-        new Boards({ name: "Board 2", color: "#FCD34D" }),
-        new Boards({ name: "Board 3", color: "#6EE7B7" }),
+        new Boards({ name: "TODO", color: "#FCA5A5" }),
+        new Boards({ name: "IN PROGRESS", color: "#FCD34D" }),
+        new Boards({ name: "TEST", color: "#6EE7B7" }),
       ],
     }).save();
 
