@@ -571,6 +571,23 @@ exports.addProjectMember = async (req, res) => {
       return res.status(500).json("Project not found").end();
     }
 
+    // TODO сделать проверку на наличие реквеста
+
+    var requestExist = false;
+
+    pr.requests.forEach((element) => {
+      if (
+        element.role === req.body.role &&
+        element.username === req.body.username
+      ) {
+        requestExist = true;
+      }
+    });
+
+    if (!requestExist) {
+      return res.status(200).json({message: "No request"}).end();
+    }
+
     var newMember;
     if (req.body.helper && pr.needHelp) {
       newMember = new Members();

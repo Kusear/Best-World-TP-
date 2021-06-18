@@ -661,13 +661,23 @@ module.exports = (io) => {
             io.to(socket.id).emit("err", { err: err.message });
             return;
           }
-          var task = await list.boards.id(oldBoard._id).items.id(mvTask._id);
+          var task = await list.boards
+            .id(mongoose.Types.ObjectId(oldBoard._id))
+            .items.id(mongoose.Types.ObjectId(mvTask._id));
 
-          var obord = await list.boards.id(oldBoard._id);
-          var nbord = await list.boards.id(newBoard._id);
+          var obord = await list.boards.id(
+            mongoose.Types.ObjectId(oldBoard._id)
+          );
+          var nbord = await list.boards.id(
+            mongoose.Types.ObjectId(newBoard._id)
+          );
 
-          await list.boards.id(newBoard._id).items.push(task);
-          await list.boards.id(oldBoard._id).items.pull(task);
+          await list.boards
+            .id(mongoose.Types.ObjectId(newBoard._id))
+            .items.push(task);
+          await list.boards
+            .id(mongoose.Types.ObjectId(oldBoard._id))
+            .items.pull(task);
           await list.save((err) => {
             if (err) {
               io.to(socket.id).emit("err", { err: err.message });
@@ -750,7 +760,9 @@ module.exports = (io) => {
             io.to(socket.id).emit("err", { err: err.message });
             return;
           }
-          await list.boards.id(board._id).items.pull(delTask._id);
+          await list.boards
+            .id(mongoose.Types.ObjectId(board._id))
+            .items.pull(mongoose.Types.ObjectId(delTask._id));
           await list.save();
           if (socket.data.username !== project.creatorName) {
             console.log("send");
