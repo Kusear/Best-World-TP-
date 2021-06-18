@@ -32,8 +32,6 @@ exports.getReportedUsers = async function (req, res) {
   });
 };
 
-// спросить как будем редачить репорченых пользователей
-
 exports.deleteUserReport = async function (req, res) {
   var reportToDelete = req.body.reportID;
   if (!reportToDelete) {

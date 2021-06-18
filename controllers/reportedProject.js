@@ -18,7 +18,7 @@ exports.createRoportProject = async (req, res) => {
   }
   
   var newReport = await new ReportedProjects({
-    title: req.body.title,
+    slug: req.body.slug,
     reportFromUser: req.body.reportFrom,
   }).save();
   return res.status(200).json({ message: "success" }).end();
