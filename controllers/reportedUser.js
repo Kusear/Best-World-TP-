@@ -19,6 +19,7 @@ exports.createReportUser = async (req, res) => {
   var newReport = await new ReportedUsers({
     username: req.body.username,
     reportFromUser: req.body.reportFrom,
+    email: req.body.email,
   }).save();
   return res.status(200).json({ message: "success" }).end();
 };

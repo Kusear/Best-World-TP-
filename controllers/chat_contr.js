@@ -6,6 +6,7 @@ const mongodb = require("mongodb");
 const mongoose = require("mongoose");
 
 // TODO сделать проверку на созданный чат двух пользователей
+// TODO проверить везде на пустые списки (подобные chatMembers в New-Test-project-name-60ccd4c4b467640015d9abb4)
 
 exports.createChat = async (req, res) => {
   try {
@@ -16,8 +17,7 @@ exports.createChat = async (req, res) => {
     str.push(checkChatName.substring(spaceIndex + 1, checkChatName.length));
 
     var chat;
-    for (i = 0; i < 1; i++) {
-      var checkSTR = str[i] + " " + str[i + 1];
+      var checkSTR = str[0] + " " + str[1];
       chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
         if (err) {
           return res.status(520).json({ err: err.message }).end();
@@ -29,7 +29,19 @@ exports.createChat = async (req, res) => {
           .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
           .end();
       }
-    }
+
+      checkSTR = str[1] + " " + str[0];
+      chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
+        if (err) {
+          return res.status(520).json({ err: err.message }).end();
+        }
+      });
+      if (chat) {
+        return res
+          .status(500)
+          .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
+          .end();
+      }
 
     // console.log(str.lastIndexOf("_"));
     // console.log(str.substring(0, 6));

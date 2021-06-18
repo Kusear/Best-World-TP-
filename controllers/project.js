@@ -12,7 +12,7 @@ const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
 const { User } = require("../models/user_model");
 
-exports.projectData = async function (req, res) {
+exports.projectData = async function (req, res) { // TODO исправить получение проектов с пустым массивом вступивших пользователей
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -826,59 +826,3 @@ exports.deleteRequest = async (req, res) => {
     }
   );
 };
-
-// await Projects.findOne(
-//   { slug: projectToDelete },
-//   async function (err, project) {
-//     if (err) {
-//       return res.status(520).json({ err: err.message }).end();
-//     }
-
-//     if (!project) {
-//       return res.status(500).json({ err: "Project not found" }).end();
-//     }
-
-//     await ToDoLists.findOne(
-//       { projectSlug: project.slug },
-//       async (err, list) => {
-//         if (err) {
-//           return res.status(520).json({ err: err.message }).end();
-//         }
-
-//         if (list) {
-//           await list.remove((err) => {
-//             if (err) {
-//               return res.status(520).json({ err: err.message }).end();
-//             }
-//             responce.todoListStatus = "deleted";
-//           });
-//         } else {
-//           responce.todoListStatus = "todo not found";
-//         }
-//       }
-//     );
-
-//     await Chat.findOne({ chatRoom: project.slug }, async (err, chat) => {
-//       if (err) {
-//         responce.chatStatus = err.message;
-//       }
-//       if (!chat) {
-//         responce.chatStatus = "Chat not found";
-//       }
-//       await chat.remove((err, result) => {
-//         if (err) {
-//           responce.chatStatus = err.message;
-//         }
-//         responce.chatStatus = "deleted";
-//       });
-//     });
-
-//     await project.remove(function (err, doc) {
-//       if (err) {
-//         return res.status(500).json({ err: err.message }).end();
-//       }
-//       responce.projectStatus = "deleted";
-//       return res.status(200).json(responce).end();
-//     });
-//   }
-// );
