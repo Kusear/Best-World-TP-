@@ -23,6 +23,8 @@ const GridFsStorage = require("multer-gridfs-storage");
 const storageIMG = new GridFsStorage({
   url: MONGO_URL,
   file: (req, file) => {
+    console.log(file); // jpeg png jpg
+    console.log(file.mimetype); // jpeg png jpg
     var objID = req.body.userID || req.body.projectID;
     return {
       filename:
@@ -56,8 +58,20 @@ const storageFILE = new GridFsStorage({
     };
   },
 });
-const upload = multer({ storage: storageIMG });
+const upload = multer({
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter: function (req, file, next) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return next(null, false);
+    }
+    next(null, file.originalname);
+  },
+  storage: storageIMG,
+});
 const uploadFiles = multer({ storage: storageFILE });
+const multerParse = multer();
 
 const midleware = require("./midleware/midleware");
 const controllersCommon = require("./controllers/common");
@@ -321,10 +335,11 @@ app.post(
   api_route + "/saveFile",
   midleware.auth,
   upload.single("image"),
-  async (req, res, next) => {
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(500).json({ text: "bad file", status: -200 }).end();
+    }
     var objID = req.body.userID || req.body.projectID;
-    console.log("USERID: ", req.body.userID);
-    console.log("PROJECTID: ", req.body.projectID);
     var filenameSlug =
       (await slugify(req.body.filename, {
         replacement: "-",

@@ -121,3 +121,17 @@ exports.banCheck = async (req, res, next) => {
     });
   }
 };
+
+exports.fileTypeCheck = async (req, res, next) => {
+  console.log("FILE: ", req.file);
+  if (
+    req.file.mimetype !== "image/jpeg" &&
+    req.file.mimetype !== "image/png" &&
+    req.file.mimetype !== "image/jpg"
+  ) {
+    return res.status(200).json({}).end();
+  } else {
+    console.log("YAS", true);
+    next();
+  }
+};
