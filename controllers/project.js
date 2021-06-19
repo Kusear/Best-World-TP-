@@ -487,8 +487,8 @@ exports.getProjects = async function (req, res) {
     .skip(10 * req.query.currentPage)
     .limit(10);
   console.log(projects.length);
-  
-  if (projects.length) {
+
+  if (projects.length == 0) {
     var emptyList = [];
     return res.status(200).json(emptyList).end();
   }
