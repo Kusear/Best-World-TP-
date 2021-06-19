@@ -478,6 +478,7 @@ exports.getProjects = async function (req, res) {
 
   var listProjects = [];
   var counter = 0;
+  var hasNext = false;
 
   var projects = await Projects.find({}, null, function (err, result) {
     if (err) {
@@ -488,9 +489,19 @@ exports.getProjects = async function (req, res) {
     .limit(10);
   console.log(projects.length);
 
+  var projects2 = await Projects.find({}, null, function (err, result) {
+    if (err) {
+      return res.status(520).json({ err: err.message }).end();
+    }
+  })
+    .skip(10 * req.query.currentPage + 1)
+    .limit(10);
+
   if (projects.length == 0) {
-    var emptyList = [];
-    return res.status(200).json(emptyList).end();
+    return res.status(200).json({listProjects: emptyList, hasNext: hasNext}).end();
+  }
+  if (projects2.length != 0) {
+    hasNext = true;
   }
 
   projects.forEach((element) => {
@@ -525,7 +536,7 @@ exports.getProjects = async function (req, res) {
             listProjects.push(pr);
             console.log("d c: ", counter);
             if (counter == projects.length - 1) {
-              return res.status(200).json(listProjects).end();
+              return res.status(200).json({listProjects: listProjects, hasNext: hasNext}).end();
             }
             console.log("e: ", counter);
             counter++;
@@ -540,7 +551,7 @@ exports.getProjects = async function (req, res) {
         pr.project.image = endSTR;
         listProjects.push(pr);
         if (counter == projects.length - 1) {
-          return res.status(200).json(listProjects).end();
+          return res.status(200).json({listProjects: listProjects, hasNext: hasNext}).end();
         }
         console.log("c: ", counter);
         counter++;
