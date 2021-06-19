@@ -642,7 +642,7 @@ exports.addProjectMember = async (req, res) => {
     await Chat.findOne({ chatRoom: projectSlug }, (err, chat) => {
       if (err) {
         exptionChatAddMember = err.message;
-      }
+      } // TODO добавить проверку на существование пользователя в чате
       var newChatUser = new ChatMembers({
         username: newMember.username,
         role: newMember.role,

@@ -13,6 +13,8 @@ const mongoose = require("mongoose");
  "кому назначена задача" в тасклистах, если она ранее принадлежала этому пользователю.
  */
 
+ // TODO сделать проверку на разрешение получение уведомлений
+
 module.exports = (io) => {
   var counter = 0; //
 
@@ -233,7 +235,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("created-board", {
+          io.to(socket.data.TaskList).emit("created-board", {
             status: "success",
             board: newBoard,
           });
@@ -325,7 +327,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("updated-board", {
+          io.to(socket.data.TaskList).emit("updated-board", {
             status: "success",
             board: board,
           });
@@ -406,7 +408,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("deleted-board", { board: bordItem });
+          io.to(socket.data.TaskList).emit("deleted-board", { board: bordItem });
         }
       );
     });
@@ -524,7 +526,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("created-task", {
+          io.to(socket.data.TaskList).emit("created-task", {
             task: newTask,
             board: board,
           });
@@ -619,7 +621,7 @@ module.exports = (io) => {
             nodemailer.sendMessageEmail(info);
           }
 
-          io.to(socket.id).emit("updated-task", { board: board, task: task });
+          io.to(socket.data.TaskList).emit("updated-task", { board: board, task: task });
         }
       );
     });
@@ -718,7 +720,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("moved-task", {
+          io.to(socket.data.TaskList).emit("moved-task", {
             from: oldBoard._id,
             to: newBoard._id,
             task: mvTask,
@@ -794,7 +796,7 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.id).emit("deleted-task", {
+          io.to(socket.data.TaskList).emit("deleted-task", {
             board: board,
             task: delTask,
           });
