@@ -12,7 +12,8 @@ const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
 const { User } = require("../models/user_model");
 
-exports.projectData = async function (req, res) { // TODO исправить получение проектов с пустым массивом вступивших пользователей
+exports.projectData = async function (req, res) {
+  // TODO исправить получение проектов с пустым массивом вступивших пользователей
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -54,135 +55,164 @@ exports.projectData = async function (req, res) { // TODO исправить п�
               project.image = endSTR;
               var usersInProject = [];
               var i = 0;
-              project.projectMembers.forEach(async (element) => {
-                var endSTR2 = "";
-                var user = {
-                  username: element.username,
-                  role: element.role,
-                  canChange: element.canChange,
-                  image: "",
-                };
-                console.log("USER: ", element);
-                await Users.findOne(
-                  { username: user.username },
-                  (err, userBD) => {
-                    gfs
-                      .openDownloadStreamByName(userBD.image, { revision: -1 })
-                      .on("data", (chunk) => {
-                        console.log("CHUNK: ", chunk);
-                        endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-                      })
-                      .on("error", function (err) {
-                        console.log("ERR: ", err);
-                        user.image = "default";
-
-                        if (element.username === project.creatorName) {
-                          creatorImage = user.image;
-                        }
-                        usersInProject.push(user);
-                        if (i == project.projectMembers.length - 1) {
-                          return res
-                            .status(200)
-                            .json({
-                              project: project,
-                              members: usersInProject,
-                              creatorImage: creatorImage,
-                            })
-                            .end();
-                        }
-                        i++;
-                      })
-                      .on("close", () => {
-                        if (userBD.image !== "default") {
-                          user.image = endSTR2;
-                        } else {
+              if (project.projectMembers.length != 0) {
+                project.projectMembers.forEach(async (element) => {
+                  var endSTR2 = "";
+                  var user = {
+                    username: element.username,
+                    role: element.role,
+                    canChange: element.canChange,
+                    image: "",
+                  };
+                  console.log("USER: ", element);
+                  await Users.findOne(
+                    { username: user.username },
+                    (err, userBD) => {
+                      gfs
+                        .openDownloadStreamByName(userBD.image, {
+                          revision: -1,
+                        })
+                        .on("data", (chunk) => {
+                          console.log("CHUNK: ", chunk);
+                          endSTR2 += Buffer.from(chunk, "hex").toString(
+                            "base64"
+                          );
+                        })
+                        .on("error", function (err) {
+                          console.log("ERR: ", err);
                           user.image = "default";
-                        }
-                        if (element.username === project.creatorName) {
-                          creatorImage = user.image;
-                        }
 
-                        usersInProject.push(user);
-                        if (i == project.projectMembers.length - 1) {
-                          return res
-                            .status(200)
-                            .json({
-                              project: project,
-                              members: usersInProject,
-                              creatorImage: creatorImage,
-                            })
-                            .end();
-                        }
-                        i++;
-                      });
-                  }
-                );
-              });
+                          if (element.username === project.creatorName) {
+                            creatorImage = user.image;
+                          }
+                          usersInProject.push(user);
+                          if (i == project.projectMembers.length - 1) {
+                            return res
+                              .status(200)
+                              .json({
+                                project: project,
+                                members: usersInProject,
+                                creatorImage: creatorImage,
+                              })
+                              .end();
+                          }
+                          i++;
+                        })
+                        .on("close", () => {
+                          if (userBD.image !== "default") {
+                            user.image = endSTR2;
+                          } else {
+                            user.image = "default";
+                          }
+                          if (element.username === project.creatorName) {
+                            creatorImage = user.image;
+                          }
+
+                          usersInProject.push(user);
+                          if (i == project.projectMembers.length - 1) {
+                            return res
+                              .status(200)
+                              .json({
+                                project: project,
+                                members: usersInProject,
+                                creatorImage: creatorImage,
+                              })
+                              .end();
+                          }
+                          i++;
+                        });
+                    }
+                  );
+                });
+              } else {
+                return res
+                  .status(200)
+                  .json({
+                    project: project,
+                    members: usersInProject,
+                    creatorImage: creatorImage,
+                  })
+                  .end();
+              }
             });
         })
         .on("close", () => {
           project.image = endSTR;
           var usersInProject = [];
           var i = 0;
-          project.projectMembers.forEach(async (element) => {
-            var endSTR2 = "";
-            var user = {
-              username: element.username,
-              role: element.role,
-              canChange: element.canChange,
-              image: "",
-            };
-            console.log("USER: ", element);
-            await Users.findOne({ username: user.username }, (err, userBD) => {
-              gfs
-                .openDownloadStreamByName(userBD.image, { revision: -1 })
-                .on("data", (chunk) => {
-                  console.log("CHUNK: ", chunk);
-                  endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-                })
-                .on("error", function (err) {
-                  console.log("ERR: ", err);
-                  user.image = "default";
-                  if (element.username === project.creatorName) {
-                    creatorImage = user.image;
-                  }
-                  usersInProject.push(user);
-                  if (i == project.projectMembers.length - 1) {
-                    return res
-                      .status(200)
-                      .json({
-                        project: project,
-                        members: usersInProject,
-                        creatorImage: creatorImage,
-                      })
-                      .end();
-                  }
-                  i++;
-                })
-                .on("close", () => {
-                  if (userBD.image !== "default") {
-                    user.image = endSTR2;
-                  } else {
-                    user.image = "default";
-                  }
-                  if (element.username === project.creatorName) {
-                    creatorImage = user.image;
-                  }
-                  usersInProject.push(user);
-                  if (i == project.projectMembers.length - 1) {
-                    return res
-                      .status(200)
-                      .json({
-                        project: project,
-                        members: usersInProject,
-                        creatorImage: creatorImage,
-                      })
-                      .end();
-                  }
-                  i++;
-                });
+          if (project.projectMembers.length != 0) {
+            project.projectMembers.forEach(async (element) => {
+              var endSTR2 = "";
+              var user = {
+                username: element.username,
+                role: element.role,
+                canChange: element.canChange,
+                image: "",
+              };
+              console.log("USER: ", element);
+              await Users.findOne(
+                { username: user.username },
+                (err, userBD) => {
+                  gfs
+                    .openDownloadStreamByName(userBD.image, { revision: -1 })
+                    .on("data", (chunk) => {
+                      console.log("CHUNK: ", chunk);
+                      endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+                    })
+                    .on("error", function (err) {
+                      console.log("ERR: ", err);
+                      user.image = "default";
+                      if (element.username === project.creatorName) {
+                        creatorImage = user.image;
+                      }
+                      usersInProject.push(user);
+                      if (i == project.projectMembers.length - 1) {
+                        return res
+                          .status(200)
+                          .json({
+                            project: project,
+                            members: usersInProject,
+                            creatorImage: creatorImage,
+                          })
+                          .end();
+                      }
+                      i++;
+                    })
+                    .on("close", () => {
+                      if (userBD.image !== "default") {
+                        user.image = endSTR2;
+                      } else {
+                        user.image = "default";
+                      }
+                      if (element.username === project.creatorName) {
+                        creatorImage = user.image;
+                      }
+                      usersInProject.push(user);
+                      if (i == project.projectMembers.length - 1) {
+                        return res
+                          .status(200)
+                          .json({
+                            project: project,
+                            members: usersInProject,
+                            creatorImage: creatorImage,
+                          })
+                          .end();
+                      }
+                      i++;
+                    });
+                }
+              );
             });
-          });
+          } else {
+            return res
+              .status(200)
+              .json({
+                project: project,
+                members: usersInProject,
+                creatorImage: creatorImage,
+              })
+              .end();
+          }
         });
     } else {
       return res.status(500).json("Project not found").end();
