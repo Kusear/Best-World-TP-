@@ -17,31 +17,31 @@ exports.createChat = async (req, res) => {
     str.push(checkChatName.substring(spaceIndex + 1, checkChatName.length));
 
     var chat;
-      var checkSTR = str[0] + " " + str[1];
-      chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
-        if (err) {
-          return res.status(520).json({ err: err.message }).end();
-        }
-      });
-      if (chat) {
-        return res
-          .status(500)
-          .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
-          .end();
+    var checkSTR = str[0] + " " + str[1];
+    chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
+      if (err) {
+        return res.status(520).json({ err: err.message }).end();
       }
+    });
+    if (chat) {
+      return res
+        .status(500)
+        .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
+        .end();
+    }
 
-      checkSTR = str[1] + " " + str[0];
-      chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
-        if (err) {
-          return res.status(520).json({ err: err.message }).end();
-        }
-      });
-      if (chat) {
-        return res
-          .status(500)
-          .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
-          .end();
+    checkSTR = str[1] + " " + str[0];
+    chat = await Chat.findOne({ chatName: checkSTR }, (err) => {
+      if (err) {
+        return res.status(520).json({ err: err.message }).end();
       }
+    });
+    if (chat) {
+      return res
+        .status(500)
+        .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
+        .end();
+    }
 
     // console.log(str.lastIndexOf("_"));
     // console.log(str.substring(0, 6));
@@ -123,53 +123,62 @@ exports.getUsersInChat = async (req, res) => {
 
   var chatUsers = [];
   var i = 0;
-  chat.chatMembers.forEach(async (element) => {
-    var endSTR2 = "";
-    var user = {
-      username: "",
-      image: "",
-      role: "",
-    };
-    user.role = element.role;
-    await Users.findOne({ username: element.username }, (err, userBD) => {
-      user.username = userBD.username;
-      gfs
-        .openDownloadStreamByName(userBD.image, { revision: -1 })
-        .on("data", (chunk) => {
-          console.log("CHUNK: ", chunk);
-          endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-        })
-        .on("error", function (err) {
-          console.log("ERR: ", err);
-          user.image = "default";
-          chatUsers.push(user);
-          if (i == chat.chatMembers.length - 1) {
-            return res
-              .status(200)
-              .json({
-                members: chatUsers,
-              })
-              .end();
-          }
-          i++;
-        })
-        .on("close", () => {
-          if (userBD.image !== "default") {
-            user.image = endSTR2;
-          } else {
+  if (chat.chatMembers.length != 0) {
+    chat.chatMembers.forEach(async (element) => {
+      var endSTR2 = "";
+      var user = {
+        username: "",
+        image: "",
+        role: "",
+      };
+      user.role = element.role;
+      await Users.findOne({ username: element.username }, (err, userBD) => {
+        user.username = userBD.username;
+        gfs
+          .openDownloadStreamByName(userBD.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+          })
+          .on("error", function (err) {
+            console.log("ERR: ", err);
             user.image = "default";
-          }
-          chatUsers.push(user);
-          if (i == chat.chatMembers.length - 1) {
-            return res
-              .status(200)
-              .json({
-                members: chatUsers,
-              })
-              .end();
-          }
-          i++;
-        });
+            chatUsers.push(user);
+            if (i == chat.chatMembers.length - 1) {
+              return res
+                .status(200)
+                .json({
+                  members: chatUsers,
+                })
+                .end();
+            }
+            i++;
+          })
+          .on("close", () => {
+            if (userBD.image !== "default") {
+              user.image = endSTR2;
+            } else {
+              user.image = "default";
+            }
+            chatUsers.push(user);
+            if (i == chat.chatMembers.length - 1) {
+              return res
+                .status(200)
+                .json({
+                  members: chatUsers,
+                })
+                .end();
+            }
+            i++;
+          });
+      });
     });
-  });
+  } else {
+    return res
+      .status(200)
+      .json({
+        members: chatUsers,
+      })
+      .end();
+  }
 };

@@ -13,6 +13,8 @@ const DISCONNECTED = 1;
 
 var i = 0;
 
+// TODO повесить проверку на существование переменный (null)
+
 var emailMessage = async (room, socketArray) => {
   socketArray.forEach((element) => {
     var info = {
