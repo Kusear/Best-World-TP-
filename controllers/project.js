@@ -68,59 +68,61 @@ exports.projectData = async function (req, res) {
                   await Users.findOne(
                     { username: user.username },
                     (err, userBD) => {
-                      gfs
-                        .openDownloadStreamByName(userBD.image, {
-                          revision: -1,
-                        })
-                        .on("data", (chunk) => {
-                          console.log("CHUNK: ", chunk);
-                          endSTR2 += Buffer.from(chunk, "hex").toString(
-                            "base64"
-                          );
-                        })
-                        .on("error", function (err) {
-                          console.log("ERR: ", err);
-                          user.image = "default";
-
-                          if (element.username === project.creatorName) {
-                            creatorImage = user.image;
-                          }
-                          usersInProject.push(user);
-                          if (i == project.projectMembers.length - 1) {
-                            return res
-                              .status(200)
-                              .json({
-                                project: project,
-                                members: usersInProject,
-                                creatorImage: creatorImage,
-                              })
-                              .end();
-                          }
-                          i++;
-                        })
-                        .on("close", () => {
-                          if (userBD.image !== "default") {
-                            user.image = endSTR2;
-                          } else {
+                      if (userDB) {
+                        gfs
+                          .openDownloadStreamByName(userBD.image, {
+                            revision: -1,
+                          })
+                          .on("data", (chunk) => {
+                            console.log("CHUNK: ", chunk);
+                            endSTR2 += Buffer.from(chunk, "hex").toString(
+                              "base64"
+                            );
+                          })
+                          .on("error", function (err) {
+                            console.log("ERR: ", err);
                             user.image = "default";
-                          }
-                          if (element.username === project.creatorName) {
-                            creatorImage = user.image;
-                          }
 
-                          usersInProject.push(user);
-                          if (i == project.projectMembers.length - 1) {
-                            return res
-                              .status(200)
-                              .json({
-                                project: project,
-                                members: usersInProject,
-                                creatorImage: creatorImage,
-                              })
-                              .end();
-                          }
-                          i++;
-                        });
+                            if (element.username === project.creatorName) {
+                              creatorImage = user.image;
+                            }
+                            usersInProject.push(user);
+                            if (i == project.projectMembers.length - 1) {
+                              return res
+                                .status(200)
+                                .json({
+                                  project: project,
+                                  members: usersInProject,
+                                  creatorImage: creatorImage,
+                                })
+                                .end();
+                            }
+                            i++;
+                          })
+                          .on("close", () => {
+                            if (userBD.image !== "default") {
+                              user.image = endSTR2;
+                            } else {
+                              user.image = "default";
+                            }
+                            if (element.username === project.creatorName) {
+                              creatorImage = user.image;
+                            }
+
+                            usersInProject.push(user);
+                            if (i == project.projectMembers.length - 1) {
+                              return res
+                                .status(200)
+                                .json({
+                                  project: project,
+                                  members: usersInProject,
+                                  creatorImage: creatorImage,
+                                })
+                                .end();
+                            }
+                            i++;
+                          });
+                      }
                     }
                   );
                 });
@@ -485,6 +487,12 @@ exports.getProjects = async function (req, res) {
     .skip(10 * req.query.currentPage)
     .limit(10);
   console.log(projects.length);
+  
+  if (projects.length) {
+    var emptyList = [];
+    return res.status(200).json(emptyList).end();
+  }
+
   projects.forEach((element) => {
     var endSTR = "";
 

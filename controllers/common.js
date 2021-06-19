@@ -89,8 +89,10 @@ exports.registration = async function (req, res) {
     var saltR = await bcrypt.genSalt(10);
     var hash = await bcrypt.hash(req.body.password, saltR);
 
+    var usName = req.body.username;
+
     var newUser = await new Users({
-      username: req.body.username,
+      username: usName.trim(),
       email: req.body.email,
       password: hash,
       image: req.body.filename,
