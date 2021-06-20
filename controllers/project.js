@@ -704,11 +704,13 @@ exports.addProjectMember = async (req, res) => {
       }
 
       var isChatMember = false;
-      chat.chatMembers.forEach((element) => {
-        if (element.username === newMember.username) {
-          isChatMember = true;
-        }
-      });
+      if (chat.chatMembers) {
+        chat.chatMembers.forEach((element) => {
+          if (element.username === newMember.username) {
+            isChatMember = true;
+          }
+        });
+      }
       if (!isChatMember) {
         var newChatUser = new ChatMembers();
         newChatUser.username = newMember.username;
