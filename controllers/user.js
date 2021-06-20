@@ -461,7 +461,9 @@ exports.updateUser = async function (req, res) {
             });
             chatName.forEach(async (element) => {
               var newName =
-                element.chatMembers[0] + " " + element.chatMembers[1];
+                element.chatMembers[0].username +
+                " " +
+                element.chatMembers[1].username;
               element.cahtName = newName;
               element.chatRoom = await slugify(newName, {
                 replacement: "-",
@@ -470,7 +472,7 @@ exports.updateUser = async function (req, res) {
                 strict: false,
                 locale: "ru",
               });
-              element.save();
+              await element.save();
             });
             await ReportedUsers.updateMany(
               { username: userToUpdate },
