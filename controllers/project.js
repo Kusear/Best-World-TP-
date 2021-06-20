@@ -967,7 +967,7 @@ exports.deleteFile = async (req, res) => {
   );
 };
 
-exports.getProjectsByCreationDate = async (req, res) => {
+exports.getProjectsByFilters = async (req, res) => {
   var tags = req.body.tags;
   console.log(tags);
   // [""] при не вводе поле названия и тегов проекта

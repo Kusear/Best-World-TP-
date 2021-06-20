@@ -214,19 +214,14 @@ app.get(
   controllersProject.getProjects
 );
 app.get(
-  api_route + "/getProjectsByTag",
-  midleware.routeLog,
-  controllersProject.getProjectsByTag
-);
-app.get(
   api_route + "/getArchivedProjects",
   midleware.routeLog,
   controllersProject.getArchivedProjects
 );
 app.post(
-  api_route + "/getProjectsByCreationDate",
+  api_route + "/getProjectsByFilters",
   midleware.routeLog,
-  controllersProject.getProjectsByCreationDate
+  controllersProject.getProjectsByFilters
 );
 app.post(
   api_route + "/addProjectMember",
