@@ -122,16 +122,18 @@ exports.banCheck = async (req, res, next) => {
   }
 };
 
-exports.fileTypeCheck = async (req, res, next) => {
-  console.log("FILE: ", req.file);
-  if (
-    req.file.mimetype !== "image/jpeg" &&
-    req.file.mimetype !== "image/png" &&
-    req.file.mimetype !== "image/jpg"
-  ) {
-    return res.status(200).json({}).end();
-  } else {
-    console.log("YAS", true);
-    next();
-  }
+exports.countFilesCheck = async (req, res, next) => {
+  await Projects.findOne({ slug: req.body.projectSlug }, (err, project) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+    if (!project) {
+      return res.status(500).json({ message: "Проект не найден" }).end();
+    }
+    if (project.projectFiles.length == 20) {
+      return res.status(500).json({ message: "Достигнут лимит файлов" }).end();
+    } else {
+      next();
+    }
+  });
 };

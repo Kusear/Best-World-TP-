@@ -36,6 +36,12 @@ const ProjectMembers = new mongoose.Schema({
   },
 });
 
+const Files = new mongoose.Schema({
+  username: { type: String },
+  filename: { type: String },
+  fileType: { type: String },
+});
+
 const ProjectSchema = new mongoose.Schema({
   IDcreator: {
     type: String,
@@ -74,6 +80,9 @@ const ProjectSchema = new mongoose.Schema({
   countOfMembers: {
     type: Number,
   },
+  freePlaces: {
+    type: Number,
+  },
   creationDate: {
     type: Date,
   },
@@ -96,7 +105,7 @@ const ProjectSchema = new mongoose.Schema({
     default: [],
   },
   projectFiles: {
-    type: [],
+    type: [Files],
     default: [],
   },
   needChanges: {
@@ -130,3 +139,4 @@ exports.projectCollection = "project";
 exports.Project = mongoose.model("project", ProjectSchema);
 exports.Members = mongoose.model("members", ProjectMembers);
 exports.Requests = mongoose.model("requests", RequestsSchema);
+exports.Files = mongoose.model("files", Files);

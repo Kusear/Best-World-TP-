@@ -18,7 +18,7 @@ module.exports = (io) => {
       socket.data.TaskList = slug;
       socket.data.username = username;
 
-      await Users.findOne({username: socket.data.username}, (err, user)=>{
+      await Users.findOne({ username: socket.data.username }, (err, user) => {
         socket.data.taskListNotify = user.todoListNotify;
       });
 
@@ -206,7 +206,10 @@ module.exports = (io) => {
           newBoard.items = crtBoard.items;
           list.boards.push(newBoard);
           list.save();
-          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
+          if (
+            socket.data.username !== project.creatorName &&
+            socket.data.taskListNotify
+          ) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -300,7 +303,10 @@ module.exports = (io) => {
               return;
             }
           });
-          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
+          if (
+            socket.data.username !== project.creatorName &&
+            socket.data.taskListNotify
+          ) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -379,7 +385,10 @@ module.exports = (io) => {
           );
           list.boards.pull(mongoose.Types.ObjectId(delBoard._id));
           await list.save();
-          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
+          if (
+            socket.data.username !== project.creatorName &&
+            socket.data.taskListNotify
+          ) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -406,7 +415,9 @@ module.exports = (io) => {
             };
             nodemailer.sendMessageEmail(info);
           }
-          io.to(socket.data.TaskList).emit("deleted-board", { board: bordItem });
+          io.to(socket.data.TaskList).emit("deleted-board", {
+            board: bordItem,
+          });
         }
       );
     });
@@ -592,7 +603,10 @@ module.exports = (io) => {
             }
           });
 
-          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
+          if (
+            socket.data.username !== project.creatorName &&
+            socket.data.taskListNotify
+          ) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -619,7 +633,10 @@ module.exports = (io) => {
             nodemailer.sendMessageEmail(info);
           }
 
-          io.to(socket.data.TaskList).emit("updated-task", { board: board, task: task });
+          io.to(socket.data.TaskList).emit("updated-task", {
+            board: board,
+            task: task,
+          });
         }
       );
     });
@@ -687,7 +704,10 @@ module.exports = (io) => {
               return;
             }
           });
-          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
+          if (
+            socket.data.username !== project.creatorName &&
+            socket.data.taskListNotify
+          ) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -767,7 +787,10 @@ module.exports = (io) => {
             .id(mongoose.Types.ObjectId(board._id))
             .items.pull(mongoose.Types.ObjectId(delTask._id));
           await list.save();
-          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
+          if (
+            socket.data.username !== project.creatorName &&
+            socket.data.taskListNotify
+          ) {
             console.log("send");
             var info = {
               notificationID: -1,

@@ -505,7 +505,7 @@ exports.deleteUser = async function (req, res) {
     return res
       .status(400)
       .json({
-        err: "field (usertoupdate) are required",
+        err: "field (username) are required",
         status: INTERNAL_ERROR,
       })
       .end();
@@ -530,46 +530,40 @@ exports.deleteUser = async function (req, res) {
       };
 
       try {
-        await Projects.deleteMany({ creatorName: userToDelete });
+        await Projects.deleteMany({ creatorName: user.username });
         await Projects.updateMany(
-          { "projectMembers.username": userToDelete },
-          { $pull: { projectMembers: { username: user.username } } }
+          { "projectMembers.username": user.username },
+          { $pullAll: { projectMembers: { username: user.username } } }
         );
         await Projects.updateMany(
-          { "requests.username": userToDelete },
-          { $pull: { requests: { username: user.username } } }
+          { "requests.username": user.username },
+          { $pullAll: { requests: { username: user.username } } }
         );
         await TODOList.updateMany(
-          // TODO test
-          { "boards.items.performer": userToDelete },
-          { $pull: { boards: { items: { performer: user.username } } } }
+          { "boards.items.performer": user.username },
+          { $pullAll: { boards: { items: { performer: user.username } } } }
         );
         await Chats.updateMany(
-          { "chatMembers.username": userToDelete },
-          { $pull: { chatMembers: { username: user.username } } }
-        );
-        await Chats.updateMany(
-          { "chatMembers.username": userToUpdate },
-          { $set: { "chatMembers.$.username": req.body.newData.username } },
-          { multi: true }
+          { "chatMembers.username": user.username },
+          { $pullAll: { chatMembers: { username: user.username } } }
         );
         var chatName = await Chats.find({
-          "chatMembers.username": req.body.newData.username,
+          "chatMembers.username": user.username,
         });
         chatName.forEach(async (element) => {
-          if (element.chatMembers.length == 2) {
+          if (element.chatMembers.length <= 2) {
             element.remove();
           }
         });
         await Chats.updateMany(
-          { "messages.username": userToDelete },
-          { $pull: { messages: { username: user.username } } }
+          { "messages.username": user.username },
+          { $pullAll: { messages: { username: user.username } } }
         );
       } catch (ex) {
         exeptionPullRequests = ex;
       }
       await ReportedUsers.findOneAndRemove(
-        { username: userToDelete },
+        { username: user.username },
         { multi: true },
         (err) => {
           if (err) {

@@ -247,6 +247,7 @@ exports.createProject = async function (req, res) {
         description: req.body.projectDescription,
         projectHashTag: req.body.projectHashTag,
         countOfMembers: req.body.membersCount,
+        freePlaces: req.body.membersCount,
         creationDate: new Date(),
         endTeamGathering: new Date(req.body.endGathering),
         endProjectDate: new Date(req.body.endProject),
@@ -266,6 +267,7 @@ exports.createProject = async function (req, res) {
         description: req.body.projectDescription,
         projectHashTag: req.body.projectHashTag,
         countOfMembers: req.body.membersCount,
+        freePlaces: req.body.membersCount,
         creationDate: new Date(),
         requiredRoles: req.body.requredRoles,
         projectMembers: req.body.projectMembers,
@@ -471,7 +473,6 @@ exports.deleteProject = async function (req, res) {
 };
 
 exports.getProjects = async function (req, res) {
-  // TODO сделать проверку на истечение срока проекта
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   var listProjects = [];
@@ -515,6 +516,11 @@ exports.getProjects = async function (req, res) {
       project: element,
     };
 
+    if (element.endProjectDate > new Date()) {
+      element.archive = true;
+    }
+    element.save();
+
     gfs
       .openDownloadStreamByName(element.image, { revision: -1 })
       .on("data", (chunk) => {
@@ -548,11 +554,6 @@ exports.getProjects = async function (req, res) {
             console.log("e: ", counter);
             counter++;
           });
-
-        // if (counter == projects.length - 1) {
-        //   return res.status(200).json(listProjects).end();
-        // }
-        // console.log("e: ", counter);
       })
       .on("close", () => {
         pr.project.image = endSTR;
@@ -678,15 +679,8 @@ exports.addProjectMember = async (req, res) => {
 
       await pr.requiredRoles.pull(req.body.roleID);
 
-      if (req.body.name) {
-        reqRole.name = req.body.name;
-      }
-      if (req.body.count) {
-        reqRole.count = req.body.count;
-      }
-      if (req.body.alreadyEnter) {
-        reqRole.alreadyEnter = req.body.alreadyEnter;
-      }
+      reqRole.alreadyEnter++;
+      pr.freePlaces--;
 
       await pr.requiredRoles.push(reqRole);
     } catch (ex) {
@@ -716,10 +710,9 @@ exports.addProjectMember = async (req, res) => {
         }
       });
       if (!isChatMember) {
-        var newChatUser = new ChatMembers({
-          username: newMember.username,
-          role: newMember.role,
-        });
+        var newChatUser = new ChatMembers();
+        newChatUser.username = newMember.username;
+        newChatUser.role = newMember.role;
         chat.chatMembers.push(newChatUser);
         chat.save();
       }
@@ -822,21 +815,13 @@ exports.deleteProjectMember = async (req, res) => {
     var exeption = "null";
     try {
       var reqRole = await project.requiredRoles.id(req.body.roleID);
-
       if (!reqRole) {
         return res.status(500).json("Req role not found").end();
       }
       await project.requiredRoles.pull(req.body.roleID);
-      if (req.body.name) {
-        reqRole.name = req.body.name;
-      }
-      if (req.body.count) {
-        reqRole.count = req.body.count;
-      }
-      if (req.body.alreadyEnter) {
-        reqRole.alreadyEnter = req.body.alreadyEnter;
-      }
 
+      reqRole.alreadyEnter--;
+      pr.freePlaces++;
       await project.requiredRoles.push(reqRole);
     } catch (ex) {
       exeption = ex;
@@ -924,6 +909,61 @@ exports.deleteRequest = async (req, res) => {
     }
   );
 };
+exports.deleteFile = async (req, res) => {
+  var projectUser = req.body.username;
+  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+  await Projects.findOne(
+    { slug: req.body.projectSlug },
+    async (err, project) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
+      }
+      if (!project) {
+        return res.status(500).json({ err: "Проект не найден" }).end();
+      }
+      var user;
+      var file;
+      var status = false;
+      if (projectUser != project.creatorName) {
+        console.log("not creator");
+        project.projectFiles.forEach((element) => {
+          console.log(element);
+          if (
+            element.filename === req.body.filename &&
+            element.username === projectUser
+          ) {
+            file = gfs.find({ filename: req.body.filename });
+            file.forEach((cursor) => {
+              if (cursor.filename === req.body.filename) {
+                gfs.delete(cursor._id);
+                var obj = project.projectFiles.id(req.body.fileObj);
+                project.projectFiles.pull(obj);
+                status = true;
+                return res.status(200).json({ message: "success" }).end();
+              }
+            });
+          }
+        });
+        if (!status) {
+          return res.status(500).json({ message: "err" }).end();
+        }
+      } else {
+        file = gfs.find({ filename: req.body.filename });
+        await file.forEach(async (cursor) => {
+          if (cursor.filename === req.body.filename) {
+            console.log("creator");
+            gfs.delete(cursor._id);
+            var obj = await project.projectFiles.id(req.body.fileObj);
+            console.log(obj);
+            await project.projectFiles.pull(obj);
+            project.save();
+            return res.status(200).json({ message: "success" }).end();
+          }
+        });
+      }
+    }
+  );
+};
 
 exports.getProjectsByCreationDate = async (req, res) => {
   var tags = req.body.tags;
@@ -935,30 +975,47 @@ exports.getProjectsByCreationDate = async (req, res) => {
         $or: [
           { projectHashTag: { $in: tags } },
           { title: { $regex: tags[0], $options: "$i" } },
-          {},
         ],
       },
       {
-        $or: [{ creationDate: { $gte: new Date(req.body.dateCrt) } }, {}],
+        $or: [
+          { creationDate: { $gte: new Date(req.body.dateCrt) } },
+          { creationDate: { $gte: new Date() } },
+        ],
       },
       {
-        $or: [{ endProjectDate: { $gte: new Date(req.body.dateEndPr) } }, {}],
+        $or: [
+          { endProjectDate: { $gte: new Date(req.body.dateEndPr) } },
+          {
+            endProjectDate: { $gte: new Date() },
+          },
+        ],
       },
       {
         $or: [
           { endTeamGathering: { $gte: new Date(req.body.dateTeamGathEnd) } },
-          {},
+          { endTeamGathering: { $gte: new Date() } },
         ],
       },
-      {$or: [{requiredRoles: {$elemMatch: {role: req.body.reqRole}}}, {}] },
+      {
+        $or: [
+          { requiredRoles: { $elemMatch: { role: req.body.reqRole } } },
+          { requiredRoles: { $elemMatch: { role: /.*/ } } },
+        ],
+      },
+      {
+        countOfMembers: {
+          // если не введено, то передавать от 1 до 20
+          $gte: req.body.countOfMembersMin,
+          $lte: req.body.countOfMembersMax,
+        },
+      },
+      // {                        // ready need drop db
+      //      freePlaces: { $gte: req.body.freePlacesMin, $lte: req.body.freePlacesMax } ,
+      // },
     ],
-  });
-  return res.status(200).json({ list: list }).end();
-};
-
-exports.getProjectsByEndDate = async (req, res) => {
-  var list = await Projects.find({
-    endProjectDate: { $gte: new Date(req.body.dateEndPr) },
-  });
+  })
+    .skip(20 * req.body.page)
+    .limit(20);
   return res.status(200).json({ list: list }).end();
 };

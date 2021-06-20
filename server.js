@@ -13,16 +13,10 @@ const nodemailer = require("./config/nodemailer");
 const slugify = require("slugify");
 require("dotenv").config();
 require("./config/config-passport");
-
-const Projects = require("./models/project").Project;
-
-// TODO сделать фильтрацию по остальным полям из тз 
-// TODO / доделать проверку файлов на doc. docx. pdf
+const GridFsStorage = require("multer-gridfs-storage");
 
 const MONGO_URL = process.env.MONGO_URL;
 const api_route = "/api";
-
-const GridFsStorage = require("multer-gridfs-storage");
 
 const storageIMG = new GridFsStorage({
   url: MONGO_URL,
@@ -48,6 +42,7 @@ const storageFILE = new GridFsStorage({
   url: MONGO_URL,
   file: (req, file) => {
     console.log(file);
+    console.log(req.body.projectID);
     return {
       filename:
         slugify(req.body.filename, {
@@ -71,7 +66,24 @@ const upload = multer({
   },
   storage: storageIMG,
 });
-const uploadFiles = multer({ storage: storageFILE });
+const uploadFiles = multer({
+  fileFilter: async function (req, file, next) {
+    await Projects.findById(req.body.projectID, (err, pr) => {
+      if (err) {
+        return next(null, "err");
+      }
+      if (pr.projectFiles.length <= 20) {
+        if (!file.originalname.match(/\.(DOC|DOCX|PDF|doc|docx|pdf)$/)) {
+          return next(null, false);
+        }
+        next(null, file.originalname);
+      } else {
+          return next(null, "limit");
+      }
+    });
+  },
+  storage: storageFILE,
+});
 const multerParse = multer();
 
 const midleware = require("./midleware/midleware");
@@ -84,6 +96,8 @@ const controllersReportUser = require("./controllers/reportedUser");
 const controllersReportProject = require("./controllers/reportedProject");
 const controllersBan = require("./controllers/userBan");
 const Users = require("./models/user_model").User;
+const ProjectFiles = require("./models/project").Files;
+const Projects = require("./models/project").Project;
 const { Project } = require("./models/project");
 const app = express();
 const server = http.createServer(app);
@@ -118,13 +132,9 @@ app.use(
         autoReconnect: true,
       },
       collectionName: "sessions",
-      ttl: 43200, // sec
-      /*autoRemove: "interval",
-      autoRemoveInterval: 60*/
+      ttl: 43200,
     }),
-    //proxy: true,
     cookie: {
-      //secure: true,
       path: "/",
       httpOnly: false,
       maxAge: 60 * 60 * 1000,
@@ -138,16 +148,17 @@ app.use(passport.session());
 
 // TODO удалить все выводы в консоль
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//TODo сделать возврат времени сервера как роут
+
 app.get("/", (req, res) => {});
 
 app.post("/api/", async function (req, res) {
-  
   var list = await Projects.find({
     projectHashTag: { $in: req.body.tags },
   });
   return res.status(200).json({ list: list }).end();
 });
+
+app.post(api_route + "/deleteFile", controllersProject.deleteFile);
 
 // Common routes
 app.post(api_route + "/login", controllersCommon.login);
@@ -212,7 +223,11 @@ app.get(
   midleware.routeLog,
   controllersProject.getArchivedProjects
 );
-app.post(api_route + "/getProjectsByCreationDate", midleware.routeLog, controllersProject.getProjectsByCreationDate);
+app.post(
+  api_route + "/getProjectsByCreationDate",
+  midleware.routeLog,
+  controllersProject.getProjectsByCreationDate
+);
 app.post(
   api_route + "/addProjectMember",
   midleware.routeLog,
@@ -396,8 +411,15 @@ app.post(
 app.post(
   api_route + "/addFileToProject",
   midleware.auth,
-  uploadFiles.array("file", 5),
-  async (req, res, next) => {
+  uploadFiles.single("file"),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(500).json({ text: "bad file", status: -200 }).end();
+    } else if (req.file === "err") {
+      return res.status(500).json({ text: "db err", status: -300 }).end();
+    } else if (req.file === "limit") {
+      return res.status(500).json({ text: "limit", status: -400 }).end();
+    }
     var filenameSlug =
       (await slugify(req.body.filename, {
         replacement: "-",
@@ -418,7 +440,26 @@ app.post(
       if (err) {
         return res.status(500).json({ err: err.message }).end();
       }
-      pr.projectFiles.push(file);
+      if (!pr) {
+        return res
+          .status(500)
+          .json({ err: "Такого проекта не существует" })
+          .end();
+      }
+      var fileType = "";
+      if (req.file.originalname.match(/\.(DOC|DOCX|doc|docx)$/)) {
+        fileType = "doc/docx";
+      } else if (req.file.originalname.match(/\.(PDF|pdf)$/)) {
+        fileType = "pdf";
+      }
+
+      var newFile = new ProjectFiles();
+      newFile.username = req.body.username;
+      newFile.filename = filenameSlug;
+      newFile.fileType = fileType;
+
+      pr.projectFiles.push(newFile);
+
       pr.save();
       return res
         .status(200)

@@ -12,8 +12,21 @@ exports.createChat = async (req, res) => {
     var str = [];
     str.push(checkChatName.substring(0, spaceIndex));
     str.push(checkChatName.substring(spaceIndex + 1, checkChatName.length));
-    //TODO проверка на существование пользователей
-    var user1 = await Users.findOne();
+    var user1 = await Users.findOne({ username: str[0] });
+    var user2 = await Users.findOne({ username: str[1] });
+
+    if (!user1) {
+      return res
+        .status(500)
+        .json({ err: "Пользователя " + str[0] + " не существует" })
+        .end();
+    }
+    if (!user2) {
+      return res
+        .status(500)
+        .json({ err: "Пользователя " + str[1] + " не существует" })
+        .end();
+    }
 
     var chat;
     var checkSTR = str[0] + " " + str[1];
