@@ -1012,6 +1012,9 @@ exports.getProjectsByFilters = async (req, res) => {
           $lte: req.body.countOfMembersMax,
         },
       },
+      {
+        needHelp: req.body.needHelp,
+      },
       // {                        // ready need drop db
       //      freePlaces: { $gte: req.body.freePlacesMin, $lte: req.body.freePlacesMax } ,
       // },
