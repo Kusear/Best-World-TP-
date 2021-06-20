@@ -13,8 +13,6 @@ const DISCONNECTED = 1;
 
 var i = 0;
 
-// TODO повесить проверку на существование переменный (null)
-
 var emailMessage = async (room, socketArray) => {
   socketArray.forEach((element) => {
     var info = {
@@ -171,23 +169,112 @@ module.exports = (io) => {
               return;
             }
             console.log(chatBD.chatMembers);
-            await chatBD.chatMembers.forEach(async (element) => {
-              await Users.findOne({ username: element.username }, (err, u) => {
-                if (err) {
-                  console.log("err user", err.message);
-                }
-                console.log(u.username);
-                users.push({ username: u.username, image: u.image });
+            if (chatBD.chatMembers.length != 0) {
+              await chatBD.chatMembers.forEach(async (element) => {
+                await Users.findOne(
+                  { username: element.username },
+                  (err, u) => {
+                    if (err) {
+                      console.log("err user", err.message);
+                    }
+                    console.log(u.username);
+                    users.push({ username: u.username, image: u.image });
 
-                //
+                    //
+                    var list = {
+                      count: 0,
+                      array: [],
+                    };
+                    users.forEach((element) => {
+                      var obj = {
+                        username: "",
+                        image: "",
+                        base64: "",
+                      };
+                      gfs
+                        .openDownloadStreamByName(element.image, {
+                          revision: -1,
+                        })
+                        .on("data", (chunk) => {
+                          obj.base64 += Buffer.from(chunk, "hex").toString(
+                            "base64"
+                          );
+                          // console.log("CHUNK: ", chunk);
+                        })
+                        .on("error", function (err) {
+                          console.log("err");
+                          obj.chunks.push("No image found with that title");
+                          //
+                          obj.image = element.image;
+                          obj.username = element.username;
+                          list.count++;
+                          list.array.push(obj);
+                          console.log(element);
+                          if (list.count == users.length) {
+                            console.log("io");
+                            io.to(socket.id).emit("usersInChat", {
+                              users: list.array,
+                            });
+                            return;
+                          }
+                          //
+                        })
+                        .on("close", () => {
+                          obj.image = element.image;
+                          obj.username = element.username;
+                          list.count++;
+                          list.array.push(obj);
+                          console.log("a");
+                          if (list.count == users.length) {
+                            console.log("io");
+                            io.to(socket.id).emit("usersInChat", {
+                              users: list.array,
+                            });
+                            return;
+                          }
+                        });
+                    });
+                    //
+                  }
+                );
+              });
+            } else {
+              io.to(socket.id).emit("usersInChat", {
+                users: list.array,
+              });
+              return;
+            }
+          }
+        );
+      } else if (project) {
+        await Project.findOne({ slug: socket.data.room }, (err, pr) => {
+          if (err) {
+            io.to(socket.id).emit("err", { err: err.message });
+            return;
+          }
+          if (pr.projectMembers.length != 0) {
+            pr.projectMembers.forEach((element) => {
+              Users.findOne({ username: element.username }, (err, u) => {
+                if (err) {
+                  console.log("err in project branch chat users");
+                }
+                users.push({
+                  username: u.username,
+                  image: u.image,
+                  role: element.role,
+                });
+
                 var list = {
                   count: 0,
                   array: [],
                 };
+                var c = 0;
                 users.forEach((element) => {
+                  c++;
                   var obj = {
                     username: "",
                     image: "",
+                    role: "",
                     base64: "",
                   };
                   gfs
@@ -199,31 +286,26 @@ module.exports = (io) => {
                       // console.log("CHUNK: ", chunk);
                     })
                     .on("error", function (err) {
-                      console.log("err");
                       obj.chunks.push("No image found with that title");
-                      //
                       obj.image = element.image;
                       obj.username = element.username;
+                      obj.role = element.role;
                       list.count++;
                       list.array.push(obj);
-                      console.log(element);
-                      if (list.count == users.length) {
-                        console.log("io");
+                      if (list.count == c) {
                         io.to(socket.id).emit("usersInChat", {
                           users: list.array,
                         });
                         return;
                       }
-                      //
                     })
                     .on("close", () => {
                       obj.image = element.image;
                       obj.username = element.username;
+                      obj.role = element.role;
                       list.count++;
                       list.array.push(obj);
-                      console.log("a");
-                      if (list.count == users.length) {
-                        console.log("io");
+                      if (list.count == c) {
                         io.to(socket.id).emit("usersInChat", {
                           users: list.array,
                         });
@@ -231,78 +313,14 @@ module.exports = (io) => {
                       }
                     });
                 });
-                //
               });
             });
-          }
-        );
-      } else if (project) {
-        await Project.findOne({ slug: socket.data.room }, (err, pr) => {
-          if (err) {
-            io.to(socket.id).emit("err", { err: err.message });
+          } else {
+            io.to(socket.id).emit("usersInChat", {
+              users: list.array,
+            });
             return;
           }
-
-          pr.projectMembers.forEach((element) => {
-            Users.findOne({ username: element.username }, (err, u) => {
-              if (err) {
-                console.log("err in project branch chat users");
-              }
-              users.push({
-                username: u.username,
-                image: u.image,
-                role: element.role,
-              });
-
-              var list = {
-                count: 0,
-                array: [],
-              };
-              var c = 0;
-              users.forEach((element) => {
-                c++;
-                var obj = {
-                  username: "",
-                  image: "",
-                  role: "",
-                  base64: "",
-                };
-                gfs
-                  .openDownloadStreamByName(element.image, { revision: -1 })
-                  .on("data", (chunk) => {
-                    obj.base64 += Buffer.from(chunk, "hex").toString("base64");
-                    // console.log("CHUNK: ", chunk);
-                  })
-                  .on("error", function (err) {
-                    obj.chunks.push("No image found with that title");
-                    obj.image = element.image;
-                    obj.username = element.username;
-                    obj.role = element.role;
-                    list.count++;
-                    list.array.push(obj);
-                    if (list.count == c) {
-                      io.to(socket.id).emit("usersInChat", {
-                        users: list.array,
-                      });
-                      return;
-                    }
-                  })
-                  .on("close", () => {
-                    obj.image = element.image;
-                    obj.username = element.username;
-                    obj.role = element.role;
-                    list.count++;
-                    list.array.push(obj);
-                    if (list.count == c) {
-                      io.to(socket.id).emit("usersInChat", {
-                        users: list.array,
-                      });
-                      return;
-                    }
-                  });
-              });
-            });
-          });
         });
       }
     });

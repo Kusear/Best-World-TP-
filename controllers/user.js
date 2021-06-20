@@ -3,8 +3,9 @@ const mongodb = require("mongodb");
 const Users = require("../models/user_model").User;
 const Chats = require("../models/chats_model").Chat;
 const Projects = require("../models/project").Project;
-const projectMembers = require("../models/project").Members;
 const ReportedUsers = require("../models/reported_users").ReportedUser;
+const { TODOList } = require("../models/todoList_model");
+const slugify = require("slugify");
 
 const STATUS_DBOBJECT_NOT_FOUND = 32685;
 const INTERNAL_ERROR = 23568;
@@ -64,9 +65,7 @@ exports.userData = async function (req, res) {
         var i = 0;
         var i3 = 0;
         if (projects.length != 0) {
-
           projects.forEach((element) => {
-
             element.project = memberInProjects[i];
 
             var endSTR2 = "";
@@ -419,11 +418,60 @@ exports.updateUser = async function (req, res) {
               { $set: { managerName: req.body.newData.username } },
               { multi: true }
             );
+            var projectsTaskList = await Projects.find({
+              "projectMembers.username": req.body.newData.username,
+            });
+            projectsTaskList.forEach(async (element) => {
+              await TODOList.findOne(
+                { projectSlug: element.slug },
+                (err, list) => {
+                  list.boards.forEach((board) => {
+                    if (board.items.length != 0) {
+                      board.items.forEach((task) => {
+                        if (task.performer === userToUpdate) {
+                          task.performer = req.body.newData.username;
+                        }
+                      });
+                    }
+                  });
+                  list.save();
+                }
+              );
+            });
+            var chatM = await Chats.find({
+              "chatMembers.username": userToUpdate,
+            });
+            chatM.forEach((element) => {
+              var messages = element.messages;
+              console.log("Chat name: ", element.chatName);
+              messages.forEach((messageElement) => {
+                if (messageElement.username === userToUpdate) {
+                  messageElement.username = req.body.newData.username;
+                }
+              });
+              element.save();
+            });
             await Chats.updateMany(
               { "chatMembers.username": userToUpdate },
               { $set: { "chatMembers.$.username": req.body.newData.username } },
               { multi: true }
             );
+            var chatName = await Chats.find({
+              "chatMembers.username": req.body.newData.username,
+            });
+            chatName.forEach(async (element) => {
+              var newName =
+                element.chatMembers[0] + " " + element.chatMembers[1];
+              element.cahtName = newName;
+              element.chatRoom = await slugify(newName, {
+                replacement: "-",
+                remove: undefined,
+                lower: false,
+                strict: false,
+                locale: "ru",
+              });
+              element.save();
+            });
             await ReportedUsers.updateMany(
               { username: userToUpdate },
               { username: req.body.newData.username },
@@ -431,7 +479,7 @@ exports.updateUser = async function (req, res) {
             );
           }
         } catch (e) {
-          console.log("ERROR WITH updateMany");
+          console.log("ERROR WITH updateMany", e.message);
         }
         return res
           .status(200)
@@ -452,7 +500,6 @@ exports.updateUser = async function (req, res) {
 };
 
 exports.deleteUser = async function (req, res) {
-  // TODO сделать удаление из всего
   var userToDelete = req.body.username;
   if (!userToDelete) {
     return res
@@ -483,16 +530,40 @@ exports.deleteUser = async function (req, res) {
       };
 
       try {
-        // await pr.requests.pull({ _id: req.body.id });
-        await Projects.findOneAndUpdate(
-          // TODO протестировать
+        await Projects.deleteMany({ creatorName: userToDelete });
+        await Projects.updateMany(
           { "projectMembers.username": userToDelete },
           { $pull: { projectMembers: { username: user.username } } }
         );
-        await Chats.findOneAndUpdate(
-          // TODO протестировать
+        await Projects.updateMany(
+          { "requests.username": userToDelete },
+          { $pull: { requests: { username: user.username } } }
+        );
+        await TODOList.updateMany(
+          // TODO test
+          { "boards.items.performer": userToDelete },
+          { $pull: { boards: { items: { performer: user.username } } } }
+        );
+        await Chats.updateMany(
           { "chatMembers.username": userToDelete },
           { $pull: { chatMembers: { username: user.username } } }
+        );
+        await Chats.updateMany(
+          { "chatMembers.username": userToUpdate },
+          { $set: { "chatMembers.$.username": req.body.newData.username } },
+          { multi: true }
+        );
+        var chatName = await Chats.find({
+          "chatMembers.username": req.body.newData.username,
+        });
+        chatName.forEach(async (element) => {
+          if (element.chatMembers.length == 2) {
+            element.remove();
+          }
+        });
+        await Chats.updateMany(
+          { "messages.username": userToDelete },
+          { $pull: { messages: { username: user.username } } }
         );
       } catch (ex) {
         exeptionPullRequests = ex;

@@ -10,10 +10,8 @@ const Chat = require("../models/chats_model").Chat;
 const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
-const { User } = require("../models/user_model");
 
 exports.projectData = async function (req, res) {
-  // TODO исправить получение проектов с пустым массивом вступивших пользователей
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
@@ -225,7 +223,6 @@ exports.projectData = async function (req, res) {
 exports.createProject = async function (req, res) {
   try {
     var newProject;
-
     var userBD = await Users.findOne(
       { username: req.body.creatorUsername },
       (err) => {
@@ -474,6 +471,7 @@ exports.deleteProject = async function (req, res) {
 };
 
 exports.getProjects = async function (req, res) {
+  // TODO сделать проверку на истечение срока проекта
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   var listProjects = [];
@@ -632,7 +630,13 @@ exports.addProjectMember = async (req, res) => {
       return res.status(500).json("Project not found").end();
     }
 
-    // TODO сделать проверку на наличие реквеста
+    var rolesReq = await pr.requiredRoles.id(req.body.roleID);
+    if (req.body.alreadyEnter > rolesReq.count) {
+      return res
+        .status(500)
+        .json({ err: "Все места на эту роль заняты" })
+        .end();
+    }
 
     var requestExist = false;
 
@@ -703,13 +707,22 @@ exports.addProjectMember = async (req, res) => {
     await Chat.findOne({ chatRoom: projectSlug }, (err, chat) => {
       if (err) {
         exptionChatAddMember = err.message;
-      } // TODO добавить проверку на существование пользователя в чате
-      var newChatUser = new ChatMembers({
-        username: newMember.username,
-        role: newMember.role,
+      }
+
+      var isChatMember = false;
+      chat.chatMembers.forEach((element) => {
+        if (element.username === newMember.username) {
+          isChatMember = true;
+        }
       });
-      chat.chatMembers.push(newChatUser);
-      chat.save();
+      if (!isChatMember) {
+        var newChatUser = new ChatMembers({
+          username: newMember.username,
+          role: newMember.role,
+        });
+        chat.chatMembers.push(newChatUser);
+        chat.save();
+      }
     });
 
     pr.projectMembers.forEach(async (element) => {
@@ -717,24 +730,48 @@ exports.addProjectMember = async (req, res) => {
         if (err) {
           return res.status().json({}).end();
         }
-        var info = {
-          notificationID: -1,
-          email: user.email,
-          // title: project.title,
-          subject: "Пользователь присоединился к одному из ваших проектов",
-          theme: user.username + " к вашему проекту присоединился пользователь",
-          text:
-            "<div><br>К вашему '" +
-            pr.title +
-            "' проекту присоединился пользователь с никнеймом '" +
-            newMember.username +
-            "'.</div>" +
-            "<div>Роль: " +
-            newMember.role +
-            ".</div>" +
-            "<div><br>Благодарим за внимание, Start-Up.</div>",
-        };
-        nodemailer.sendMessageEmail(info);
+        if (user.projectNotify) {
+          var info;
+          if (user.username != newMember.username) {
+            info = {
+              notificationID: -1,
+              email: user.email,
+              // title: project.title,
+              subject: "Пользователь присоединился к одному из ваших проектов",
+              theme:
+                user.username + " к вашему проекту присоединился пользователь",
+              text:
+                "<div><br>К вашему '" +
+                pr.title +
+                "' проекту присоединился пользователь с никнеймом '" +
+                newMember.username +
+                "'.</div>" +
+                "<div>Роль: " +
+                newMember.role +
+                ".</div>" +
+                "<div><br>Благодарим за внимание, Start-Up.</div>",
+            };
+            nodemailer.sendMessageEmail(info);
+          } else {
+            info = {
+              notificationID: -1,
+              email: user.email,
+              // title: project.title,
+              subject: "Приняте в проект",
+              theme: user.username + " вас приняли в проект",
+              text:
+                "<div><br>Вас приняли в '" +
+                pr.title +
+                "' проект." +
+                "</div>" +
+                "<div>На роль: " +
+                newMember.role +
+                ".</div>" +
+                "<div><br>Благодарим за внимание, Start-Up.</div>",
+            };
+            nodemailer.sendMessageEmail(info);
+          }
+        }
       });
     });
 
@@ -886,4 +923,42 @@ exports.deleteRequest = async (req, res) => {
       return res.status(200).json({ message: "success" }).end();
     }
   );
+};
+
+exports.getProjectsByCreationDate = async (req, res) => {
+  var tags = req.body.tags;
+  console.log(tags);
+  // [""] при не вводе поле названия и тегов проекта
+  var list = await Projects.find({
+    $and: [
+      {
+        $or: [
+          { projectHashTag: { $in: tags } },
+          { title: { $regex: tags[0], $options: "$i" } },
+          {},
+        ],
+      },
+      {
+        $or: [{ creationDate: { $gte: new Date(req.body.dateCrt) } }, {}],
+      },
+      {
+        $or: [{ endProjectDate: { $gte: new Date(req.body.dateEndPr) } }, {}],
+      },
+      {
+        $or: [
+          { endTeamGathering: { $gte: new Date(req.body.dateTeamGathEnd) } },
+          {},
+        ],
+      },
+      {$or: [{requiredRoles: {$elemMatch: {role: req.body.reqRole}}}, {}] },
+    ],
+  });
+  return res.status(200).json({ list: list }).end();
+};
+
+exports.getProjectsByEndDate = async (req, res) => {
+  var list = await Projects.find({
+    endProjectDate: { $gte: new Date(req.body.dateEndPr) },
+  });
+  return res.status(200).json({ list: list }).end();
 };

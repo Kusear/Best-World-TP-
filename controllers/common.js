@@ -162,12 +162,15 @@ exports.emailAuth = async function (req, res) {
 };
 
 exports.sendRecoveryEmail = async (req, res) => {
-  var user = await Users.findById(req.body.userID, (err) => {
+  var user = await Users.findOne({ email: req.body.email }, (err) => {
     if (err) {
       return res.status(500).json({ err: err.message }).end();
     }
   });
-  var url = process.env.FRONT_URL + "passwordrecovery/" + req.body.userID;
+  if (!user) {
+    return res.status(500).json({ err: "Пользователь не найден"}).end();
+  }
+  var url = process.env.FRONT_URL + "passwordrecovery/" + user._id;
   var info = {
     notificationID: -1,
     email: user.email,
@@ -188,10 +191,11 @@ exports.sendRecoveryEmail = async (req, res) => {
     link: url,
   }).save();
   nodemailer.sendMessageEmail(info);
-  return res.status(200).json({ message: "success" }).end();
+  return res.status(200).json({ message: "отправлено" }).end();
 };
 
 exports.recoveryPassword = async (req, res) => {
+  //  ошибки на русском, не айди а емеил
   await Links.findOneAndDelete(
     { userID: req.body.userID },
     async (error, link) => {
@@ -199,7 +203,10 @@ exports.recoveryPassword = async (req, res) => {
         return res.status(500).json({ err: error.message }).end();
       }
       if (!link) {
-        return res.status(500).json({ err: "Link has expired" }).end();
+        return res
+          .status(500)
+          .json({ err: "Срок действия ссылки истек" })
+          .end();
       }
       link.remove();
 
@@ -213,7 +220,7 @@ exports.recoveryPassword = async (req, res) => {
           if (err) {
             return res.status(500).json({ err: err.message }).end();
           }
-          return res.status(200).json({ message: "success" }).end();
+          return res.status(200).json({ message: "изменено" }).end();
         }
       );
     }

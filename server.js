@@ -7,13 +7,17 @@ const cors = require("cors");
 const MongoStore = require("connect-mongo");
 const soketio = require("socket.io");
 const http = require("http");
-const path = require("path"); // TODO удалить
 const formData = require("express-form-data");
 const multer = require("multer");
 const nodemailer = require("./config/nodemailer");
 const slugify = require("slugify");
 require("dotenv").config();
 require("./config/config-passport");
+
+const Projects = require("./models/project").Project;
+
+// TODO сделать фильтрацию по остальным полям из тз 
+// TODO / доделать проверку файлов на doc. docx. pdf
 
 const MONGO_URL = process.env.MONGO_URL;
 const api_route = "/api";
@@ -59,9 +63,6 @@ const storageFILE = new GridFsStorage({
   },
 });
 const upload = multer({
-  limits: {
-    fileSize: 1000000,
-  },
   fileFilter: function (req, file, next) {
     if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
       return next(null, false);
@@ -132,18 +133,20 @@ app.use(
     saveUninitialized: false,
   })
 );
-app.use(express.static(path.join(__dirname, "public"))); // TODO удалить как доделаю чат и таски
 app.use(passport.initialize());
 app.use(passport.session());
 
 // TODO удалить все выводы в консоль
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//TODo сделать возврат времени сервера как роут
 app.get("/", (req, res) => {});
 
 app.post("/api/", async function (req, res) {
-  console.log("body: ", req.body);
-  return res.status(200).json({}).end();
+  
+  var list = await Projects.find({
+    projectHashTag: { $in: req.body.tags },
+  });
+  return res.status(200).json({ list: list }).end();
 });
 
 // Common routes
@@ -209,6 +212,7 @@ app.get(
   midleware.routeLog,
   controllersProject.getArchivedProjects
 );
+app.post(api_route + "/getProjectsByCreationDate", midleware.routeLog, controllersProject.getProjectsByCreationDate);
 app.post(
   api_route + "/addProjectMember",
   midleware.routeLog,
@@ -330,7 +334,7 @@ app.post(
   controllersProjectBoard.getUsers
 );
 
-// files routes // TODO
+// files routes
 app.post(
   api_route + "/saveFile",
   midleware.auth,
@@ -521,6 +525,11 @@ app.post(api_route + "/createChat", midleware.auth, controllersChat.createChat);
 app.post(api_route + "/getChats", midleware.auth, controllersChat.getChats);
 app.post(api_route + "/deleteChat", midleware.auth, controllersChat.deleteChat);
 app.post(api_route + "/getUsersInChat", controllersChat.getUsersInChat);
+
+// Date
+app.get(api_route + "/serverDate", (req, res) => {
+  return res.status(200).json({ serverDate: new Date() }).end();
+});
 
 mongoose
   .connect(MONGO_URL, { useNewUrlParser: true })

@@ -8,13 +8,6 @@ const nodemailer = require("../config/nodemailer");
 const mongodb = require("mongodb");
 const mongoose = require("mongoose");
 
-/* TODO
- * - При удалении пользователя из member'ов очищать поле задачи 
- "кому назначена задача" в тасклистах, если она ранее принадлежала этому пользователю.
- */
-
- // TODO сделать проверку на разрешение получение уведомлений
-
 module.exports = (io) => {
   var counter = 0; //
 
@@ -24,6 +17,11 @@ module.exports = (io) => {
     socket.on("get-TaskList", async ({ username, token, slug }) => {
       socket.data.TaskList = slug;
       socket.data.username = username;
+
+      await Users.findOne({username: socket.data.username}, (err, user)=>{
+        socket.data.taskListNotify = user.todoListNotify;
+      });
+
       console.log("List: ", slug);
       await ToDoLists.findOne(
         { projectSlug: socket.data.TaskList },
@@ -208,7 +206,7 @@ module.exports = (io) => {
           newBoard.items = crtBoard.items;
           list.boards.push(newBoard);
           list.save();
-          if (socket.data.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -302,7 +300,7 @@ module.exports = (io) => {
               return;
             }
           });
-          if (socket.data.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -381,7 +379,7 @@ module.exports = (io) => {
           );
           list.boards.pull(mongoose.Types.ObjectId(delBoard._id));
           await list.save();
-          if (socket.data.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -594,7 +592,7 @@ module.exports = (io) => {
             }
           });
 
-          if (socket.data.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -689,7 +687,7 @@ module.exports = (io) => {
               return;
             }
           });
-          if (socket.data.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -769,7 +767,7 @@ module.exports = (io) => {
             .id(mongoose.Types.ObjectId(board._id))
             .items.pull(mongoose.Types.ObjectId(delTask._id));
           await list.save();
-          if (socket.data.username !== project.creatorName) {
+          if (socket.data.username !== project.creatorName && socket.data.taskListNotify) {
             console.log("send");
             var info = {
               notificationID: -1,
@@ -807,8 +805,6 @@ module.exports = (io) => {
     counter++; //
   });
 };
-
-// TODO переделать отправку объектов при изменении
 
 var isProjectMember = async (username, slug) => {
   console.log("slug:", slug);

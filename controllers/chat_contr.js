@@ -5,9 +5,6 @@ const slugify = require("slugify");
 const mongodb = require("mongodb");
 const mongoose = require("mongoose");
 
-// TODO сделать проверку на созданный чат двух пользователей
-// TODO проверить везде на пустые списки (подобные chatMembers в New-Test-project-name-60ccd4c4b467640015d9abb4)
-
 exports.createChat = async (req, res) => {
   try {
     var checkChatName = req.body.chatName;
@@ -15,6 +12,8 @@ exports.createChat = async (req, res) => {
     var str = [];
     str.push(checkChatName.substring(0, spaceIndex));
     str.push(checkChatName.substring(spaceIndex + 1, checkChatName.length));
+    //TODO проверка на существование пользователей
+    var user1 = await Users.findOne();
 
     var chat;
     var checkSTR = str[0] + " " + str[1];
@@ -133,44 +132,46 @@ exports.getUsersInChat = async (req, res) => {
       };
       user.role = element.role;
       await Users.findOne({ username: element.username }, (err, userBD) => {
-        user.username = userBD.username;
-        gfs
-          .openDownloadStreamByName(userBD.image, { revision: -1 })
-          .on("data", (chunk) => {
-            console.log("CHUNK: ", chunk);
-            endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-          })
-          .on("error", function (err) {
-            console.log("ERR: ", err);
-            user.image = "default";
-            chatUsers.push(user);
-            if (i == chat.chatMembers.length - 1) {
-              return res
-                .status(200)
-                .json({
-                  members: chatUsers,
-                })
-                .end();
-            }
-            i++;
-          })
-          .on("close", () => {
-            if (userBD.image !== "default") {
-              user.image = endSTR2;
-            } else {
+        if (userBD) {
+          user.username = userBD.username;
+          gfs
+            .openDownloadStreamByName(userBD.image, { revision: -1 })
+            .on("data", (chunk) => {
+              console.log("CHUNK: ", chunk);
+              endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+            })
+            .on("error", function (err) {
+              console.log("ERR: ", err);
               user.image = "default";
-            }
-            chatUsers.push(user);
-            if (i == chat.chatMembers.length - 1) {
-              return res
-                .status(200)
-                .json({
-                  members: chatUsers,
-                })
-                .end();
-            }
-            i++;
-          });
+              chatUsers.push(user);
+              if (i == chat.chatMembers.length - 1) {
+                return res
+                  .status(200)
+                  .json({
+                    members: chatUsers,
+                  })
+                  .end();
+              }
+              i++;
+            })
+            .on("close", () => {
+              if (userBD.image !== "default") {
+                user.image = endSTR2;
+              } else {
+                user.image = "default";
+              }
+              chatUsers.push(user);
+              if (i == chat.chatMembers.length - 1) {
+                return res
+                  .status(200)
+                  .json({
+                    members: chatUsers,
+                  })
+                  .end();
+              }
+              i++;
+            });
+        }
       });
     });
   } else {
