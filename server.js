@@ -441,17 +441,11 @@ app.post(
           .json({ err: "Такого проекта не существует" })
           .end();
       }
-      var fileType = "";
-      if (req.file.originalname.match(/\.(DOC|DOCX|doc|docx)$/)) {
-        fileType = "doc/docx";
-      } else if (req.file.originalname.match(/\.(PDF|pdf)$/)) {
-        fileType = "pdf";
-      }
 
       var newFile = new ProjectFiles();
       newFile.username = req.body.username;
       newFile.filename = filenameSlug;
-      newFile.fileType = fileType;
+      newFile.fileType = req.body.fileType;
 
       pr.projectFiles.push(newFile);
 
@@ -463,11 +457,12 @@ app.post(
     });
   }
 );
-app.post(
+app.get(
   api_route + "/getFile",
   midleware.routeLog,
   controllersCommon.getFiles
 );
+app.get("/download", controllersCommon.downloadFile);
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);

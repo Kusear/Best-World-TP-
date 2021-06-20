@@ -168,7 +168,7 @@ exports.sendRecoveryEmail = async (req, res) => {
     }
   });
   if (!user) {
-    return res.status(500).json({ err: "Пользователь не найден"}).end();
+    return res.status(500).json({ err: "Пользователь не найден" }).end();
   }
   var url = process.env.FRONT_URL + "passwordrecovery/" + user._id;
   var info = {
@@ -231,9 +231,6 @@ exports.getFiles = async function (req, res) {
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
   var endSTR = "";
 
-  // var files = await gfs.find({}, (err) => {});
-  // console.log(files);
-
   gfs
     .openDownloadStreamByName(req.body.filename, { revision: -1 })
     .on("data", (chunk) => {
@@ -248,6 +245,29 @@ exports.getFiles = async function (req, res) {
         .end();
     })
     .on("close", () => {
-      return res.status(200).json({ base64Image: endSTR }).end();
+       return res.status(200).json({ base64Image: endSTR }).end();
     });
+};
+
+exports.downloadFile = async (req, res) => {
+  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+  var endSTR = "";
+
+  res.set({
+    "Accept-Ranges": "bytes",
+    "Content-Disposition": `attachment; filename=${req.query.filename}`+`.${req.query.fileType}`,
+  });
+
+  gfs
+    .openDownloadStreamByName(req.query.filename, { revision: -1 })
+    .on("data", (chunk) => {
+      console.log("CHUNK: ", chunk);
+      endSTR += Buffer.from(chunk);
+    })
+    .on("error", function (err) {
+      console.log("ERR: ", err);
+    })
+    .on("close", () => {
+    })
+    .pipe(res);
 };
