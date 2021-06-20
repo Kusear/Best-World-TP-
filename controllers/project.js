@@ -970,7 +970,6 @@ exports.deleteFile = async (req, res) => {
 exports.getProjectsByFilters = async (req, res) => {
   var tags = req.body.tags;
   console.log(tags);
-  // [""] при не вводе поле названия и тегов проекта
   var list = await Projects.find({
     $and: [
       {
@@ -1001,7 +1000,6 @@ exports.getProjectsByFilters = async (req, res) => {
       },
       {
         countOfMembers: {
-          // если не введено, то передавать от 1 до 20
           $gte: req.body.countOfMembersMin,
           $lte: req.body.countOfMembersMax,
         },

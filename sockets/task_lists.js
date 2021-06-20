@@ -106,6 +106,7 @@ module.exports = (io) => {
                           io.to(socket.id).emit("listData", {
                             list: list,
                             title: project.title,
+                            projectid: project._id,
                             files: project.project.projectFiles,
                             members: membersList,
                           });
@@ -123,6 +124,7 @@ module.exports = (io) => {
                           io.to(socket.id).emit("listData", {
                             list: list,
                             title: project.title,
+                            projectid: project._id,
                             files: project.projectFiles,
                             members: membersList,
                           });
