@@ -158,8 +158,6 @@ app.post("/api/", async function (req, res) {
   return res.status(200).json({ list: list }).end();
 });
 
-app.post(api_route + "/deleteFile", controllersProject.deleteFile);
-
 // Common routes
 app.post(api_route + "/login", controllersCommon.login);
 app.post(
@@ -455,7 +453,7 @@ app.post(
         .json({ message: "File added", filename: filenameSlug })
         .end();
     });
-  }
+  } 
 );
 app.get(
   api_route + "/getFile",
@@ -463,6 +461,7 @@ app.get(
   controllersCommon.getFiles
 );
 app.get("/download", controllersCommon.downloadFile);
+app.post(api_route + "/deleteFile", controllersProject.deleteFile);
 
 // User routes
 app.get(api_route + "/userData", midleware.routeLog, controllersUser.userData);

@@ -403,19 +403,19 @@ exports.updateUser = async function (req, res) {
               { "projectMembers.username": userToUpdate },
               {
                 $set: {
-                  "projectMembers.$.username": req.body.newData.username,
+                  "projectMembers.$[].username": req.body.newData.username,
                 },
               },
               { multi: true }
             );
             await Projects.updateMany(
               { creatorName: userToUpdate },
-              { $set: { creatorName: req.body.newData.username } },
+              { creatorName: req.body.newData.username },
               { multi: true }
             );
             await Projects.updateMany(
               { managerName: userToUpdate },
-              { $set: { managerName: req.body.newData.username } },
+              { managerName: req.body.newData.username },
               { multi: true }
             );
             var projectsTaskList = await Projects.find({
@@ -453,7 +453,7 @@ exports.updateUser = async function (req, res) {
             });
             await Chats.updateMany(
               { "chatMembers.username": userToUpdate },
-              { $set: { "chatMembers.$.username": req.body.newData.username } },
+              { $set: { "chatMembers.$[].username": req.body.newData.username } },
               { multi: true }
             );
             var chatName = await Chats.find({

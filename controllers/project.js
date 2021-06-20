@@ -926,42 +926,58 @@ exports.deleteFile = async (req, res) => {
       var user;
       var file;
       var status = false;
-      if (projectUser != project.creatorName) {
+      if (
+        projectUser != project.creatorName &&
+        projectUser != project.managerName
+      ) {
         console.log("not creator");
-        project.projectFiles.forEach((element) => {
+        project.projectFiles.forEach(async (element) => {
           console.log(element);
           if (
             element.filename === req.body.filename &&
             element.username === projectUser
           ) {
-            file = gfs.find({ filename: req.body.filename });
-            file.forEach((cursor) => {
-              if (cursor.filename === req.body.filename) {
-                gfs.delete(cursor._id);
-                var obj = project.projectFiles.id(req.body.fileObj);
-                project.projectFiles.pull(obj);
-                status = true;
-                return res.status(200).json({ message: "success" }).end();
-              }
-            });
+            file = await gfs.find({ filename: req.body.filename }).toArray();
+            if (file.length != 0) {
+              file.forEach(async (cursor) => {
+                if (cursor.filename === req.body.filename) {
+                  gfs.delete(cursor._id);
+                  var obj = await project.projectFiles.id(req.body.fileObj);
+                  console.log(obj);
+                  await project.projectFiles.pull(obj);
+                  project.save();
+                  status = true;
+                  return res.status(500).json({ message: "err" }).end();
+                }
+              });
+            } else {
+              return res.status(500).json({ message: "Not file" }).end();
+            }
           }
         });
-        if (!status) {
-          return res.status(500).json({ message: "err" }).end();
-        }
       } else {
-        file = gfs.find({ filename: req.body.filename });
-        await file.forEach(async (cursor) => {
-          if (cursor.filename === req.body.filename) {
+        file = await gfs.find({ filename: req.body.filename }).toArray();
+        console.log(file);
+        if (file.length != 0) {
+          file.forEach(async (cursor) => {
             console.log("creator");
-            gfs.delete(cursor._id);
-            var obj = await project.projectFiles.id(req.body.fileObj);
-            console.log(obj);
-            await project.projectFiles.pull(obj);
-            project.save();
-            return res.status(200).json({ message: "success" }).end();
-          }
-        });
+            if (cursor.filename === req.body.filename) {
+              gfs.delete(cursor._id);
+              var obj = await project.projectFiles.id(req.body.fileObj);
+              console.log(obj);
+              await project.projectFiles.pull(obj);
+              project.save();
+              return res.status(200).json({ message: "success" }).end();
+            }
+          });
+        } else {
+          return res.status(500).json({ message: "Not file" }).end();
+        }
+
+        // if (!status) {
+        //   status = false;
+        //   return res.status(500).json({ message: "Not file" }).end();
+        // }
       }
     }
   );
