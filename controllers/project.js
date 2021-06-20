@@ -981,12 +981,6 @@ exports.getProjectsByFilters = async (req, res) => {
       },
       {
         $or: [
-          { creationDate: { $gte: new Date(req.body.dateCrt) } },
-          { creationDate: { $gte: new Date() } },
-        ],
-      },
-      {
-        $or: [
           { endProjectDate: { $gte: new Date(req.body.dateEndPr) } },
           {
             endProjectDate: { $gte: new Date() },
