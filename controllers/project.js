@@ -819,7 +819,7 @@ exports.deleteProjectMember = async (req, res) => {
     } catch (error) {
       console.log("DELETE MEMBER: ", error.message);
     }
-    
+
     await project.projectMembers.pull(req.body.memberID);
 
     var exeption = "null";
@@ -934,6 +934,8 @@ exports.deleteRequest = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
+  console.log("BODY: ", req.body);
+  console.log("SLUG: ", req.body.projectSlug);
   console.log("REQUEST ID: ", req.body.requestID);
   await Projects.findOneAndUpdate(
     { slug: projectSlug },
