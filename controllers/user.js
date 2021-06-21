@@ -101,6 +101,26 @@ exports.userData = async function (req, res) {
                   .on("error", function (err) {
                     console.log("ERR: ", err);
                     element.project.image = "ERR in image";
+                    console.log(i3);
+                    if (i3 == projects.length - 1) {
+                      return res
+                        .status(200)
+                        .json({
+                          id: user._id,
+                          username: user.username,
+                          email: user.email,
+                          name: user.name,
+                          role: user.role,
+                          preferredRole: user.preferredRole,
+                          info: user.info,
+                          image: user.image,
+                          projects: projects,
+                          emailConfirm: user.emailConfirm,
+                          status: SUCCESS,
+                        })
+                        .end();
+                    }
+                    i3++;
                   })
                   .on("close", () => {
                     element.project.image = endSTR2;

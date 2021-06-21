@@ -477,7 +477,7 @@ exports.getProjects = async function (req, res) {
     .skip(10 * (page + 1))
     .limit(10);
 
-  if (projects.length === 0) {
+  if (projects.length == 0) {
     var emptyList = [];
     return res
       .status(200)
@@ -490,7 +490,7 @@ exports.getProjects = async function (req, res) {
 
   projects.forEach((element) => {
     var endSTR = "";
-
+    console.log(true);
     var pr = {
       project: element,
     };
@@ -509,7 +509,7 @@ exports.getProjects = async function (req, res) {
       .on("error", function (err) {
         console.log("ERR: ", err);
         pr.project.image = "default";
-
+        console.log("d c: ", counter);
         gfs
           .openDownloadStreamByName(pr.project.image, { revision: -1 })
           .on("data", (chunk) => {
@@ -517,13 +517,22 @@ exports.getProjects = async function (req, res) {
             endSTR += Buffer.from(chunk, "hex").toString("base64");
           })
           .on("error", function (err) {
+            console.log("e: ", counter);
             pr.project.image = "Err on image";
             listProjects.push(pr);
+            if (counter == projects.length - 1) {
+              return res
+                .status(200)
+                .json({ listProjects: listProjects, hasNext: hasNext })
+                .end();
+            }
+            console.log("e: ", counter);
+            counter++;
           })
           .on("close", () => {
             pr.project.image = endSTR;
             listProjects.push(pr);
-            console.log("d c: ", counter);
+            console.log("a: ", counter);
             if (counter == projects.length - 1) {
               return res
                 .status(200)
@@ -537,6 +546,7 @@ exports.getProjects = async function (req, res) {
       .on("close", () => {
         pr.project.image = endSTR;
         listProjects.push(pr);
+        console.log("c: ", counter);
         if (counter == projects.length - 1) {
           return res
             .status(200)

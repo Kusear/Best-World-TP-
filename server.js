@@ -78,7 +78,7 @@ const uploadFiles = multer({
         }
         next(null, file.originalname);
       } else {
-          return next(null, "limit");
+        return next(null, "limit");
       }
     });
   },
@@ -453,13 +453,9 @@ app.post(
         .json({ message: "File added", filename: filenameSlug })
         .end();
     });
-  } 
+  }
 );
-app.get(
-  api_route + "/getFile",
-  midleware.routeLog,
-  controllersCommon.getFiles
-);
+app.get(api_route + "/getFile", midleware.routeLog, controllersCommon.getFiles);
 app.get("/download", controllersCommon.downloadFile);
 app.post(api_route + "/deleteFile", controllersProject.deleteFile);
 
