@@ -579,29 +579,34 @@ exports.deleteUser = async function (req, res) {
         }
         await Projects.deleteMany({ creatorName: user.username });
 
-        // var clearTasks = await Projects.find({
-        //   "projectMembers.username": user.username,
-        // });
-        // if (clearTasks != 0) {
-        //   clearTasks.forEach(async (element) => {
-        //     console.log(element.slug);
-        //     await TODOList.findOne(
-        //       { projectSlug: element.slug },
-        //       (err, todolist) => {
-        //         if (!err){
-        //           if (todolist){
-        //             if (todolist.boards != 0) {
-        //               todolist.boards.forEach(async (element) => {
-
-        //               });
-        //             }
-        //           }
-        //         }
-        //       }
-        //     );
-        //   });
-        // }
-
+        var clearTasks = await Projects.find({
+          "projectMembers.username": user.username,
+        });
+        if (clearTasks != 0) {
+          clearTasks.forEach(async (element) => {
+            console.log(element.slug);
+            await TODOList.findOne(
+              { projectSlug: element.slug },
+              (err, todolist) => {
+                if (!err){
+                  if (todolist){
+                    if (todolist.boards != 0) {
+                      todolist.boards.forEach(async (board) => {
+                        // var task;
+                        board.forEach((task)=>{
+                          if (task.performer === user.username) {
+                            task.remove();
+                          }
+                        });
+                      });
+                    }
+                  }
+                }
+              }
+            );
+          });
+        }
+// TODO переделать получение профиля пользователя по ID
         await Projects.updateMany(
           { "projectMembers.username": user.username },
           { $pullAll: { projectMembers: { username: user.username } } }
@@ -610,10 +615,12 @@ exports.deleteUser = async function (req, res) {
           { "requests.username": user.username },
           { $pullAll: { requests: { username: user.username } } }
         );
-        await TODOList.updateMany(
-          { "boards.items.performer": user.username },
-          { $pullAll: { boards: { items: { performer: user.username } } } }
-        );
+
+
+        // await TODOList.updateMany(
+        //   { "boards.items.performer": user.username },
+        //   { $pullAll: { boards: { items: { performer: user.username } } } }
+        // ); //TODO проверить удаление задачь пользователя
         // await Chats.updateMany(
         //   { "chatMembers.username": user.username },
         //   { $pull: { chatMembers: { username: user.username } } }

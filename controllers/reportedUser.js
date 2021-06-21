@@ -24,7 +24,7 @@ exports.createReportUser = async (req, res) => {
 };
 
 exports.getReportedUsers = async function (req, res) {
-  ReportedUsers.find({}, function (err, result) {
+  await ReportedUsers.find({}, function (err, result) {
     if (err) {
       return res.status(400).json({ err: err.message }).end();
     }
