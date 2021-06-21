@@ -937,6 +937,12 @@ exports.deleteRequest = async (req, res) => {
   console.log("BODY: ", req.body);
   console.log("SLUG: ", req.body.projectSlug);
   console.log("REQUEST ID: ", req.body.requestID);
+
+  await Chats.findOneAndUpdate(
+    { chatRoom: projectSlug},
+    { $pull: { chatMembers: { username: user.username } } }
+  );
+
   await Projects.findOneAndUpdate(
     { slug: projectSlug },
     {
