@@ -425,7 +425,7 @@ exports.updateUser = async function (req, res) {
               await TODOList.findOne(
                 { projectSlug: element.slug },
                 (err, list) => {
-                  if (list.boards.length != 0) {
+                  if (list) {
                     list.boards.forEach((board) => {
                       if (board.items.length != 0) {
                         board.items.forEach((task) => {
