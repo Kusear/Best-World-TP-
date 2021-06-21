@@ -614,15 +614,15 @@ exports.deleteUser = async function (req, res) {
           { "boards.items.performer": user.username },
           { $pullAll: { boards: { items: { performer: user.username } } } }
         );
-        await Chats.updateMany(
-          { "chatMembers.username": user.username },
-          { $pull: { chatMembers: { username: user.username } } }
-        );
+        // await Chats.updateMany(
+        //   { "chatMembers.username": user.username },
+        //   { $pull: { chatMembers: { username: user.username } } }
+        // );
         var chatName = await Chats.find({
           "chatMembers.username": user.username,
         });
         chatName.forEach(async (element) => {
-          if (element.chatMembers.length <= 1) {
+          if (element.chatMembers.length <= 2) {
             await Chats.findOneAndRemove(
               { chatRoom: element.chatRoom },
               { multi: true }
