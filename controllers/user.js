@@ -599,7 +599,10 @@ exports.deleteUser = async function (req, res) {
         });
         chatName.forEach(async (element) => {
           if (element.chatMembers.length <= 1) {
-            element.remove();
+            await Chats.findOneAndRemove(
+              { chatRoom: element.chatRoom },
+              { multi: true }
+            );
           }
         });
         await Chats.updateMany(
