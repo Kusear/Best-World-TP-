@@ -680,6 +680,7 @@ exports.addProjectMember = async (req, res) => {
       pr.freePlaces--;
 
       await pr.requiredRoles.push(reqRole);
+      await pr.save();
     } catch (ex) {
       exeptionReqRole = ex;
     }
@@ -824,7 +825,7 @@ exports.deleteProjectMember = async (req, res) => {
     } catch (error) {
       console.log("DELETE MEMBER: ", error.message);
     }
-
+    // TODO
     await project.projectMembers.pull(req.body.memberID);
 
     var exeption = "null";
@@ -834,7 +835,7 @@ exports.deleteProjectMember = async (req, res) => {
         return res.status(500).json("Req role not found").end();
       }
       reqRole.alreadyEnter--;
-      pr.freePlaces++;
+      project.freePlaces++;
     } catch (ex) {
       exeption = ex;
     }
@@ -908,18 +909,10 @@ exports.deleteRequest = async (req, res) => {
   await Projects.findOneAndUpdate(
     { slug: projectSlug },
     {
-      $pull: { requests: { _id: mongoose.Types.ObjectId(req.body.requestID) } },
-    },
-    (err) => {
-      if (err) {
-        return res
-          .status(200)
-          .json({ message: "failed", err: err.message })
-          .end();
-      }
-      return res.status(200).json({ message: "success" }).end();
+      $pull: { requests: { _id: req.body.requestID } },
     }
   );
+  return res.status(200).json({ message: "success" }).end();
 };
 
 exports.deleteFile = async (req, res) => {

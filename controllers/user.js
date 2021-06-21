@@ -531,6 +531,7 @@ exports.updateUser = async function (req, res) {
 };
 
 exports.deleteUser = async function (req, res) {
+  // TODO НЕ ТРОГАТЬ РАБОТАЕТ
   var userToDelete = req.body.username;
   if (!userToDelete) {
     return res
@@ -635,7 +636,7 @@ exports.deleteUser = async function (req, res) {
         });
         await Chats.updateMany(
           { "messages.username": user.username },
-          { $pull: { "$[].messages": { username: user.username } } }
+          { $pull: { messages: { username: user.username } } }
         );
       } catch (ex) {
         exeptionPullRequests = ex;
