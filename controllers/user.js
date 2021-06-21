@@ -64,7 +64,8 @@ exports.userData = async function (req, res) {
         user.image = "default";
         var i = 0;
         var i3 = 0;
-        if (projects.length != null) {
+        if (projects.length != 0) {
+          console.log(true);
           projects.forEach((element) => {
             element.project = memberInProjects[i];
 
@@ -176,6 +177,7 @@ exports.userData = async function (req, res) {
             i++;
           });
         } else {
+          console.log("else ", true);
           return res
             .status(200)
             .json({
@@ -201,7 +203,7 @@ exports.userData = async function (req, res) {
         console.log("aboba");
         var i = 0;
         var i3 = 0;
-        if (projects.length != null) {
+        if (projects.length != 0) {
           projects.forEach((element) => {
             element.project = memberInProjects[i];
             var endSTR2 = "";
@@ -290,6 +292,7 @@ exports.userData = async function (req, res) {
             i++;
           });
         } else {
+          console.log("else 2", true);
           return res
             .status(200)
             .json({
