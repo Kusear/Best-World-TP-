@@ -1091,6 +1091,7 @@ exports.getProjectsByFilters = async (req, res) => {
   })
     .skip(20 * req.body.page)
     .limit(20);
+    console.log("list: ",list);
   if (!list) {
     return res.status(200).json({ list: [] }).end();
   } else {
