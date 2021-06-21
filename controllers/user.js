@@ -578,17 +578,41 @@ exports.deleteUser = async function (req, res) {
           });
         }
         await Projects.deleteMany({ creatorName: user.username });
+
+        // var clearTasks = await Projects.find({
+        //   "projectMembers.username": user.username,
+        // });
+        // if (clearTasks != 0) {
+        //   clearTasks.forEach(async (element) => {
+        //     console.log(element.slug);
+        //     await TODOList.findOne(
+        //       { projectSlug: element.slug },
+        //       (err, todolist) => {
+        //         if (!err){
+        //           if (todolist){
+        //             if (todolist.boards != 0) {
+        //               todolist.boards.forEach(async (element) => {
+
+        //               });
+        //             }
+        //           }
+        //         }
+        //       }
+        //     );
+        //   });
+        // }
+
         await Projects.updateMany(
           { "projectMembers.username": user.username },
-          { $pull: { projectMembers: { username: user.username } } }
+          { $pullAll: { projectMembers: { username: user.username } } }
         );
         await Projects.updateMany(
           { "requests.username": user.username },
-          { $pull: { requests: { username: user.username } } }
+          { $pullAll: { requests: { username: user.username } } }
         );
         await TODOList.updateMany(
           { "boards.items.performer": user.username },
-          { $pull: { boards: { items: { performer: user.username } } } }
+          { $pullAll: { boards: { items: { performer: user.username } } } }
         );
         await Chats.updateMany(
           { "chatMembers.username": user.username },

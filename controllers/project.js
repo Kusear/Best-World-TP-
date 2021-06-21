@@ -460,20 +460,28 @@ exports.getProjects = async function (req, res) {
 
   var page = req.query.currentPage;
 
-  var projects = await Projects.find({}, null, function (err, result) {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
+  var projects = await Projects.find(
+    { needHelp: false },
+    null,
+    function (err, result) {
+      if (err) {
+        return res.status(520).json({ err: err.message }).end();
+      }
     }
-  })
+  )
     .skip(10 * page)
     .limit(10);
   console.log(projects.length);
 
-  var projects2 = await Projects.find({}, null, function (err, result) {
-    if (err) {
-      return res.status(520).json({ err: err.message }).end();
+  var projects2 = await Projects.find(
+    { needHelp: false },
+    null,
+    function (err, result) {
+      if (err) {
+        return res.status(520).json({ err: err.message }).end();
+      }
     }
-  })
+  )
     .skip(10 * (page + 1))
     .limit(10);
 
@@ -951,13 +959,13 @@ exports.deleteFile = async (req, res) => {
                   var obj = await project.projectFiles.id(req.body.fileObj);
                   console.log(obj);
                   await project.projectFiles.pull(obj);
-                  project.save();
+                  await project.save();
                   status = true;
                   return res.status(500).json({ message: "err" }).end();
                 }
               });
             } else {
-              return res.status(500).json({ message: "Not file" }).end();
+              return res.status(500).json({ message: "No file" }).end();
             }
           }
         });
@@ -972,18 +980,13 @@ exports.deleteFile = async (req, res) => {
               var obj = await project.projectFiles.id(req.body.fileObj);
               console.log(obj);
               await project.projectFiles.pull(obj);
-              project.save();
+              await project.save();
               return res.status(200).json({ message: "success" }).end();
             }
           });
         } else {
-          return res.status(500).json({ message: "Not file" }).end();
+          return res.status(500).json({ message: "No file" }).end();
         }
-
-        // if (!status) {
-        //   status = false;
-        //   return res.status(500).json({ message: "Not file" }).end();
-        // }
       }
     }
   );
@@ -1010,7 +1013,7 @@ exports.getProjectsByFilters = async (req, res) => {
   var countOfMembersMin = 1;
   var countOfMembersMax = 20;
   var needHelp = false;
-  var freePlacesMin = 1;
+  var freePlacesMin = 0;
   var freePlacesMax = 20;
   console.log(tags);
 
@@ -1091,7 +1094,7 @@ exports.getProjectsByFilters = async (req, res) => {
   })
     .skip(20 * req.body.page)
     .limit(20);
-    console.log("list: ",list);
+  console.log("list: ", list);
   if (!list) {
     return res.status(200).json({ list: [] }).end();
   } else {
