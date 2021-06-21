@@ -566,8 +566,15 @@ exports.deleteUser = async function (req, res) {
         });
         if (projectTaskListDelet != 0) {
           projectTaskListDelet.forEach(async (element) => {
-            await TODOList.findOneAndRemove({ projectSlug: element.slug });
-            await Chats.findOneAndRemove({ chatRoom: element.slug });
+            console.log(element.slug);
+            await TODOList.findOneAndRemove(
+              { projectSlug: element.slug },
+              { multi: true }
+            );
+            await Chats.findOneAndRemove(
+              { chatRoom: element.slug },
+              { multi: true }
+            );
           });
         }
         await Projects.deleteMany({ creatorName: user.username });
