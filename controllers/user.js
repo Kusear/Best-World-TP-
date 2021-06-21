@@ -559,7 +559,7 @@ exports.deleteUser = async function (req, res) {
           "chatMembers.username": user.username,
         });
         chatName.forEach(async (element) => {
-          if (element.chatMembers.length <= 2) {
+          if (element.chatMembers.length <= 1) {
             element.remove();
           }
         });

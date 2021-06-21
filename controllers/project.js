@@ -153,53 +153,57 @@ exports.projectData = async function (req, res) {
               await Users.findOne(
                 { username: user.username },
                 (err, userBD) => {
-                  gfs
-                    .openDownloadStreamByName(userBD.image, { revision: -1 })
-                    .on("data", (chunk) => {
-                      console.log("CHUNK: ", chunk);
-                      endSTR2 += Buffer.from(chunk, "hex").toString("base64");
-                    })
-                    .on("error", function (err) {
-                      console.log("ERR: ", err);
-                      user.image = "default";
-                      if (element.username === project.creatorName) {
-                        creatorImage = user.image;
-                      }
-                      usersInProject.push(user);
-                      if (i == project.projectMembers.length - 1) {
-                        return res
-                          .status(200)
-                          .json({
-                            project: project,
-                            members: usersInProject,
-                            creatorImage: creatorImage,
-                          })
-                          .end();
-                      }
-                      i++;
-                    })
-                    .on("close", () => {
-                      if (userBD.image !== "default") {
-                        user.image = endSTR2;
-                      } else {
+                  if (userBD.image != null) {
+                    gfs
+                      .openDownloadStreamByName(userBD.image, { revision: -1 })
+                      .on("data", (chunk) => {
+                        console.log("CHUNK: ", chunk);
+                        endSTR2 += Buffer.from(chunk, "hex").toString("base64");
+                      })
+                      .on("error", function (err) {
+                        console.log("ERR: ", err);
                         user.image = "default";
-                      }
-                      if (element.username === project.creatorName) {
-                        creatorImage = user.image;
-                      }
-                      usersInProject.push(user);
-                      if (i == project.projectMembers.length - 1) {
-                        return res
-                          .status(200)
-                          .json({
-                            project: project,
-                            members: usersInProject,
-                            creatorImage: creatorImage,
-                          })
-                          .end();
-                      }
-                      i++;
-                    });
+                        if (element.username === project.creatorName) {
+                          creatorImage = user.image;
+                        }
+                        usersInProject.push(user);
+                        if (i == project.projectMembers.length - 1) {
+                          return res
+                            .status(200)
+                            .json({
+                              project: project,
+                              members: usersInProject,
+                              creatorImage: creatorImage,
+                            })
+                            .end();
+                        }
+                        i++;
+                      })
+                      .on("close", () => {
+                        if (userBD.image !== "default") {
+                          user.image = endSTR2;
+                        } else {
+                          user.image = "default";
+                        }
+                        if (element.username === project.creatorName) {
+                          creatorImage = user.image;
+                        }
+                        usersInProject.push(user);
+                        if (i == project.projectMembers.length - 1) {
+                          return res
+                            .status(200)
+                            .json({
+                              project: project,
+                              members: usersInProject,
+                              creatorImage: creatorImage,
+                            })
+                            .end();
+                        }
+                        i++;
+                      });
+                  } else {
+                    userBD.image = "default";
+                  }
                 }
               );
             });
@@ -705,18 +709,30 @@ exports.addProjectMember = async (req, res) => {
 
       var isChatMember = false;
       if (chat) {
-        chat.chatMembers.forEach((element) => {
-          if (element.username === newMember.username) {
-            isChatMember = true;
+        if (chat.chatMembers != null) {
+          chat.chatMembers.forEach((element) => {
+            if (element.username === newMember.username) {
+              isChatMember = true;
+            }
+          });
+          if (!isChatMember) {
+            var newChatUser = new ChatMembers();
+            newChatUser.username = newMember.username;
+            newChatUser.role = newMember.role;
+            chat.chatMembers.push(newChatUser);
+            chat.save();
           }
-        });
-      }
-      if (!isChatMember) {
-        var newChatUser = new ChatMembers();
-        newChatUser.username = newMember.username;
-        newChatUser.role = newMember.role;
-        chat.chatMembers.push(newChatUser);
-        chat.save();
+        } else {
+          chat.chatMembers = [newMember];
+          chat.save();
+        }
+      } else {
+        var newProjectChat = new Chat({
+          chatRoom: pr.slug,
+          chatName: pr.title,
+          chatMembers: pr.projectMembers,
+          privateChat: false,
+        }).save();
       }
     });
 
@@ -800,8 +816,12 @@ exports.deleteProjectMember = async (req, res) => {
       if (err) {
         return res.status(520).json({ err: err.message }).end();
       }
-      chat.chatMembers.pull(user);
-      chat.save();
+      if (chat.chatMembers != null) {
+        chat.chatMembers.pull(user);
+        chat.save();
+      } else {
+        chat.remove();
+      }
     });
     try {
       await ToDoLists.updateMany(
@@ -911,6 +931,7 @@ exports.deleteRequest = async (req, res) => {
     }
   );
 };
+
 exports.deleteFile = async (req, res) => {
   var projectUser = req.body.username;
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
