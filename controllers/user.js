@@ -64,7 +64,7 @@ exports.userData = async function (req, res) {
         user.image = "default";
         var i = 0;
         var i3 = 0;
-        if (projects.length != 0) {
+        if (projects.length != null) {
           projects.forEach((element) => {
             element.project = memberInProjects[i];
 
@@ -181,7 +181,7 @@ exports.userData = async function (req, res) {
         console.log("aboba");
         var i = 0;
         var i3 = 0;
-        if (projects.length != 0) {
+        if (projects.length != null) {
           projects.forEach((element) => {
             element.project = memberInProjects[i];
             var endSTR2 = "";
