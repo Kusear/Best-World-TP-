@@ -819,7 +819,7 @@ exports.deleteProjectMember = async (req, res) => {
     try {
       await ToDoLists.updateMany(
         { projectSlug: projectSlug },
-        { $pull: { boards: { items: { performer: user.username } } } }
+        { $pull: { "boards.$[].items": { performer: user.username } } }
       );
     } catch (error) {
       console.log("DELETE MEMBER: ", error.message);
@@ -833,11 +833,8 @@ exports.deleteProjectMember = async (req, res) => {
       if (!reqRole) {
         return res.status(500).json("Req role not found").end();
       }
-      await project.requiredRoles.pull(req.body.roleID);
-
       reqRole.alreadyEnter--;
       pr.freePlaces++;
-      await project.requiredRoles.push(reqRole);
     } catch (ex) {
       exeption = ex;
     }

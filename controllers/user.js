@@ -551,7 +551,10 @@ exports.deleteUser = async function (req, res) {
           .end();
       }
       if (!user) {
-        return;
+        return res
+          .status(500)
+          .json({ message: "User not found", status: INTERNAL_ERROR })
+          .end();
       }
 
       var stat = {
@@ -577,31 +580,32 @@ exports.deleteUser = async function (req, res) {
             );
           });
         }
-        await Projects.deleteMany({ creatorName: user.username });
 
-        // TODO переделать получение профиля пользователя по ID
-
-        var rolesPR = await Projects.find({
+        var i = 0;
+        var proj = await Projects.find({
           "projectMembers.username": user.username,
         });
-        rolesPR.forEach((proj) => {
+        proj.forEach(async (pr) => {
           var role;
-          proj.projectMembers.forEach((member) => {
+          console.log("pr", i);
+
+          await pr.projectMembers.forEach((member) => {
             if (member.username === user.username) {
               role = member.role;
+              console.log("memebrs: ", role);
             }
           });
-          if (role) {
-            proj.requiredRoles.forEach((element) => {
-              if (element.role === role) {
-                element.alreadyEnter--;
-              }
-            });
-            proj.freePlaces++;
-            proj.save();
-          }
+          await pr.requiredRoles.forEach(async (element) => {
+            if (element.role === role) {
+              console.log("roles: ", role);
+              element.alreadyEnter -= 1;
+              pr.freePlaces += 1;
+              await pr.save();
+            }
+          });
         });
 
+        await Projects.deleteMany({ creatorName: user.username });
         await Projects.updateMany(
           { "projectMembers.username": user.username },
           { $pull: { projectMembers: { username: user.username } } }
@@ -610,32 +614,32 @@ exports.deleteUser = async function (req, res) {
           { "requests.username": user.username },
           { $pull: { requests: { username: user.username } } }
         );
-
         await TODOList.updateMany(
           { "boards.items.performer": user.username },
-          { $pullAll: { "boards.$[].items.performer": user.username } }
-        ); //TODO проверить удаление задачь пользователя
+          { $pull: { "boards.$[].items": { performer: user.username } } }
+        );
         await Chats.updateMany(
           { "chatMembers.username": user.username },
           { $pull: { chatMembers: { username: user.username } } }
         );
-        // var chatName = await Chats.find({
-        //   "chatMembers.username": user.username,
-        // });
-        // chatName.forEach(async (element) => {
-        //   if (element.chatMembers.length <= 2) {
-        //     await Chats.findOneAndRemove(
-        //       { chatRoom: element.chatRoom },
-        //       { multi: true }
-        //     );
-        //   }
-        // });
+        var chatName = await Chats.find({
+          "chatMembers.username": user.username,
+        });
+        chatName.forEach(async (element) => {
+          if (element.chatMembers.length <= 1) {
+            await Chats.findOneAndRemove(
+              { chatRoom: element.chatRoom },
+              { multi: true }
+            );
+          }
+        });
         await Chats.updateMany(
           { "messages.username": user.username },
-          { $pull: { "messages.$[].username": user.username } }
+          { $pull: { "$[].messages": { username: user.username } } }
         );
       } catch (ex) {
         exeptionPullRequests = ex;
+        console.log("EX: ", ex);
       }
       await ReportedUsers.findOneAndRemove(
         { username: user.username },
