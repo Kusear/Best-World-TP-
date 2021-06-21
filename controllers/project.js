@@ -990,8 +990,68 @@ exports.deleteFile = async (req, res) => {
 };
 
 exports.getProjectsByFilters = async (req, res) => {
-  var tags = req.body.tags;
+  var tags = [""];
+
+  var dateEndPr = new Date().toISOString();
+  var endTeamGathDate = new Date().toISOString();
+
+  var indexForendpr;
+  var indexForendteamgath;
+  var tempDateendpr = new Date().toISOString();
+  var tempDateteamgthend = new Date().toISOString();
+
+  indexForendpr = tempDateendpr.indexOf("T");
+  indexForendteamgath = tempDateteamgthend.indexOf("T");
+
+  dateEndPr = tempDateendpr.substring(0, indexForendpr);
+  endTeamGathDate = tempDateteamgthend.substring(0, indexForendteamgath);
+
+  var reqRoles = "";
+  var countOfMembersMin = 1;
+  var countOfMembersMax = 20;
+  var needHelp = false;
+  var freePlacesMin = 1;
+  var freePlacesMax = 20;
   console.log(tags);
+
+  if (req.body.tags) {
+    tags = req.body.tags;
+  }
+  if (req.body.dateEndPr) {
+    dateEndPr = req.body.dateEndPr;
+  }
+  if (req.body.dateTeamGathEnd) {
+    endTeamGathDate = req.body.dateTeamGathEnd;
+  }
+  if (req.body.reqRole) {
+    reqRoles = req.body.reqRole;
+  }
+  if (req.body.countOfMembersMin) {
+    countOfMembersMin = req.body.countOfMembersMin;
+  }
+  if (req.body.countOfMembersMax) {
+    countOfMembersMax = req.body.countOfMembersMax;
+  }
+  if (req.body.needHelp) {
+    needHelp = req.body.needHelp;
+  }
+  if (req.body.freePlacesMin) {
+    freePlacesMin = req.body.freePlacesMin;
+  }
+  if (req.body.freePlacesMax) {
+    freePlacesMax = req.body.freePlacesMax;
+  }
+
+  console.log("t", tags);
+  console.log("d", dateEndPr);
+  console.log("e", endTeamGathDate);
+  console.log("r", reqRoles);
+  console.log("cmin", countOfMembersMin);
+  console.log("cmax", countOfMembersMax);
+  console.log("m", needHelp);
+  console.log("fmin", freePlacesMin);
+  console.log("fmax", freePlacesMax);
+
   var list = await Projects.find({
     $and: [
       {
@@ -1001,40 +1061,39 @@ exports.getProjectsByFilters = async (req, res) => {
         ],
       },
       {
-        $or: [
-          { endProjectDate: { $gte: new Date(req.body.dateEndPr) } },
-          {
-            endProjectDate: { $gte: new Date() },
-          },
-        ],
+        endProjectDate: { $gte: new Date(dateEndPr) },
+      },
+      {
+        endTeamGathering: { $gte: new Date(endTeamGathDate) },
       },
       {
         $or: [
-          { endTeamGathering: { $gte: new Date(req.body.dateTeamGathEnd) } },
-          { endTeamGathering: { $gte: new Date() } },
-        ],
-      },
-      {
-        $or: [
-          { requiredRoles: { $elemMatch: { role: req.body.reqRole } } },
+          { requiredRoles: { $elemMatch: { role: reqRoles } } },
           { requiredRoles: { $elemMatch: { role: /.*/ } } },
         ],
       },
       {
         countOfMembers: {
-          $gte: req.body.countOfMembersMin,
-          $lte: req.body.countOfMembersMax,
+          $gte: countOfMembersMin,
+          $lte: countOfMembersMax,
         },
       },
       {
-        needHelp: req.body.needHelp,
+        needHelp: needHelp,
       },
-      // {                        // ready need drop db
-      //      freePlaces: { $gte: req.body.freePlacesMin, $lte: req.body.freePlacesMax } ,
-      // },
+      {
+        freePlaces: {
+          $gte: freePlacesMin,
+          $lte: freePlacesMax,
+        },
+      },
     ],
   })
     .skip(20 * req.body.page)
     .limit(20);
-  return res.status(200).json({ list: list }).end();
+  if (!list) {
+    return res.status(200).json({ list: [] }).end();
+  } else {
+    return res.status(200).json({ list: list }).end();
+  }
 };
