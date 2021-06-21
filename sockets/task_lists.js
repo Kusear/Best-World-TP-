@@ -45,6 +45,9 @@ module.exports = (io) => {
               var isMember = false;
               project.projectMembers.forEach((element) => {
                 if (element.username === socket.data.username) {
+                  if (element.role === "Менеджер") {
+                    socket.data.canChange = true;
+                  }
                   isMember = true;
                   console.log("true in cycle");
                 }
@@ -55,7 +58,7 @@ module.exports = (io) => {
                 io.to(socket.id).emit("err", { status: -1 });
                 return socket.disconnect();
               }
-
+              
               if (
                 username === project.creatorName ||
                 username === project.managerName
@@ -186,6 +189,7 @@ module.exports = (io) => {
           }
         }
       );
+
       var creatorUser = await Users.findOne(
         { username: project.creatorName },
         (err) => {
@@ -268,6 +272,7 @@ module.exports = (io) => {
           }
         }
       );
+
       var creatorUser = await Users.findOne(
         { username: project.creatorName },
         (err) => {
@@ -365,6 +370,7 @@ module.exports = (io) => {
           }
         }
       );
+
       var creatorUser = await Users.findOne(
         { username: project.creatorName },
         (err) => {
@@ -376,7 +382,6 @@ module.exports = (io) => {
       );
 
       var bordItem;
-
       await ToDoLists.findOne(
         { projectSlug: socket.data.TaskList },
         async (err, list) => {
@@ -695,7 +700,7 @@ module.exports = (io) => {
           var nbord = await list.boards.id(
             mongoose.Types.ObjectId(newBoard._id)
           );
-          if (nbord.items.length >=100) {
+          if (nbord.items.length >= 100) {
             io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
             return;
           }
