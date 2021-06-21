@@ -806,17 +806,11 @@ exports.deleteProjectMember = async (req, res) => {
 
     var user = await project.projectMembers.id(req.body.memberID);
 
-    await Chat.findOne({ chatRoom: project.slug }, (err, chat) => {
-      if (err) {
-        return res.status(520).json({ err: err.message }).end();
-      }
-      if (chat.chatMembers != null) {
-        chat.chatMembers.pull(user);
-        chat.save();
-      } else {
-        chat.remove();
-      }
-    });
+    await Chat.findOneAndUpdate(
+      { chatRoom: project.slug },
+      { $pull: { chatMembers: { username: user.username } } }
+    );
+
     try {
       await ToDoLists.updateMany(
         { projectSlug: projectSlug },
@@ -825,7 +819,7 @@ exports.deleteProjectMember = async (req, res) => {
     } catch (error) {
       console.log("DELETE MEMBER: ", error.message);
     }
-    // TODO
+    
     await project.projectMembers.pull(req.body.memberID);
 
     var exeption = "null";
@@ -878,6 +872,40 @@ exports.addReqest = async (req, res) => {
       var newRequest = new Requests();
       newRequest.username = req.body.username;
       newRequest.role = req.body.role;
+
+      await Chat.findOne({ chatRoom: projectSlug }, (err, chat) => {
+        if (err) {
+          exptionChatAddMember = err.message;
+        }
+
+        var isChatMember = false;
+        if (chat) {
+          if (chat.chatMembers != null) {
+            chat.chatMembers.forEach((element) => {
+              if (element.username === newRequest.username) {
+                isChatMember = true;
+              }
+            });
+            if (!isChatMember) {
+              var newChatUser = new ChatMembers();
+              newChatUser.username = newRequest.username;
+              newChatUser.role = newRequest.role;
+              chat.chatMembers.push(newChatUser);
+              chat.save();
+            }
+          } else {
+            chat.chatMembers = [newMember];
+            chat.save();
+          }
+        } else {
+          var newProjectChat = new Chat({
+            chatRoom: pr.slug,
+            chatName: pr.title,
+            chatMembers: pr.projectMembers,
+            privateChat: false,
+          }).save();
+        }
+      });
 
       await pr.requests.push(newRequest);
 

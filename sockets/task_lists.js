@@ -695,6 +695,10 @@ module.exports = (io) => {
           var nbord = await list.boards.id(
             mongoose.Types.ObjectId(newBoard._id)
           );
+          if (nbord.items.length >=100) {
+            io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
+            return;
+          }
 
           await list.boards
             .id(mongoose.Types.ObjectId(newBoard._id))
