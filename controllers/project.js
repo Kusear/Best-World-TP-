@@ -906,6 +906,7 @@ exports.deleteRequest = async (req, res) => {
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
   }
+  console.log("REQUEST ID: ", req.body.requestID);
   await Projects.findOneAndUpdate(
     { slug: projectSlug },
     {
@@ -946,7 +947,9 @@ exports.deleteFile = async (req, res) => {
               file.forEach(async (cursor) => {
                 if (cursor.filename === req.body.filename) {
                   gfs.delete(cursor._id);
-                  var obj = await project.projectFiles.id(req.body.fileObj);
+                  var obj = await project.projectFiles.id(
+                    mongoose.Types.ObjectId(req.body.fileObj)
+                  );
                   console.log(obj);
                   await project.projectFiles.pull(obj);
                   await project.save();
@@ -967,7 +970,9 @@ exports.deleteFile = async (req, res) => {
             console.log("creator");
             if (cursor.filename === req.body.filename) {
               gfs.delete(cursor._id);
-              var obj = await project.projectFiles.id(req.body.fileObj);
+              var obj = await project.projectFiles.id(
+                mongoose.Types.ObjectId(req.body.fileObj)
+              );
               console.log(obj);
               await project.projectFiles.pull(obj);
               await project.save();
