@@ -579,34 +579,29 @@ exports.deleteUser = async function (req, res) {
         }
         await Projects.deleteMany({ creatorName: user.username });
 
-        // var clearTasks = await Projects.find({
-        //   "projectMembers.username": user.username,
-        // });
-        // if (clearTasks != 0) {
-        //   clearTasks.forEach(async (element) => {
-        //     console.log(element.slug);
-        //     await TODOList.findOne(
-        //       { projectSlug: element.slug },
-        //       (err, todolist) => {
-        //         if (!err){
-        //           if (todolist){
-        //             if (todolist.boards != 0) {
-        //               todolist.boards.forEach(async (board) => {
-        //                 // var task;
-        //                 board.forEach((task)=>{
-        //                   if (task.performer === user.username) {
-        //                     task.remove();
-        //                   }
-        //                 });
-        //               });
-        //             }
-        //           }
-        //         }
-        //       }
-        //     );
-        //   });
-        // }
         // TODO переделать получение профиля пользователя по ID
+
+        var rolesPR = await Projects.find({
+          "projectMembers.username": user.username,
+        });
+        rolesPR.forEach((proj) => {
+          var role;
+          proj.projectMembers.forEach((member) => {
+            if (member.username === user.username) {
+              role = member.role;
+            }
+          });
+          if (role) {
+            proj.requiredRoles.forEach((element) => {
+              if (element.role === role) {
+                element.alreadyEnter--;
+              }
+            });
+            proj.freePlaces++;
+            proj.save();
+          }
+        });
+
         await Projects.updateMany(
           { "projectMembers.username": user.username },
           { $pull: { projectMembers: { username: user.username } } }
