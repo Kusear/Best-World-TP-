@@ -909,7 +909,7 @@ exports.deleteRequest = async (req, res) => {
   await Projects.findOneAndUpdate(
     { slug: projectSlug },
     {
-      $pull: { requests: { _id: req.body.requestID } },
+      $pull: { requests: { _id: mongoose.Types.ObjectId(req.body.requestID) } },
     }
   );
   return res.status(200).json({ message: "success" }).end();
