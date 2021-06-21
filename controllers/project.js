@@ -202,6 +202,19 @@ exports.projectData = async function (req, res) {
 exports.createProject = async function (req, res) {
   try {
     var newProject;
+    var usNameTrim;
+    if (req.body.projectTitle) {
+      usNameTrim = req.body.projectTitle.trim();
+      if (usNameTrim.length < 4) {
+        return res
+          .status(500)
+          .json({ message: "Название проекта должно быть больше 4 символов" })
+          .end();
+      } else {
+        req.body.projectTitle = usNameTrim;
+      }
+    }
+
     var userBD = await Users.findOne(
       { username: req.body.creatorUsername },
       (err) => {
@@ -288,6 +301,19 @@ exports.updateProject = async function (req, res) {
 
   if (!projectToUpdate) {
     return res.status(500).json({ err: "no project to edit" }).end();
+  }
+
+  var usNameTrim;
+  if (req.body.newProjectData.title) {
+    usNameTrim = req.body.newProjectData.title.trim();
+    if (usNameTrim.length < 4) {
+      return res
+        .status(500)
+        .json({ message: "Название проекта должно быть больше 4 символов" })
+        .end();
+    } else {
+      req.body.newProjectData.title = usNameTrim;
+    }
   }
 
   var projectA = await Projects.findOne({ slug: projectToUpdate }, (err) => {
@@ -628,6 +654,13 @@ exports.addProjectMember = async (req, res) => {
       return res.status(500).json("Project not found").end();
     }
 
+    if (pr.endTeamGathering < new Date()) {
+      return res
+        .status(500)
+        .json({ message: "Период сбора команды истек" })
+        .end();
+    }
+
     var rolesReq = await pr.requiredRoles.id(req.body.roleID);
     if (req.body.alreadyEnter > rolesReq.count) {
       return res
@@ -806,6 +839,13 @@ exports.deleteProjectMember = async (req, res) => {
 
     var user = await project.projectMembers.id(req.body.memberID);
 
+    if (user.username === project.creatorName) {
+      return res
+        .status(500)
+        .json({ message: "Нельзя исключить создателя", status: -200 })
+        .end();
+    }
+
     await Chat.findOneAndUpdate(
       { chatRoom: project.slug },
       { $pull: { chatMembers: { username: user.username } } }
@@ -938,9 +978,15 @@ exports.deleteRequest = async (req, res) => {
   console.log("SLUG: ", req.body.projectSlug);
   console.log("REQUEST ID: ", req.body.requestID);
 
+  var proj = await Projects.findOne({ slug: projectSlug });
+
+  var requestUser = proj.requests.id(
+    mongoose.Types.ObjectId(req.body.requestID)
+  );
+
   await Chat.findOneAndUpdate(
-    { chatRoom: projectSlug},
-    { $pull: { chatMembers: { username: user.username } } }
+    { chatRoom: projectSlug },
+    { $pull: { chatMembers: { username: requestUser.username } } }
   );
 
   await Projects.findOneAndUpdate(

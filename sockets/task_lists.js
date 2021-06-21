@@ -58,7 +58,7 @@ module.exports = (io) => {
                 io.to(socket.id).emit("err", { status: -1 });
                 return socket.disconnect();
               }
-              
+
               if (
                 username === project.creatorName ||
                 username === project.managerName
@@ -263,6 +263,13 @@ module.exports = (io) => {
         return;
       }
 
+      if (!updBoard.name || updBoard.name === "") {
+        io.to(socket.id).emit("err", {
+          err: "Название столбца не должно быть пустое",
+        });
+        return;
+      }
+
       var project = await Projects.findOne(
         { slug: socket.data.TaskList },
         async (err) => {
@@ -441,6 +448,13 @@ module.exports = (io) => {
         return;
       }
 
+      if (!crtTask.text || crtTask.text === "") {
+        io.to(socket.id).emit("err", {
+          err: "Название задачи не должно быть пустым",
+        });
+        return;
+      }
+
       var limit = false;
       await ToDoLists.aggregate(
         [
@@ -508,6 +522,25 @@ module.exports = (io) => {
             io.to(socket.id).emit("err", { err: err.message });
             return;
           }
+          var taskExist = false;
+          list.bords.forEach((element) => {
+            element.items.forEach((arrayTask) => {
+              if (
+                arrayTask.text === crtTask.text &&
+                arrayTask.performer === crtTask.performer &&
+                arrayTask.description === crtTask.description &&
+                arrayTask.timeStartWork === crtTask.timeStartWork &&
+                arrayTask.timeEndWork === crtTask.timeEndWork
+              ) {
+                taskExist = true;
+              }
+            });
+          });
+
+          if (taskExist) {
+            io.to(socket.id).emit("err", { err: "Задача уже существует" });
+            return;
+          }
 
           var newTask = new Tasks();
           newTask.text = crtTask.text;
@@ -562,6 +595,13 @@ module.exports = (io) => {
         return;
       }
 
+      if (!updTask.text || updTask.text === "") {
+        io.to(socket.id).emit("err", {
+          err: "Название задачи не должно быть пустым",
+        });
+        return;
+      }
+
       var project = await Projects.findOne(
         { slug: socket.data.TaskList },
         async (err) => {
@@ -605,6 +645,13 @@ module.exports = (io) => {
           if (updTask.description) {
             task.description = updTask.description;
           }
+          if (updTask.timeEndWork) {
+            task.timeEndWork = updTask.timeEndWork;
+          }
+          if (updTask.timeStartWork) {
+            task.timeStartWork = updTask.timeStartWork;
+          }
+
           await list.save((err) => {
             if (err) {
               io.to(socket.id).emit("err", { err: err.message });

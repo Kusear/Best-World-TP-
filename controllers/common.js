@@ -90,9 +90,12 @@ exports.registration = async function (req, res) {
     var hash = await bcrypt.hash(req.body.password, saltR);
 
     var usName = req.body.username;
-
+    var usNameTrim = usName.trim();
+    if (usNameTrim.length < 4) {
+      return res.status(500).json({message: "Никнейм должен быть больше 4 символов" }).end();
+    }
     var newUser = await new Users({
-      username: usName.trim(),
+      username: usNameTrim,
       email: req.body.email,
       password: hash,
       image: req.body.filename,

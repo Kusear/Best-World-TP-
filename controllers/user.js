@@ -387,6 +387,18 @@ exports.updateUser = async function (req, res) {
       })
       .end();
   }
+  var usNameTrim;
+  if (req.body.newData.username) {
+    usNameTrim = req.body.newData.username.trim();
+    if (usNameTrim.length < 4) {
+      return res
+        .status(500)
+        .json({ message: "Никнейм должен быть больше 4 символов" })
+        .end();
+    }else {
+      req.body.newData.username = usNameTrim;
+    }
+  }
 
   var state = false;
   await Users.findOne({ username: userToUpdate }, (err, user) => {
