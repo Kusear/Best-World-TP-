@@ -561,19 +561,19 @@ exports.deleteUser = async function (req, res) {
         await Projects.deleteMany({ creatorName: user.username });
         await Projects.updateMany(
           { "projectMembers.username": user.username },
-          { $pullAll: { projectMembers: { username: user.username } } }
+          { $pull: { projectMembers: { username: user.username } } }
         );
         await Projects.updateMany(
           { "requests.username": user.username },
-          { $pullAll: { requests: { username: user.username } } }
+          { $pull: { requests: { username: user.username } } }
         );
         await TODOList.updateMany(
           { "boards.items.performer": user.username },
-          { $pullAll: { boards: { items: { performer: user.username } } } }
+          { $pull: { boards: { items: { performer: user.username } } } }
         );
         await Chats.updateMany(
           { "chatMembers.username": user.username },
-          { $pullAll: { chatMembers: { username: user.username } } }
+          { $pull: { chatMembers: { username: user.username } } }
         );
         var chatName = await Chats.find({
           "chatMembers.username": user.username,
