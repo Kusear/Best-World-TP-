@@ -561,6 +561,15 @@ exports.deleteUser = async function (req, res) {
       };
 
       try {
+        var projectTaskListDelet = await Projects.find({
+          creatorName: user.username,
+        });
+        if (projectTaskListDelet != 0) {
+          projectTaskListDelet.forEach(async (element) => {
+            await TODOList.findOneAndRemove({ projectSlug: element.slug });
+            await Chats.findOneAndRemove({ chatRoom: element.slug });
+          });
+        }
         await Projects.deleteMany({ creatorName: user.username });
         await Projects.updateMany(
           { "projectMembers.username": user.username },
