@@ -1044,6 +1044,7 @@ exports.deleteFile = async (req, res) => {
 
 exports.getProjectsByFilters = async (req, res) => {
   var tags = [""];
+  var title = "";
 
   var dateEndPr = new Date().toISOString();
   var endTeamGathDate = new Date().toISOString();
@@ -1082,7 +1083,8 @@ exports.getProjectsByFilters = async (req, res) => {
   console.log("2freePlacesMax", req.body.freePlacesMax);
 
   if (req.body.tags) {
-    tags = req.body.tags;
+    title = req.body.tags;
+    tags = req.body.tags.split(/\s/);
   }
   if (req.body.dateEndPr) {
     dateEndPr = new Date(req.body.dateEndPr);
@@ -1106,12 +1108,14 @@ exports.getProjectsByFilters = async (req, res) => {
     reqRoles = req.body.reqRole;
   } else {
     console.log("reqRoles '': ", true);
+    console.log("2tags", tags);
+    console.log("2title", title);
     list = await Projects.find({
       $and: [
         {
           $or: [
+            { title: { $regex: title, $options: "$i" } },
             { projectHashTag: { $in: tags } },
-            { title: { $regex: tags[0], $options: "$i" } },
           ],
         },
         {
@@ -1125,6 +1129,9 @@ exports.getProjectsByFilters = async (req, res) => {
             $gte: countOfMembersMin,
             $lte: countOfMembersMax,
           },
+        },
+        {
+          archive: false,
         },
         {
           freePlaces: {
@@ -1146,7 +1153,7 @@ exports.getProjectsByFilters = async (req, res) => {
         {
           $or: [
             { projectHashTag: { $in: tags } },
-            { title: { $regex: tags[0], $options: "$i" } },
+            { title: { $regex: title, $options: "$i" } },
           ],
         },
         {
@@ -1247,14 +1254,31 @@ exports.getProjectsByFilters = async (req, res) => {
     needHelp = req.body.needHelp;
   } else {
     console.log("needHelp '': ", true);
-    list = await Projects.find({ needHelp: true })
+    var hasNext2 = false;
+    list = await Projects.find({
+      $and: [
+        {
+          needHelp: true,
+
+          archive: false,
+        },
+      ],
+    })
       .skip(20 * req.body.page)
       .limit(20);
-    list2 = await Projects.find({ needHelp: true })
+    list2 = await Projects.find({
+      $and: [
+        {
+          needHelp: true,
+
+          archive: false,
+        },
+      ],
+    })
       .skip(20 * (req.body.page + 1))
       .limit(20);
     if (list2.length != 0) {
-      hasNext = true;
+      hasNext2 = true;
     }
     var counter2 = 0;
     list.forEach((element) => {
@@ -1286,7 +1310,7 @@ exports.getProjectsByFilters = async (req, res) => {
               if (counter2 == list.length - 1) {
                 return res
                   .status(200)
-                  .json({ list: listProjects, hasNext: hasNext })
+                  .json({ list: listProjects, hasNext: hasNext2 })
                   .end();
               }
               console.log("e: ", counter2);
@@ -1299,7 +1323,7 @@ exports.getProjectsByFilters = async (req, res) => {
               if (counter2 == list.length - 1) {
                 return res
                   .status(200)
-                  .json({ list: listProjects, hasNext: hasNext })
+                  .json({ list: listProjects, hasNext: hasNext2 })
                   .end();
               }
               console.log("e: ", counter2);
@@ -1313,7 +1337,7 @@ exports.getProjectsByFilters = async (req, res) => {
           if (counter2 == list.length - 1) {
             return res
               .status(200)
-              .json({ list: listProjects, hasNext: hasNext })
+              .json({ list: listProjects, hasNext: hasNext2 })
               .end();
           }
           console.log("c: ", counter2);
@@ -1323,22 +1347,15 @@ exports.getProjectsByFilters = async (req, res) => {
     return;
   }
 
-  console.log("dEP", dateEndPr);
-  console.log("dateTeamGathEnd", endTeamGathDate);
-  console.log("reqRoles", reqRoles);
-  console.log("tags", tags);
-  console.log("countOfMembersMin", countOfMembersMin);
-  console.log("countOfMembersMax", countOfMembersMax);
-  console.log("freePlacesMin", freePlacesMin);
-  console.log("freePlacesMax", freePlacesMax);
+  var hasNext3 = false;
 
   console.log("CUSTOM");
   list = await Projects.find({
     $and: [
       {
         $or: [
+          { title: { $regex: title, $options: "$i" } },
           { projectHashTag: { $in: tags } },
-          { title: { $regex: tags[0], $options: "$i" } },
         ],
       },
       {
@@ -1355,6 +1372,9 @@ exports.getProjectsByFilters = async (req, res) => {
           $gte: countOfMembersMin,
           $lte: countOfMembersMax,
         },
+      },
+      {
+        archive: false,
       },
       {
         freePlaces: {
@@ -1375,8 +1395,8 @@ exports.getProjectsByFilters = async (req, res) => {
     $and: [
       {
         $or: [
+          { title: { $regex: title, $options: "$i" } },
           { projectHashTag: { $in: tags } },
-          { title: { $regex: tags[0], $options: "$i" } },
         ],
       },
       {
@@ -1406,7 +1426,7 @@ exports.getProjectsByFilters = async (req, res) => {
     .limit(20);
 
   if (list2.length != 0) {
-    hasNext = true;
+    hasNext3 = true;
   }
   console.log("list: ", list);
 
@@ -1440,7 +1460,7 @@ exports.getProjectsByFilters = async (req, res) => {
             if (counter3 == list.length - 1) {
               return res
                 .status(200)
-                .json({ list: listProjects, hasNext: hasNext })
+                .json({ list: listProjects, hasNext: hasNext3 })
                 .end();
             }
             console.log("e: ", counter3);
@@ -1453,7 +1473,7 @@ exports.getProjectsByFilters = async (req, res) => {
             if (counter3 == list.length - 1) {
               return res
                 .status(200)
-                .json({ list: listProjects, hasNext: hasNext })
+                .json({ list: listProjects, hasNext: hasNext3 })
                 .end();
             }
             console.log("e: ", counter3);
@@ -1467,7 +1487,7 @@ exports.getProjectsByFilters = async (req, res) => {
         if (counter3 == list.length - 1) {
           return res
             .status(200)
-            .json({ list: listProjects, hasNext: hasNext })
+            .json({ list: listProjects, hasNext: hasNext3 })
             .end();
         }
         console.log("c: ", counter3);
