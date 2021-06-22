@@ -174,7 +174,7 @@ module.exports = (io) => {
           }
         }
       );
-
+      try{
       await ToDoLists.findOne(
         { projectSlug: socket.data.TaskList },
         (err, taskList) => {
@@ -187,6 +187,9 @@ module.exports = (io) => {
           }
         }
       );
+      } catch (ex) {
+        console.log("EX: ", ex);
+      }
 
       if (limit) {
         io.to(socket.id).emit("err", { err: "Limit of boards" });
