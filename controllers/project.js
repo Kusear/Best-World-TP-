@@ -11,8 +11,6 @@ const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
 
-// TODO добавить менеджеру canChange
-
 exports.projectData = async function (req, res) {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
@@ -669,168 +667,225 @@ exports.addProjectMember = async (req, res) => {
         .end();
     }
 
-    var rolesReq = await pr.requiredRoles.id(req.body.roleID);
-    if (req.body.alreadyEnter > rolesReq.count) {
-      return res
-        .status(500)
-        .json({ err: "Все места на эту роль заняты" })
-        .end();
-    }
-
-    var requestExist = false;
-
-    pr.requests.forEach((element) => {
-      if (
-        element.role === req.body.role &&
-        element.username === req.body.username
-      ) {
-        console.log("Requiest exist");
-        requestExist = true;
-      }
-    });
-
-    if (!requestExist) {
-      return res.status(200).json({ message: "No request" }).end();
-    }
-
     var newMember;
     if (req.body.helper && pr.needHelp) {
       newMember = new Members();
       newMember.username = req.body.username;
       newMember.role = "Помощь в заполнении проекта";
       newMember.canChange = true;
-    } else {
-      newMember = new Members();
-      newMember.username = req.body.username;
-      newMember.role = req.body.role;
-    }
 
-    await pr.projectMembers.push(newMember);
-
-    var exeptionReqRole = "null";
-    try {
-      var reqRole = await pr.requiredRoles.id(req.body.roleID);
-
-      if (!reqRole) {
-        exeptionReqRole = "No reqRole";
-      }
-
-      await pr.requiredRoles.pull(req.body.roleID);
-
-      reqRole.alreadyEnter++;
-      pr.freePlaces--;
-
-      await pr.requiredRoles.push(reqRole);
+      await pr.projectMembers.push(newMember);
       await pr.save();
-    } catch (ex) {
-      exeptionReqRole = ex;
-    }
+      var info;
+      if (user.username != newMember.username) {
+        info = {
+          notificationID: -1,
+          email: user.email,
+          // title: project.title,
+          subject: "Пользователь присоединился к одному из ваших проектов",
+          theme: user.username + " к вашему проекту присоединился пользователь",
+          text:
+            "<div><br>К вашему '" +
+            pr.title +
+            "' проекту присоединился пользователь с никнеймом '" +
+            newMember.username +
+            "'.</div>" +
+            "<div>Роль: " +
+            newMember.role +
+            ".</div>" +
+            "<div><br>Благодарим за внимание, Start-Up.</div>",
+        };
+        nodemailer.sendMessageEmail(info);
+      } else {
+        info = {
+          notificationID: -1,
+          email: user.email,
+          // title: project.title,
+          subject: "Приняте в проект",
+          theme: user.username + " вас приняли в проект",
+          text:
+            "<div><br>Вас приняли в '" +
+            pr.title +
+            "' проект." +
+            "</div>" +
+            "<div>На роль: " +
+            newMember.role +
+            ".</div>" +
+            "<div><br>Благодарим за внимание, Start-Up.</div>",
+        };
+        nodemailer.sendMessageEmail(info);
+      }
+      return res
+        .status(200)
+        .json({
+          message: "success",
+        })
+        .end();
+    } else {
+      var rolesReq = await pr.requiredRoles.id(req.body.roleID);
+      if (req.body.alreadyEnter > rolesReq.count) {
+        return res
+          .status(500)
+          .json({ err: "Все места на эту роль заняты" })
+          .end();
+      }
 
-    var exeptionPullRequests = "null";
-    await Projects.findOneAndUpdate(
-      { slug: projectSlug },
-      { $pull: { requests: { username: req.body.username } } },
-      (err) => {
-        if (err) {
-          exeptionPullRequests = err.message;
+      var requestExist = false;
+
+      pr.requests.forEach((element) => {
+        if (
+          element.role === req.body.role &&
+          element.username === req.body.username
+        ) {
+          console.log("Requiest exist");
+          requestExist = true;
         }
-      }
-    );
-    var exptionChatAddMember = "null";
-    await Chat.findOne({ chatRoom: projectSlug }, (err, chat) => {
-      if (err) {
-        exptionChatAddMember = err.message;
+      });
+
+      if (!requestExist) {
+        return res.status(200).json({ message: "No request" }).end();
       }
 
-      var isChatMember = false;
-      if (chat) {
-        if (chat.chatMembers != null) {
-          chat.chatMembers.forEach((element) => {
-            if (element.username === newMember.username) {
-              isChatMember = true;
+      if (req.body.role != "Менеджер") {
+        newMember = new Members();
+        newMember.username = req.body.username;
+        newMember.role = req.body.role;
+        newMember.canChange = true;
+      } else {
+        newMember = new Members();
+        newMember.username = req.body.username;
+        newMember.role = req.body.role;
+      }
+
+      await pr.projectMembers.push(newMember);
+
+      var exeptionReqRole = "null";
+      try {
+        var reqRole = await pr.requiredRoles.id(req.body.roleID);
+
+        if (!reqRole) {
+          exeptionReqRole = "No reqRole";
+        }
+
+        await pr.requiredRoles.pull(req.body.roleID);
+
+        reqRole.alreadyEnter++;
+        pr.freePlaces--;
+
+        await pr.requiredRoles.push(reqRole);
+        await pr.save();
+      } catch (ex) {
+        exeptionReqRole = ex;
+      }
+
+      var exeptionPullRequests = "null";
+      await Projects.findOneAndUpdate(
+        { slug: projectSlug },
+        { $pull: { requests: { username: req.body.username } } },
+        (err) => {
+          if (err) {
+            exeptionPullRequests = err.message;
+          }
+        }
+      );
+      var exptionChatAddMember = "null";
+      await Chat.findOne({ chatRoom: projectSlug }, (err, chat) => {
+        if (err) {
+          exptionChatAddMember = err.message;
+        }
+
+        var isChatMember = false;
+        if (chat) {
+          if (chat.chatMembers != null) {
+            chat.chatMembers.forEach((element) => {
+              if (element.username === newMember.username) {
+                isChatMember = true;
+              }
+            });
+            if (!isChatMember) {
+              var newChatUser = new ChatMembers();
+              newChatUser.username = newMember.username;
+              newChatUser.role = newMember.role;
+              chat.chatMembers.push(newChatUser);
+              chat.save();
             }
-          });
-          if (!isChatMember) {
-            var newChatUser = new ChatMembers();
-            newChatUser.username = newMember.username;
-            newChatUser.role = newMember.role;
-            chat.chatMembers.push(newChatUser);
+          } else {
+            chat.chatMembers = [newMember];
             chat.save();
           }
         } else {
-          chat.chatMembers = [newMember];
-          chat.save();
-        }
-      } else {
-        var newProjectChat = new Chat({
-          chatRoom: pr.slug,
-          chatName: pr.title,
-          chatMembers: pr.projectMembers,
-          privateChat: false,
-        }).save();
-      }
-    });
-
-    pr.projectMembers.forEach(async (element) => {
-      await Users.findOne({ username: element.username }, (err, user) => {
-        if (err) {
-          return res.status().json({}).end();
-        }
-        if (user.projectNotify) {
-          var info;
-          if (user.username != newMember.username) {
-            info = {
-              notificationID: -1,
-              email: user.email,
-              // title: project.title,
-              subject: "Пользователь присоединился к одному из ваших проектов",
-              theme:
-                user.username + " к вашему проекту присоединился пользователь",
-              text:
-                "<div><br>К вашему '" +
-                pr.title +
-                "' проекту присоединился пользователь с никнеймом '" +
-                newMember.username +
-                "'.</div>" +
-                "<div>Роль: " +
-                newMember.role +
-                ".</div>" +
-                "<div><br>Благодарим за внимание, Start-Up.</div>",
-            };
-            nodemailer.sendMessageEmail(info);
-          } else {
-            info = {
-              notificationID: -1,
-              email: user.email,
-              // title: project.title,
-              subject: "Приняте в проект",
-              theme: user.username + " вас приняли в проект",
-              text:
-                "<div><br>Вас приняли в '" +
-                pr.title +
-                "' проект." +
-                "</div>" +
-                "<div>На роль: " +
-                newMember.role +
-                ".</div>" +
-                "<div><br>Благодарим за внимание, Start-Up.</div>",
-            };
-            nodemailer.sendMessageEmail(info);
-          }
+          var newProjectChat = new Chat({
+            chatRoom: pr.slug,
+            chatName: pr.title,
+            chatMembers: pr.projectMembers,
+            privateChat: false,
+          }).save();
         }
       });
-    });
 
-    await pr.save();
-    return res
-      .status(200)
-      .json({
-        message: "success",
-        exeptionReqRole: exeptionReqRole,
-        exeptionPullRequests: exeptionPullRequests,
-        exptionChatAddMember: exptionChatAddMember,
-      })
-      .end();
+      pr.projectMembers.forEach(async (element) => {
+        await Users.findOne({ username: element.username }, (err, user) => {
+          if (err) {
+            return res.status().json({}).end();
+          }
+          if (user.projectNotify) {
+            var info;
+            if (user.username != newMember.username) {
+              info = {
+                notificationID: -1,
+                email: user.email,
+                // title: project.title,
+                subject:
+                  "Пользователь присоединился к одному из ваших проектов",
+                theme:
+                  user.username +
+                  " к вашему проекту присоединился пользователь",
+                text:
+                  "<div><br>К вашему '" +
+                  pr.title +
+                  "' проекту присоединился пользователь с никнеймом '" +
+                  newMember.username +
+                  "'.</div>" +
+                  "<div>Роль: " +
+                  newMember.role +
+                  ".</div>" +
+                  "<div><br>Благодарим за внимание, Start-Up.</div>",
+              };
+              nodemailer.sendMessageEmail(info);
+            } else {
+              info = {
+                notificationID: -1,
+                email: user.email,
+                // title: project.title,
+                subject: "Приняте в проект",
+                theme: user.username + " вас приняли в проект",
+                text:
+                  "<div><br>Вас приняли в '" +
+                  pr.title +
+                  "' проект." +
+                  "</div>" +
+                  "<div>На роль: " +
+                  newMember.role +
+                  ".</div>" +
+                  "<div><br>Благодарим за внимание, Start-Up.</div>",
+              };
+              nodemailer.sendMessageEmail(info);
+            }
+          }
+        });
+      });
+
+      await pr.save();
+      return res
+        .status(200)
+        .json({
+          message: "success",
+          exeptionReqRole: exeptionReqRole,
+          exeptionPullRequests: exeptionPullRequests,
+          exptionChatAddMember: exptionChatAddMember,
+        })
+        .end();
+    }
   });
 };
 
@@ -1007,7 +1062,6 @@ exports.deleteRequest = async (req, res) => {
 };
 
 exports.deleteFile = async (req, res) => {
-  var projectUser = req.body.username;
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   console.log("DELETE FILE BODY: ", req.body);
@@ -1021,27 +1075,23 @@ exports.deleteFile = async (req, res) => {
       if (!project) {
         return res.status(500).json({ err: "Проект не найден" }).end();
       }
-      var user;
       var file;
-      var status = false;
-      console.log("not creator");
+
       project.projectFiles.forEach(async (element) => {
         console.log(element);
         file = await gfs.find({ filename: req.body.filename }).toArray();
+        console.log(file);
         if (file.length != 0) {
-          file.forEach(async (cursor) => {
-            if (cursor.filename === req.body.filename) {
-              gfs.delete(cursor._id);
-              var obj = await project.projectFiles.id(
-                mongoose.Types.ObjectId(req.body.fileObj)
-              );
-              console.log(obj);
-              await project.projectFiles.pull(obj);
-              await project.save();
-              return res.status(200).json({ message: "success" }).end();
-            }
-          });
-          console.log("bruh");
+          if (file[0].filename === element.filename) {
+            await Projects.findOneAndUpdate(
+              { slug: req.body.projectSlug },
+              {
+                $pull: { projectFiles: { filename: req.body.filename } },
+              }
+            );
+            console.log("bruh");
+            return res.status(200).json({ message: "success" }).end();
+          }
         } else {
           return res.status(500).json({ message: "No file" }).end();
         }
@@ -1070,7 +1120,6 @@ exports.getProjectsByFilters = async (req, res) => {
   var reqRoles = "";
   var countOfMembersMin = 0;
   var countOfMembersMax = 20;
-  // var needHelp = false;
   var freePlacesMin = 0;
   var freePlacesMax = 20;
   console.log(tags);
