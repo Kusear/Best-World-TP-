@@ -1063,7 +1063,6 @@ exports.getProjectsByFilters = async (req, res) => {
   var reqRoles = "";
   var countOfMembersMin = 0;
   var countOfMembersMax = 20;
-  // var needHelp = false;
   var freePlacesMin = 0;
   var freePlacesMax = 20;
   console.log(tags);
@@ -1145,16 +1144,12 @@ exports.getProjectsByFilters = async (req, res) => {
       .skip(20 * req.body.page)
       .limit(20);
 
-    if (list.length == 0) {
-      return res.status(200).json({ list: [], hasNext: false }).end();
-    }
-
     list2 = await Projects.find({
       $and: [
         {
           $or: [
-            { projectHashTag: { $in: tags } },
             { title: { $regex: title, $options: "$i" } },
+            { projectHashTag: { $in: tags } },
           ],
         },
         {
@@ -1168,6 +1163,9 @@ exports.getProjectsByFilters = async (req, res) => {
             $gte: countOfMembersMin,
             $lte: countOfMembersMax,
           },
+        },
+        {
+          archive: false,
         },
         {
           freePlaces: {
@@ -1263,7 +1261,6 @@ exports.getProjectsByFilters = async (req, res) => {
       $and: [
         {
           needHelp: true,
-
           archive: false,
         },
       ],
@@ -1274,7 +1271,6 @@ exports.getProjectsByFilters = async (req, res) => {
       $and: [
         {
           needHelp: true,
-
           archive: false,
         },
       ],
@@ -1420,6 +1416,9 @@ exports.getProjectsByFilters = async (req, res) => {
           $gte: countOfMembersMin,
           $lte: countOfMembersMax,
         },
+      },
+      {
+        archive: false,
       },
       {
         freePlaces: {
