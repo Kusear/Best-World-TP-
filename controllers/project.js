@@ -529,7 +529,7 @@ exports.getProjects = async function (req, res) {
       project: element,
     };
 
-    if (element.endProjectDate < new Date()) {
+    if (element.endProjectDate < new Date() && element.endProjectDate) {
       element.archive = true;
     }
     await element.save();
