@@ -487,7 +487,7 @@ exports.getProjects = async function (req, res) {
   var page = req.query.currentPage;
 
   var projects = await Projects.find(
-    { needHelp: false },
+    { needHelp: false, archive: false },
     null,
     function (err, result) {
       if (err) {
@@ -500,7 +500,7 @@ exports.getProjects = async function (req, res) {
   console.log(projects.length);
 
   var projects2 = await Projects.find(
-    { needHelp: false },
+    { needHelp: false, archive: false },
     null,
     function (err, result) {
       if (err) {
@@ -1082,17 +1082,22 @@ exports.getProjectsByFilters = async (req, res) => {
 
   indexForendpr = tempDateendpr.indexOf("T");
   indexForendteamgath = tempDateteamgthend.indexOf("T");
-
   dateEndPr = tempDateendpr.substring(0, indexForendpr);
   endTeamGathDate = tempDateteamgthend.substring(0, indexForendteamgath);
 
   var reqRoles = "";
-  var countOfMembersMin = 1;
+  var countOfMembersMin = 0;
   var countOfMembersMax = 20;
   var needHelp = false;
   var freePlacesMin = 0;
   var freePlacesMax = 20;
   console.log(tags);
+
+  var list;
+  var list2;
+  var listProjects = [];
+  var hasNext = false;
+  var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
   if (req.body.tags) {
     tags = req.body.tags;
@@ -1112,9 +1117,6 @@ exports.getProjectsByFilters = async (req, res) => {
   if (req.body.countOfMembersMax) {
     countOfMembersMax = req.body.countOfMembersMax;
   }
-  if (req.body.needHelp) {
-    needHelp = req.body.needHelp;
-  }
   if (req.body.freePlacesMin) {
     freePlacesMin = req.body.freePlacesMin;
   }
@@ -1122,17 +1124,87 @@ exports.getProjectsByFilters = async (req, res) => {
     freePlacesMax = req.body.freePlacesMax;
   }
 
-  console.log("t", tags);
-  console.log("d", dateEndPr);
-  console.log("e", endTeamGathDate);
-  console.log("r", reqRoles);
-  console.log("cmin", countOfMembersMin);
-  console.log("cmax", countOfMembersMax);
-  console.log("m", needHelp);
-  console.log("fmin", freePlacesMin);
-  console.log("fmax", freePlacesMax);
-
-  var list = await Projects.find({
+  if (!req.body.needHelp) {
+    needHelp = req.body.needHelp;
+  } else {
+    console.log(false);
+    list = await Projects.find({ needHelp: true })
+      .skip(20 * req.body.page)
+      .limit(20);
+    list2 = await Projects.find({ needHelp: true })
+      .skip(20 * (req.body.page + 1))
+      .limit(20);
+    if (list2.length != 0) {
+      hasNext = true;
+    }
+    var counter2 = 0;
+    list.forEach((element) => {
+      var endSTR = "";
+      console.log(true);
+      var pr = {
+        project: element,
+      };
+      gfs
+        .openDownloadStreamByName(element.image, { revision: -1 })
+        .on("data", (chunk) => {
+          console.log("CHUNK: ", chunk);
+          endSTR += Buffer.from(chunk, "hex").toString("base64");
+        })
+        .on("error", function (err) {
+          console.log("ERR: ", err);
+          pr.project.image = "default";
+          console.log("d c: ", counter2);
+          gfs
+            .openDownloadStreamByName(pr.project.image, { revision: -1 })
+            .on("data", (chunk) => {
+              console.log("CHUNK: ", chunk);
+              endSTR += Buffer.from(chunk, "hex").toString("base64");
+            })
+            .on("error", function (err) {
+              console.log("e: ", counter2);
+              pr.project.image = "Err on image";
+              listProjects.push(pr);
+              if (counter2 == list.length - 1) {
+                return res
+                  .status(200)
+                  .json({ list: listProjects, hasNext: hasNext })
+                  .end();
+              }
+              console.log("e: ", counter2);
+              counter2++;
+            })
+            .on("close", () => {
+              pr.project.image = endSTR;
+              listProjects.push(pr);
+              console.log("a: ", counter2);
+              if (counter2 == list.length - 1) {
+                return res
+                  .status(200)
+                  .json({ list: listProjects, hasNext: hasNext })
+                  .end();
+              }
+              console.log("e: ", counter2);
+              counter2++;
+            });
+        })
+        .on("close", () => {
+          pr.project.image = endSTR;
+          listProjects.push(pr);
+          console.log("c: ", counter2);
+          if (counter2 == list.length - 1) {
+            return res
+              .status(200)
+              .json({ list: listProjects, hasNext: hasNext })
+              .end();
+          }
+          console.log("c: ", counter2);
+          counter2++;
+        });
+    });
+    return;
+  }
+  console.log("CUSTOM");
+  list = await Projects.find({
     $and: [
       {
         $or: [
@@ -1171,10 +1243,120 @@ exports.getProjectsByFilters = async (req, res) => {
   })
     .skip(20 * req.body.page)
     .limit(20);
-  console.log("list: ", list);
-  if (!list) {
-    return res.status(200).json({ list: [] }).end();
-  } else {
-    return res.status(200).json({ list: list }).end();
+
+  list2 = await Projects.find({
+    $and: [
+      {
+        $or: [
+          { projectHashTag: { $in: tags } },
+          { title: { $regex: tags[0], $options: "$i" } },
+        ],
+      },
+      {
+        endProjectDate: { $gte: new Date(dateEndPr) },
+      },
+      {
+        endTeamGathering: { $gte: new Date(endTeamGathDate) },
+      },
+      {
+        $or: [
+          { requiredRoles: { $elemMatch: { role: reqRoles } } },
+          { requiredRoles: { $elemMatch: { role: /.*/ } } },
+        ],
+      },
+      {
+        countOfMembers: {
+          $gte: countOfMembersMin,
+          $lte: countOfMembersMax,
+        },
+      },
+      {
+        needHelp: needHelp,
+      },
+      {
+        freePlaces: {
+          $gte: freePlacesMin,
+          $lte: freePlacesMax,
+        },
+      },
+    ],
+  })
+    .skip(20 * (req.body.page + 1))
+    .limit(20);
+
+  if (list2.length != 0) {
+    hasNext = true;
   }
+  console.log("list: ", list);
+
+  var counter = 0;
+  list.forEach((element) => {
+    var endSTR = "";
+    console.log(true);
+    var pr = {
+      project: element,
+    };
+    gfs
+      .openDownloadStreamByName(element.image, { revision: -1 })
+      .on("data", (chunk) => {
+        console.log("CHUNK: ", chunk);
+        endSTR += Buffer.from(chunk, "hex").toString("base64");
+      })
+      .on("error", function (err) {
+        console.log("ERR: ", err);
+        pr.project.image = "default";
+        console.log("d c: ", counter);
+        gfs
+          .openDownloadStreamByName(pr.project.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR += Buffer.from(chunk, "hex").toString("base64");
+          })
+          .on("error", function (err) {
+            console.log("e: ", counter);
+            pr.project.image = "Err on image";
+            listProjects.push(pr);
+            if (counter == list.length - 1) {
+              return res
+                .status(200)
+                .json({ list: listProjects, hasNext: hasNext })
+                .end();
+            }
+            console.log("e: ", counter);
+            counter++;
+          })
+          .on("close", () => {
+            pr.project.image = endSTR;
+            listProjects.push(pr);
+            console.log("a: ", counter);
+            if (counter == list.length - 1) {
+              return res
+                .status(200)
+                .json({ list: listProjects, hasNext: hasNext })
+                .end();
+            }
+            console.log("e: ", counter);
+            counter++;
+          });
+      })
+      .on("close", () => {
+        pr.project.image = endSTR;
+        listProjects.push(pr);
+        console.log("c: ", counter);
+        if (counter == list.length - 1) {
+          return res
+            .status(200)
+            .json({ list: listProjects, hasNext: hasNext })
+            .end();
+        }
+        console.log("c: ", counter);
+        counter++;
+      });
+  });
+
+  // if (!list) {
+  //   return res.status(200).json({ list: [] }).end();
+  // } else {
+  //   return res.status(200).json({ list: list }).end();
+  // }
 };

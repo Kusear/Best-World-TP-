@@ -218,9 +218,10 @@ Route - /getProjects
 Method - GET
 Auth needed - no
 Values: 
-    none
+    currentPage
 Response: 
-    projects (массив проектов)
+    listProjects (массив проектов),
+    hasNext
 
 
 Route - /getArchivedProjects
@@ -288,6 +289,37 @@ Response:
     message: "success", 
     exeption: exeption
 
+
+Route - /getProjectsByFilters
+Method - POST
+Auth needed - no
+Values: 
+    tags
+    dateEndPr
+    dateTeamGathEnd
+    reqRole
+    countOfMembersMin
+    countOfMembersMax
+    freePlacesMin
+    freePlacesMax
+    page
+Response: 
+    list (массив проектов)
+    hasNext (есть ли след страница)
+
+
+Route - /deleteFile
+Method - POST
+Auth needed - no
+Values: 
+    username
+    projectSlug
+    filename
+    fileObj
+Response: 
+    message: "success"
+    or 
+    message: "No file"
 
 
 ############## Chat ##############

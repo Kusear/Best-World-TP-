@@ -5,7 +5,7 @@ exports.createReportUser = async (req, res) => {
     return res.status(500).json({ message: "reportFrom are required" }).end();
   }
   var report = await ReportedUsers.findOne(
-    { reportFromUser: req.body.reportFrom },
+    { username: req.body.username },
     (err) => {
       if (err) {
         return res.status(500).json({ err: err.message }).end();
@@ -16,6 +16,7 @@ exports.createReportUser = async (req, res) => {
   if (report) {
     return res.status(500).json({ message: "Report already exist" }).end();
   }
+
   var newReport = await new ReportedUsers({
     username: req.body.username,
     reportFromUser: req.body.reportFrom,
