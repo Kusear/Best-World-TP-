@@ -455,6 +455,7 @@ app.post(
           filename: filenameSlug,
           username: req.body.username,
           defaultFilename: req.body.filename,
+          fileID: newFile._id
         })
         .end();
     });
