@@ -11,6 +11,8 @@ const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
 
+// TODO добавить менеджеру canChange
+
 exports.projectData = async function (req, res) {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {

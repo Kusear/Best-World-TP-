@@ -450,12 +450,21 @@ app.post(
       pr.save();
       return res
         .status(200)
-        .json({ message: "File added", filename: filenameSlug })
+        .json({
+          message: "File added",
+          filename: filenameSlug,
+          username: req.body.username,
+          defaultFilename: req.body.filename,
+        })
         .end();
     });
   }
 );
-app.post(api_route + "/getFile", midleware.routeLog, controllersCommon.getFiles);
+app.post(
+  api_route + "/getFile",
+  midleware.routeLog,
+  controllersCommon.getFiles
+);
 app.get("/download", controllersCommon.downloadFile);
 app.post(api_route + "/deleteFile", controllersProject.deleteFile);
 
