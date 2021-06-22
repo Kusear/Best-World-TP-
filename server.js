@@ -455,7 +455,7 @@ app.post(
     });
   }
 );
-app.get(api_route + "/getFile", midleware.routeLog, controllersCommon.getFiles);
+app.post(api_route + "/getFile", midleware.routeLog, controllersCommon.getFiles);
 app.get("/download", controllersCommon.downloadFile);
 app.post(api_route + "/deleteFile", controllersProject.deleteFile);
 

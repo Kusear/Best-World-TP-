@@ -1061,7 +1061,7 @@ exports.getProjectsByFilters = async (req, res) => {
   var reqRoles = "";
   var countOfMembersMin = 0;
   var countOfMembersMax = 20;
-  var needHelp = false;
+  // var needHelp = false;
   var freePlacesMin = 0;
   var freePlacesMax = 20;
   console.log(tags);
@@ -1072,14 +1072,23 @@ exports.getProjectsByFilters = async (req, res) => {
   var hasNext = false;
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
 
+  console.log("2dEP", req.body.dateEndPr);
+  console.log("2dateTeamGathEnd", req.body.dateTeamGathEnd);
+  console.log("2reqRoles", req.body.reqRole);
+  console.log("2tags", req.body.tags);
+  console.log("2countOfMembersMin", req.body.countOfMembersMin);
+  console.log("2countOfMembersMax", req.body.countOfMembersMax);
+  console.log("2freePlacesMin", req.body.freePlacesMin);
+  console.log("2freePlacesMax", req.body.freePlacesMax);
+
   if (req.body.tags) {
     tags = req.body.tags;
   }
   if (req.body.dateEndPr) {
-    dateEndPr = req.body.dateEndPr;
+    dateEndPr = new Date(req.body.dateEndPr);
   }
   if (req.body.dateTeamGathEnd) {
-    endTeamGathDate = req.body.dateTeamGathEnd;
+    endTeamGathDate = new Date(req.body.dateTeamGathEnd);
   }
   if (req.body.countOfMembersMin) {
     countOfMembersMin = req.body.countOfMembersMin;
@@ -1096,6 +1105,7 @@ exports.getProjectsByFilters = async (req, res) => {
   if (req.body.reqRole != "") {
     reqRoles = req.body.reqRole;
   } else {
+    console.log("reqRoles '': ", true);
     list = await Projects.find({
       $and: [
         {
@@ -1105,10 +1115,10 @@ exports.getProjectsByFilters = async (req, res) => {
           ],
         },
         {
-          endProjectDate: { $gte: new Date(dateEndPr) },
+          endProjectDate: { $gte: dateEndPr },
         },
         {
-          endTeamGathering: { $gte: new Date(endTeamGathDate) },
+          endTeamGathering: { $gte: endTeamGathDate },
         },
         {
           countOfMembers: {
@@ -1140,10 +1150,10 @@ exports.getProjectsByFilters = async (req, res) => {
           ],
         },
         {
-          endProjectDate: { $gte: new Date(dateEndPr) },
+          endProjectDate: { $gte: dateEndPr },
         },
         {
-          endTeamGathering: { $gte: new Date(endTeamGathDate) },
+          endTeamGathering: { $gte: endTeamGathDate },
         },
         {
           countOfMembers: {
@@ -1236,7 +1246,7 @@ exports.getProjectsByFilters = async (req, res) => {
   if (!req.body.needHelp) {
     needHelp = req.body.needHelp;
   } else {
-    console.log(false);
+    console.log("needHelp '': ", true);
     list = await Projects.find({ needHelp: true })
       .skip(20 * req.body.page)
       .limit(20);
@@ -1312,6 +1322,16 @@ exports.getProjectsByFilters = async (req, res) => {
     });
     return;
   }
+
+  console.log("dEP", dateEndPr);
+  console.log("dateTeamGathEnd", endTeamGathDate);
+  console.log("reqRoles", reqRoles);
+  console.log("tags", tags);
+  console.log("countOfMembersMin", countOfMembersMin);
+  console.log("countOfMembersMax", countOfMembersMax);
+  console.log("freePlacesMin", freePlacesMin);
+  console.log("freePlacesMax", freePlacesMax);
+
   console.log("CUSTOM");
   list = await Projects.find({
     $and: [
@@ -1322,10 +1342,10 @@ exports.getProjectsByFilters = async (req, res) => {
         ],
       },
       {
-        endProjectDate: { $gte: new Date(dateEndPr) },
+        endProjectDate: { $gte: dateEndPr },
       },
       {
-        endTeamGathering: { $gte: new Date(endTeamGathDate) },
+        endTeamGathering: { $gte: endTeamGathDate },
       },
       {
         requiredRoles: { $elemMatch: { role: reqRoles } },
@@ -1360,16 +1380,13 @@ exports.getProjectsByFilters = async (req, res) => {
         ],
       },
       {
-        endProjectDate: { $gte: new Date(dateEndPr) },
+        endProjectDate: { $gte: dateEndPr },
       },
       {
-        endTeamGathering: { $gte: new Date(endTeamGathDate) },
+        endTeamGathering: { $gte: endTeamGathDate },
       },
       {
-        $or: [
-          { requiredRoles: { $elemMatch: { role: reqRoles } } },
-          { requiredRoles: { $elemMatch: { role: /.*/ } } },
-        ],
+        requiredRoles: { $elemMatch: { role: reqRoles } },
       },
       {
         countOfMembers: {
