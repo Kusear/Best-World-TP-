@@ -639,18 +639,10 @@ module.exports = (io) => {
           } else {
             additionText = " изменил задачу '" + task.text;
           }
-          if (updTask.performer) {
-            task.performer = updTask.performer;
-          }
-          if (updTask.description) {
-            task.description = updTask.description;
-          }
-          if (updTask.timeEndWork) {
-            task.timeEndWork = updTask.timeEndWork;
-          }
-          if (updTask.timeStartWork) {
-            task.timeStartWork = updTask.timeStartWork;
-          }
+          task.performer = updTask.performer;
+          task.description = updTask.description;
+          task.timeEndWork = updTask.timeEndWork;
+          task.timeStartWork = updTask.timeStartWork;
 
           await list.save((err) => {
             if (err) {
