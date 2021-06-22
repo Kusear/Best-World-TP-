@@ -30,7 +30,7 @@ exports.createRoportProject = async (req, res) => {
 };
 
 exports.applyReport = async (req, res) => {
-  //TODO сделать отправку сообщения на почту
+
   if (!req.body.projectSlug) {
     return res.status(500).json({ message: "projectSlug are required" }).end();
   }

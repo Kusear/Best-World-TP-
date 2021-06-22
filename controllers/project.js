@@ -1506,10 +1506,4 @@ exports.getProjectsByFilters = async (req, res) => {
         counter3++;
       });
   });
-
-  // if (!list) {
-  //   return res.status(200).json({ list: [] }).end();
-  // } else {
-  //   return res.status(200).json({ list: list }).end();
-  // }
 };

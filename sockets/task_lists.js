@@ -586,6 +586,7 @@ module.exports = (io) => {
     });
 
     socket.on("update-task", async ({ board, updTask }) => {
+      // TODO в board приходит id нового борда рпи перемещении
       if (!board) {
         io.to(socket.id).emit("err", { err: "Board are require" });
         return;
@@ -685,6 +686,37 @@ module.exports = (io) => {
             board: board,
             task: task,
           });
+
+          if (board._id !== board._newBoardId) {
+            var obord = await list.boards.id(
+              mongoose.Types.ObjectId(board._id)
+            );
+            var nbord = await list.boards.id(
+              mongoose.Types.ObjectId(board._newBoardId)
+            );
+            if (nbord.items.length >= 100) {
+              io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
+              return;
+            }
+
+            await list.boards
+              .id(mongoose.Types.ObjectId(obord._id))
+              .items.pull(updTask);
+            await list.boards
+              .id(mongoose.Types.ObjectId(nbord._id))
+              .items.push(updTask);
+            await list.save((err) => {
+              if (err) {
+                io.to(socket.id).emit("err", { err: err.message });
+                return;
+              }
+            });
+            io.to(socket.data.TaskList).emit("moved-task", {
+              from: obord._id,
+              to: nbord._id,
+              task: updTask,
+            });
+          }
         }
       );
     });
@@ -743,7 +775,7 @@ module.exports = (io) => {
             io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
             return;
           }
-          
+
           await list.boards
             .id(mongoose.Types.ObjectId(oldBoard._id))
             .items.pull(task);
