@@ -528,69 +528,74 @@ exports.getProjects = async function (req, res) {
     var pr = {
       project: element,
     };
-    if (element.endTeamGathering >= new Date()) {
-      if (element.endProjectDate < new Date() && element.endProjectDate) {
-        element.archive = true;
-      }
-      await element.save();
 
-      gfs
-        .openDownloadStreamByName(element.image, { revision: -1 })
-        .on("data", (chunk) => {
-          console.log("CHUNK: ", chunk);
-          endSTR += Buffer.from(chunk, "hex").toString("base64");
-        })
-        .on("error", function (err) {
-          console.log("ERR: ", err);
-          pr.project.image = "default";
-          console.log("d c: ", counter);
-          gfs
-            .openDownloadStreamByName(pr.project.image, { revision: -1 })
-            .on("data", (chunk) => {
-              console.log("CHUNK: ", chunk);
-              endSTR += Buffer.from(chunk, "hex").toString("base64");
-            })
-            .on("error", function (err) {
-              console.log("e: ", counter);
-              pr.project.image = "Err on image";
-              listProjects.push(pr);
-              if (counter == projects.length - 1) {
-                return res
-                  .status(200)
-                  .json({ listProjects: listProjects, hasNext: hasNext })
-                  .end();
-              }
-              console.log("e: ", counter);
-              counter++;
-            })
-            .on("close", () => {
-              pr.project.image = endSTR;
-              listProjects.push(pr);
-              console.log("a: ", counter);
-              if (counter == projects.length - 1) {
-                return res
-                  .status(200)
-                  .json({ listProjects: listProjects, hasNext: hasNext })
-                  .end();
-              }
-              console.log("e: ", counter);
-              counter++;
-            });
-        })
-        .on("close", () => {
-          pr.project.image = endSTR;
-          listProjects.push(pr);
-          console.log("c: ", counter);
-          if (counter == projects.length - 1) {
-            return res
-              .status(200)
-              .json({ listProjects: listProjects, hasNext: hasNext })
-              .end();
-          }
-          console.log("c: ", counter);
-          counter++;
-        });
+    if (element.endProjectDate < new Date() && element.endProjectDate) {
+      element.archive = true;
     }
+    await element.save();
+
+    gfs
+      .openDownloadStreamByName(element.image, { revision: -1 })
+      .on("data", (chunk) => {
+        console.log("CHUNK: ", chunk);
+        endSTR += Buffer.from(chunk, "hex").toString("base64");
+      })
+      .on("error", function (err) {
+        console.log("ERR: ", err);
+        pr.project.image = "default";
+        console.log("d c: ", counter);
+        gfs
+          .openDownloadStreamByName(pr.project.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR += Buffer.from(chunk, "hex").toString("base64");
+          })
+          .on("error", function (err) {
+            console.log("e: ", counter);
+            pr.project.image = "Err on image";
+            if (element.endTeamGathering >= new Date()) {
+              listProjects.push(pr);
+            }
+            if (counter == projects.length - 1) {
+              return res
+                .status(200)
+                .json({ listProjects: listProjects, hasNext: hasNext })
+                .end();
+            }
+            console.log("e: ", counter);
+            counter++;
+          })
+          .on("close", () => {
+            pr.project.image = endSTR;
+            if (element.endTeamGathering >= new Date()) {
+              listProjects.push(pr);
+            }
+            console.log("a: ", counter);
+            if (counter == projects.length - 1) {
+              return res
+                .status(200)
+                .json({ listProjects: listProjects, hasNext: hasNext })
+                .end();
+            }
+            console.log("e: ", counter);
+            counter++;
+          });
+      })
+      .on("close", () => {
+        pr.project.image = endSTR;
+        if (element.endTeamGathering >= new Date()) {
+          listProjects.push(pr);
+        }
+        console.log("c: ", counter);
+        if (counter == projects.length - 1) {
+          return res
+            .status(200)
+            .json({ listProjects: listProjects, hasNext: hasNext })
+            .end();
+        }
+        console.log("c: ", counter);
+        counter++;
+      });
   });
 };
 
@@ -1063,6 +1068,7 @@ exports.getProjectsByFilters = async (req, res) => {
   var reqRoles = "";
   var countOfMembersMin = 0;
   var countOfMembersMax = 20;
+  // var needHelp = false;
   var freePlacesMin = 0;
   var freePlacesMax = 20;
   console.log(tags);
@@ -1144,12 +1150,16 @@ exports.getProjectsByFilters = async (req, res) => {
       .skip(20 * req.body.page)
       .limit(20);
 
+    if (list.length == 0) {
+      return res.status(200).json({ list: [], hasNext: false }).end();
+    }
+
     list2 = await Projects.find({
       $and: [
         {
           $or: [
-            { title: { $regex: title, $options: "$i" } },
             { projectHashTag: { $in: tags } },
+            { title: { $regex: title, $options: "$i" } },
           ],
         },
         {
@@ -1258,6 +1268,7 @@ exports.getProjectsByFilters = async (req, res) => {
       $and: [
         {
           needHelp: true,
+
           archive: false,
         },
       ],
@@ -1268,6 +1279,7 @@ exports.getProjectsByFilters = async (req, res) => {
       $and: [
         {
           needHelp: true,
+
           archive: false,
         },
       ],
@@ -1406,13 +1418,13 @@ exports.getProjectsByFilters = async (req, res) => {
         requiredRoles: { $elemMatch: { role: reqRoles } },
       },
       {
+        archive: false,
+      },
+      {
         countOfMembers: {
           $gte: countOfMembersMin,
           $lte: countOfMembersMax,
         },
-      },
-      {
-        archive: false,
       },
       {
         freePlaces: {
