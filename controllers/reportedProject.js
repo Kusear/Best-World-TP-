@@ -1,4 +1,8 @@
-var ReportedProjects = require("../models/reported_projects").ReportedProject;
+const ReportedProjects = require("../models/reported_projects").ReportedProject;
+const Projects = require("../models/project").Project;
+const Users = require("../models/user_model").User;
+const mongoose = require("mongoose");
+const nodemailer = require("../config/nodemailer");
 
 exports.createRoportProject = async (req, res) => {
   if (!req.body.reportFrom) {
@@ -22,6 +26,60 @@ exports.createRoportProject = async (req, res) => {
     reportFromUser: req.body.reportFrom,
   }).save();
   return res.status(200).json({ message: "success" }).end();
+};
+
+exports.applyReport = async (req, res) => {
+  //TODO сделать отправку сообщения на почту
+  if (!req.body.projectSlug) {
+    return res.status(500).json({ message: "projectSlug are required" }).end();
+  }
+  if (!req.body.reportID) {
+    return res.status(500).json({ message: "reportID are required" }).end();
+  }
+  await Projects.findOne(
+    { slug: req.body.projectSlug },
+    async (err, project) => {
+      if (err) {
+        return res.status(500).json({ err: err.message }).end();
+      }
+      if (!project) {
+        return res.status(500).json({ message: "Project not exist" }).end();
+      }
+      project.needChanges = true;
+      await project.save();
+      await ReportedProjects.findByIdAndRemove(
+        mongoose.Types.ObjectId(req.body.reportID)
+      );
+      await Users.findOne({ username: project.creatorName }, (err, user) => {
+        if (err) {
+          return res.status(500).json({ err: err.message }).end();
+        }
+        if (!user) {
+          return res.status(500).json({ message: "User not found" }).end();
+        }
+
+        var info = {
+          notificationID: -1,
+          email: user.email,
+          // title: project.title,
+          subject: "Вам необходимо изменить информацию вашего проекта",
+          theme:
+            user.username +
+            ", на ваш проект'" +
+            project.title +
+            "' была подана жалоба",
+          text:
+            "<div><br>Пожалуйста измените информацию вашего проекта '" +
+            project.title +
+            "'." +
+            "</div>" +
+            "<div><br>Благодарим за внимание, Start-Up.</div>",
+        };
+        nodemailer.sendMessageEmail(info);
+        return res.status(200).json({ message: "success" }).end();
+      });
+    }
+  );
 };
 
 exports.getReortedProjects = async function (req, res) {

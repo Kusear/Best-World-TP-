@@ -4,12 +4,12 @@ var ReportedProjectSchema = new mongoose.Schema({
   slug: {
     type: String,
     required: true,
-    unique: true,
   },
   reportFromUser: {
     type: String,
     required: true,
   },
+  title: { type: String },
 });
 
 exports.reportedProjectCollection = "reportedProjects";

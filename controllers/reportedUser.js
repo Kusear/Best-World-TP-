@@ -1,4 +1,7 @@
 const ReportedUsers = require("../models/reported_users").ReportedUser;
+const Users = require("../models/user_model").User;
+const mongoose = require("mongoose");
+const nodemailer = require("../config/nodemailer");
 
 exports.createReportUser = async (req, res) => {
   if (!req.body.reportFrom) {
@@ -22,6 +25,42 @@ exports.createReportUser = async (req, res) => {
     reportFromUser: req.body.reportFrom,
   }).save();
   return res.status(200).json({ message: "success" }).end();
+};
+
+exports.applyReport = async (req, res) => {
+  if (!req.body.username) {
+    return res.status(500).json({ message: "username are required" }).end();
+  }
+  if (!req.body.reportID) {
+    return res.status(500).json({ message: "reportID are required" }).end();
+  }
+  await Users.findOne({ username: req.body.username }, async (err, user) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+    if (!user) {
+      return res.status(500).json({ message: "User not found" }).end();
+    }
+    user.needChanges = true;
+    await user.save();
+    await ReportedUsers.findByIdAndRemove(
+      mongoose.Types.ObjectId(req.body.reportID)
+    );
+    var info = {
+      notificationID: -1,
+      email: user.email,
+      // title: project.title,
+      subject: "Вам необходимо изменить личный профиль",
+      theme: user.username + ", на вас была подана жалоба",
+      text:
+        "<div><br>Пожалуйста измените свой личный профиль." +
+        "</div>" +
+        "<div><br>Благодарим за внимание, Start-Up.</div>",
+    };
+    nodemailer.sendMessageEmail(info);
+
+    return res.status(200).json({ message: "success" }).end();
+  });
 };
 
 exports.getReportedUsers = async function (req, res) {

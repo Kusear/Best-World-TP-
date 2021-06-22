@@ -504,6 +504,12 @@ app.post(
   midleware.roleCheck("user", "superadmin"),
   controllersReportUser.deleteUserReport
 );
+app.post(
+  api_route + "/applyProjectReport",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersReportUser.applyReport
+);
 
 // Report project routes
 app.post(
@@ -524,6 +530,12 @@ app.post(
   midleware.auth,
   midleware.roleCheck("user", "superadmin"),
   controllersReportProject.deleteReportProject
+);
+app.post(
+  api_route + "/applyReport",
+  midleware.auth,
+  midleware.roleCheck("superadmin"),
+  controllersReportProject.applyReport
 );
 
 // Ban routes

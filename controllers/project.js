@@ -487,7 +487,7 @@ exports.getProjects = async function (req, res) {
   var page = req.query.currentPage;
 
   var projects = await Projects.find(
-    { needHelp: false, archive: false },
+    { needHelp: false },
     null,
     function (err, result) {
       if (err) {
@@ -500,7 +500,7 @@ exports.getProjects = async function (req, res) {
   console.log(projects.length);
 
   var projects2 = await Projects.find(
-    { needHelp: false, archive: false },
+    { needHelp: false },
     null,
     function (err, result) {
       if (err) {
@@ -529,7 +529,7 @@ exports.getProjects = async function (req, res) {
       project: element,
     };
 
-    if (element.endProjectDate > new Date()) {
+    if (element.endProjectDate < new Date()) {
       element.archive = true;
     }
     element.save();
@@ -1001,6 +1001,9 @@ exports.deleteRequest = async (req, res) => {
 exports.deleteFile = async (req, res) => {
   var projectUser = req.body.username;
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
+
+  console.log("DELETE FILE BODY: ", req.body);
+
   await Projects.findOne(
     { slug: req.body.projectSlug },
     async (err, project) => {
@@ -1108,9 +1111,7 @@ exports.getProjectsByFilters = async (req, res) => {
   if (req.body.dateTeamGathEnd) {
     endTeamGathDate = req.body.dateTeamGathEnd;
   }
-  if (req.body.reqRole) {
-    reqRoles = req.body.reqRole;
-  }
+
   if (req.body.countOfMembersMin) {
     countOfMembersMin = req.body.countOfMembersMin;
   }
@@ -1123,7 +1124,146 @@ exports.getProjectsByFilters = async (req, res) => {
   if (req.body.freePlacesMax) {
     freePlacesMax = req.body.freePlacesMax;
   }
+  if (req.body.reqRole != "") {
+    reqRoles = req.body.reqRole;
+  } else {
+    list = await Projects.find({
+      $and: [
+        {
+          $or: [
+            { projectHashTag: { $in: tags } },
+            { title: { $regex: tags[0], $options: "$i" } },
+          ],
+        },
+        {
+          endProjectDate: { $gte: new Date(dateEndPr) },
+        },
+        {
+          endTeamGathering: { $gte: new Date(endTeamGathDate) },
+        },
+        {
+          countOfMembers: {
+            $gte: countOfMembersMin,
+            $lte: countOfMembersMax,
+          },
+        },
+        {
+          freePlaces: {
+            $gte: freePlacesMin,
+            $lte: freePlacesMax,
+          },
+        },
+      ],
+    })
+      .skip(20 * req.body.page)
+      .limit(20);
 
+    if (list.length == 0) {
+      return res.status(200).json({ list: [], hasNext: false }).end();
+    }
+
+    list2 = await Projects.find({
+      $and: [
+        {
+          $or: [
+            { projectHashTag: { $in: tags } },
+            { title: { $regex: tags[0], $options: "$i" } },
+          ],
+        },
+        {
+          endProjectDate: { $gte: new Date(dateEndPr) },
+        },
+        {
+          endTeamGathering: { $gte: new Date(endTeamGathDate) },
+        },
+        {
+          countOfMembers: {
+            $gte: countOfMembersMin,
+            $lte: countOfMembersMax,
+          },
+        },
+        {
+          freePlaces: {
+            $gte: freePlacesMin,
+            $lte: freePlacesMax,
+          },
+        },
+      ],
+    })
+      .skip(20 * (req.body.page + 1))
+      .limit(20);
+
+    if (list2.length != 0) {
+      hasNext = true;
+    }
+    console.log("list: ", list);
+
+    var counter = 0;
+    list.forEach((element) => {
+      var endSTR = "";
+      console.log(true);
+      var pr = {
+        project: element,
+      };
+      gfs
+        .openDownloadStreamByName(element.image, { revision: -1 })
+        .on("data", (chunk) => {
+          console.log("CHUNK: ", chunk);
+          endSTR += Buffer.from(chunk, "hex").toString("base64");
+        })
+        .on("error", function (err) {
+          console.log("ERR: ", err);
+          pr.project.image = "default";
+          console.log("d c: ", counter);
+          gfs
+            .openDownloadStreamByName(pr.project.image, { revision: -1 })
+            .on("data", (chunk) => {
+              console.log("CHUNK: ", chunk);
+              endSTR += Buffer.from(chunk, "hex").toString("base64");
+            })
+            .on("error", function (err) {
+              console.log("e: ", counter);
+              pr.project.image = "Err on image";
+              listProjects.push(pr);
+              if (counter == list.length - 1) {
+                return res
+                  .status(200)
+                  .json({ list: listProjects, hasNext: hasNext })
+                  .end();
+              }
+              console.log("e: ", counter);
+              counter++;
+            })
+            .on("close", () => {
+              pr.project.image = endSTR;
+              listProjects.push(pr);
+              console.log("a: ", counter);
+              if (counter == list.length - 1) {
+                return res
+                  .status(200)
+                  .json({ list: listProjects, hasNext: hasNext })
+                  .end();
+              }
+              console.log("e: ", counter);
+              counter++;
+            });
+        })
+        .on("close", () => {
+          pr.project.image = endSTR;
+          listProjects.push(pr);
+          console.log("c: ", counter);
+          if (counter == list.length - 1) {
+            return res
+              .status(200)
+              .json({ list: listProjects, hasNext: hasNext })
+              .end();
+          }
+          console.log("c: ", counter);
+          counter++;
+        });
+    });
+    return;
+  }
   if (!req.body.needHelp) {
     needHelp = req.body.needHelp;
   } else {
@@ -1219,19 +1359,13 @@ exports.getProjectsByFilters = async (req, res) => {
         endTeamGathering: { $gte: new Date(endTeamGathDate) },
       },
       {
-        $or: [
-          { requiredRoles: { $elemMatch: { role: reqRoles } } },
-          { requiredRoles: { $elemMatch: { role: /.*/ } } },
-        ],
+        requiredRoles: { $elemMatch: { role: reqRoles } },
       },
       {
         countOfMembers: {
           $gte: countOfMembersMin,
           $lte: countOfMembersMax,
         },
-      },
-      {
-        needHelp: needHelp,
       },
       {
         freePlaces: {
@@ -1243,6 +1377,10 @@ exports.getProjectsByFilters = async (req, res) => {
   })
     .skip(20 * req.body.page)
     .limit(20);
+
+  if (list.length == 0) {
+    return res.status(200).json({ list: [], hasNext: false }).end();
+  }
 
   list2 = await Projects.find({
     $and: [
@@ -1269,9 +1407,6 @@ exports.getProjectsByFilters = async (req, res) => {
           $gte: countOfMembersMin,
           $lte: countOfMembersMax,
         },
-      },
-      {
-        needHelp: needHelp,
       },
       {
         freePlaces: {
