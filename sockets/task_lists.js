@@ -523,7 +523,7 @@ module.exports = (io) => {
             return;
           }
           var taskExist = false;
-          list.bords.forEach((element) => {
+          list.boards.forEach((element) => {
             element.items.forEach((arrayTask) => {
               if (
                 arrayTask.text === crtTask.text &&
@@ -878,7 +878,7 @@ module.exports = (io) => {
     });
 
     counter++; //
-    
+
     socket.on("update-files", ({ filesInfo }) => {
       io.to(socket.data.TaskList).emit("updated-files", filesInfo);
       return;

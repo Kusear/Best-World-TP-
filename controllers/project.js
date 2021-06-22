@@ -487,7 +487,7 @@ exports.getProjects = async function (req, res) {
   var page = req.query.currentPage;
 
   var projects = await Projects.find(
-    { needHelp: false },
+    { needHelp: false, archive: false },
     null,
     function (err, result) {
       if (err) {
@@ -500,7 +500,7 @@ exports.getProjects = async function (req, res) {
   console.log(projects.length);
 
   var projects2 = await Projects.find(
-    { needHelp: false },
+    { needHelp: false, archive: false },
     null,
     function (err, result) {
       if (err) {
@@ -522,7 +522,7 @@ exports.getProjects = async function (req, res) {
     hasNext = true;
   }
 
-  projects.forEach((element) => {
+  projects.forEach(async (element) => {
     var endSTR = "";
     console.log(true);
     var pr = {
@@ -532,7 +532,7 @@ exports.getProjects = async function (req, res) {
     if (element.endProjectDate < new Date()) {
       element.archive = true;
     }
-    element.save();
+    await element.save();
 
     gfs
       .openDownloadStreamByName(element.image, { revision: -1 })
@@ -1016,43 +1016,12 @@ exports.deleteFile = async (req, res) => {
       var user;
       var file;
       var status = false;
-      if (
-        projectUser != project.creatorName &&
-        projectUser != project.managerName
-      ) {
-        console.log("not creator");
-        project.projectFiles.forEach(async (element) => {
-          console.log(element);
-          if (
-            element.filename === req.body.filename &&
-            element.username === projectUser
-          ) {
-            file = await gfs.find({ filename: req.body.filename }).toArray();
-            if (file.length != 0) {
-              file.forEach(async (cursor) => {
-                if (cursor.filename === req.body.filename) {
-                  gfs.delete(cursor._id);
-                  var obj = await project.projectFiles.id(
-                    mongoose.Types.ObjectId(req.body.fileObj)
-                  );
-                  console.log(obj);
-                  await project.projectFiles.pull(obj);
-                  await project.save();
-                  status = true;
-                  return res.status(500).json({ message: "err" }).end();
-                }
-              });
-            } else {
-              return res.status(500).json({ message: "No file" }).end();
-            }
-          }
-        });
-      } else {
+      console.log("not creator");
+      project.projectFiles.forEach(async (element) => {
+        console.log(element);
         file = await gfs.find({ filename: req.body.filename }).toArray();
-        console.log(file);
         if (file.length != 0) {
           file.forEach(async (cursor) => {
-            console.log("creator");
             if (cursor.filename === req.body.filename) {
               gfs.delete(cursor._id);
               var obj = await project.projectFiles.id(
@@ -1064,10 +1033,11 @@ exports.deleteFile = async (req, res) => {
               return res.status(200).json({ message: "success" }).end();
             }
           });
+          console.log("bruh");
         } else {
           return res.status(500).json({ message: "No file" }).end();
         }
-      }
+      });
     }
   );
 };
@@ -1111,7 +1081,6 @@ exports.getProjectsByFilters = async (req, res) => {
   if (req.body.dateTeamGathEnd) {
     endTeamGathDate = req.body.dateTeamGathEnd;
   }
-
   if (req.body.countOfMembersMin) {
     countOfMembersMin = req.body.countOfMembersMin;
   }
