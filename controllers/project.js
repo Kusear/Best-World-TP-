@@ -528,68 +528,69 @@ exports.getProjects = async function (req, res) {
     var pr = {
       project: element,
     };
+    if (element.endTeamGathering >= new Date()) {
+      if (element.endProjectDate < new Date() && element.endProjectDate) {
+        element.archive = true;
+      }
+      await element.save();
 
-    if (element.endProjectDate < new Date() && element.endProjectDate) {
-      element.archive = true;
+      gfs
+        .openDownloadStreamByName(element.image, { revision: -1 })
+        .on("data", (chunk) => {
+          console.log("CHUNK: ", chunk);
+          endSTR += Buffer.from(chunk, "hex").toString("base64");
+        })
+        .on("error", function (err) {
+          console.log("ERR: ", err);
+          pr.project.image = "default";
+          console.log("d c: ", counter);
+          gfs
+            .openDownloadStreamByName(pr.project.image, { revision: -1 })
+            .on("data", (chunk) => {
+              console.log("CHUNK: ", chunk);
+              endSTR += Buffer.from(chunk, "hex").toString("base64");
+            })
+            .on("error", function (err) {
+              console.log("e: ", counter);
+              pr.project.image = "Err on image";
+              listProjects.push(pr);
+              if (counter == projects.length - 1) {
+                return res
+                  .status(200)
+                  .json({ listProjects: listProjects, hasNext: hasNext })
+                  .end();
+              }
+              console.log("e: ", counter);
+              counter++;
+            })
+            .on("close", () => {
+              pr.project.image = endSTR;
+              listProjects.push(pr);
+              console.log("a: ", counter);
+              if (counter == projects.length - 1) {
+                return res
+                  .status(200)
+                  .json({ listProjects: listProjects, hasNext: hasNext })
+                  .end();
+              }
+              console.log("e: ", counter);
+              counter++;
+            });
+        })
+        .on("close", () => {
+          pr.project.image = endSTR;
+          listProjects.push(pr);
+          console.log("c: ", counter);
+          if (counter == projects.length - 1) {
+            return res
+              .status(200)
+              .json({ listProjects: listProjects, hasNext: hasNext })
+              .end();
+          }
+          console.log("c: ", counter);
+          counter++;
+        });
     }
-    await element.save();
-
-    gfs
-      .openDownloadStreamByName(element.image, { revision: -1 })
-      .on("data", (chunk) => {
-        console.log("CHUNK: ", chunk);
-        endSTR += Buffer.from(chunk, "hex").toString("base64");
-      })
-      .on("error", function (err) {
-        console.log("ERR: ", err);
-        pr.project.image = "default";
-        console.log("d c: ", counter);
-        gfs
-          .openDownloadStreamByName(pr.project.image, { revision: -1 })
-          .on("data", (chunk) => {
-            console.log("CHUNK: ", chunk);
-            endSTR += Buffer.from(chunk, "hex").toString("base64");
-          })
-          .on("error", function (err) {
-            console.log("e: ", counter);
-            pr.project.image = "Err on image";
-            listProjects.push(pr);
-            if (counter == projects.length - 1) {
-              return res
-                .status(200)
-                .json({ listProjects: listProjects, hasNext: hasNext })
-                .end();
-            }
-            console.log("e: ", counter);
-            counter++;
-          })
-          .on("close", () => {
-            pr.project.image = endSTR;
-            listProjects.push(pr);
-            console.log("a: ", counter);
-            if (counter == projects.length - 1) {
-              return res
-                .status(200)
-                .json({ listProjects: listProjects, hasNext: hasNext })
-                .end();
-            }
-            console.log("e: ", counter);
-            counter++;
-          });
-      })
-      .on("close", () => {
-        pr.project.image = endSTR;
-        listProjects.push(pr);
-        console.log("c: ", counter);
-        if (counter == projects.length - 1) {
-          return res
-            .status(200)
-            .json({ listProjects: listProjects, hasNext: hasNext })
-            .end();
-        }
-        console.log("c: ", counter);
-        counter++;
-      });
   });
 };
 

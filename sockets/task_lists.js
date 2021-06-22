@@ -743,13 +743,13 @@ module.exports = (io) => {
             io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
             return;
           }
-
-          await list.boards
-            .id(mongoose.Types.ObjectId(newBoard._id))
-            .items.push(task);
+          
           await list.boards
             .id(mongoose.Types.ObjectId(oldBoard._id))
             .items.pull(task);
+          await list.boards
+            .id(mongoose.Types.ObjectId(newBoard._id))
+            .items.push(task);
           await list.save((err) => {
             if (err) {
               io.to(socket.id).emit("err", { err: err.message });
