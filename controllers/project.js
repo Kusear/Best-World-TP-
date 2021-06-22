@@ -1213,6 +1213,7 @@ exports.getProjectsByFilters = async (req, res) => {
               pr.project.image = "Err on image";
               listProjects.push(pr);
               if (counter == list.length - 1) {
+                console.log("HASNEXT: ", hasNext);
                 return res
                   .status(200)
                   .json({ list: listProjects, hasNext: hasNext })
@@ -1226,6 +1227,7 @@ exports.getProjectsByFilters = async (req, res) => {
               listProjects.push(pr);
               console.log("a: ", counter);
               if (counter == list.length - 1) {
+                console.log("HASNEXT: ", hasNext);
                 return res
                   .status(200)
                   .json({ list: listProjects, hasNext: hasNext })
@@ -1240,6 +1242,7 @@ exports.getProjectsByFilters = async (req, res) => {
           listProjects.push(pr);
           console.log("c: ", counter);
           if (counter == list.length - 1) {
+            console.log("HASNEXT: ", hasNext);
             return res
               .status(200)
               .json({ list: listProjects, hasNext: hasNext })
@@ -1309,6 +1312,7 @@ exports.getProjectsByFilters = async (req, res) => {
               pr.project.image = "Err on image";
               listProjects.push(pr);
               if (counter2 == list.length - 1) {
+                console.log("HASNEXT2: ", hasNext2);
                 return res
                   .status(200)
                   .json({ list: listProjects, hasNext: hasNext2 })
@@ -1322,6 +1326,7 @@ exports.getProjectsByFilters = async (req, res) => {
               listProjects.push(pr);
               console.log("a: ", counter2);
               if (counter2 == list.length - 1) {
+                console.log("HASNEXT2: ", hasNext2);
                 return res
                   .status(200)
                   .json({ list: listProjects, hasNext: hasNext2 })
@@ -1336,6 +1341,7 @@ exports.getProjectsByFilters = async (req, res) => {
           listProjects.push(pr);
           console.log("c: ", counter2);
           if (counter2 == list.length - 1) {
+            console.log("HASNEXT2: ", hasNext2);
             return res
               .status(200)
               .json({ list: listProjects, hasNext: hasNext2 })
@@ -1459,6 +1465,7 @@ exports.getProjectsByFilters = async (req, res) => {
             pr.project.image = "Err on image";
             listProjects.push(pr);
             if (counter3 == list.length - 1) {
+              console.log("HASNEXT3: ", hasNext3);
               return res
                 .status(200)
                 .json({ list: listProjects, hasNext: hasNext3 })
@@ -1472,6 +1479,7 @@ exports.getProjectsByFilters = async (req, res) => {
             listProjects.push(pr);
             console.log("a: ", counter3);
             if (counter3 == list.length - 1) {
+              console.log("HASNEXT3: ", hasNext3);
               return res
                 .status(200)
                 .json({ list: listProjects, hasNext: hasNext3 })
@@ -1486,6 +1494,7 @@ exports.getProjectsByFilters = async (req, res) => {
         listProjects.push(pr);
         console.log("c: ", counter3);
         if (counter3 == list.length - 1) {
+          console.log("HASNEXT3: ", hasNext3);
           return res
             .status(200)
             .json({ list: listProjects, hasNext: hasNext3 })
