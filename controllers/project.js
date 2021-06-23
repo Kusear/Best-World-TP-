@@ -947,6 +947,10 @@ exports.deleteProjectMember = async (req, res) => {
     if (user.role === "Помощь в заполнении проекта") {
       await project.projectMembers.pull(req.body.memberID);
       await project.save();
+      await Chat.findOneAndUpdate(
+        { chatRoom: project.slug },
+        { $pull: { chatMembers: { username: user.username } } }
+      );
       return res.status(200).json({ message: "Helper user deleted" }).end();
     }
 
