@@ -472,40 +472,40 @@ module.exports = (io) => {
       }
 
       var limit = false;
-      await ToDoLists.aggregate(
-        [
-          {
-            $match: { projectSlug: socket.data.TaskList },
-          },
-          {
-            $project: {
-              boards: {
-                $map: {
-                  input: "$boards",
-                  as: "boardss",
-                  in: {
-                    id: "$$boardss._id",
-                    items: {
-                      total: { $size: "$$boardss.items" },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-        async (err, countOfDocs) => {
-          if (err) {
-            io.to(socket.id).emit("err", { err: err.message });
-            return;
-          }
-          await countOfDocs[0].boards.forEach((element) => {
-            if (element.id === board._id && element.items.total >= 100) {
-              limit = true;
-            }
-          });
-        }
-      );
+      // await ToDoLists.aggregate(
+      //   [
+      //     {
+      //       $match: { projectSlug: socket.data.TaskList },
+      //     },
+      //     {
+      //       $project: {
+      //         boards: {
+      //           $map: {
+      //             input: "$boards",
+      //             as: "boardss",
+      //             in: {
+      //               id: "$$boardss._id",
+      //               items: {
+      //                 total: { $size: "$$boardss.items" },
+      //               },
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   ],
+      //   async (err, countOfDocs) => {
+      //     if (err) {
+      //       io.to(socket.id).emit("err", { err: err.message });
+      //       return;
+      //     }
+      //     await countOfDocs[0].boards.forEach((element) => {
+      //       if (element.id === board._id && element.items.total >= 100) {
+      //         limit = true;
+      //       }
+      //     });
+      //   }
+      // );
 
       await ToDoLists.findOne(
         { projectSlug: socket.data.TaskList },
@@ -518,101 +518,102 @@ module.exports = (io) => {
           if (crtBoard.items.length >= 100) {
             limit = true;
           }
-        }
-      );
 
-      if (limit) {
-        io.to(socket.id).emit("err", { err: "Limit of tasks" });
-        return;
-      }
-
-      var project = await Projects.findOne(
-        { slug: socket.data.TaskList },
-        async (err) => {
-          if (err) {
-            io.to(socket.id).emit("err", { err: err.message });
-            return;
-          }
-        }
-      );
-      var performerUser = await Users.findOne(
-        { username: crtTask.performer },
-        (err) => {
-          if (err) {
-            io.to(socket.id).emit("err", { err: err.message });
-            return;
-          }
-        }
-      );
-
-      await ToDoLists.findOne(
-        { projectSlug: socket.data.TaskList },
-        async (err, list) => {
-          if (err) {
-            io.to(socket.id).emit("err", { err: err.message });
-            return;
-          }
-          var taskExist = false;
-          // if (list.boards != null) {
-          //   list.boards.forEach((element) => {
-          //     element.items.forEach((arrayTask) => {
-          //       if (
-          //         arrayTask.text === crtTask.text &&
-          //         arrayTask.performer === crtTask.performer &&
-          //         arrayTask.description === crtTask.description &&
-          //         arrayTask.timeStartWork === crtTask.timeStartWork &&
-          //         arrayTask.timeEndWork === crtTask.timeEndWork
-          //       ) {
-          //         taskExist = true;
-          //       }
-          //     });
-          //   });
-          // }
-
-          if (taskExist) {
-            io.to(socket.id).emit("err", { err: "Задача уже существует" });
+          if (limit) {
+            console.log("LIMIT CREATE");
+            io.to(socket.id).emit("err", { err: "Limit of tasks" });
             return;
           }
 
-          var newTask = new Tasks();
-          newTask.text = crtTask.text;
-          newTask.performer = crtTask.performer;
-          newTask.description = crtTask.description;
-          newTask.timeStartWork = crtTask.timeStartWork;
-          newTask.timeEndWork = crtTask.timeEndWork;
-          await list.boards.id(board._id).items.push(newTask);
-          await list.save();
-          if (newTask.performer) {
-            console.log("send");
-            var info = {
-              notificationID: -1,
-              email: performerUser.email,
-              // title: project.title,
-              subject: "Создание задачи.",
-              theme: "Создание задачи.",
-              text:
-                "Пользователь " +
-                socket.data.username +
-                " добавил вам задачу '" +
-                crtTask.text +
-                "'. В доске задач проекта '" +
-                project.title +
-                "'." +
-                "<br>" +
-                "Для перехода к доске задач проекта необходимо перейти в ваш " +
-                "<div><a href =" +
-                process.env.FRONT_URL +
-                "profile/" +
-                performerUser.username +
-                ">профиль</a>." +
-                " Затем найти нужную карточку проекта и нажать на стрелочку, которая находится в правом нижнем углу карточки.</div>",
-            };
-            nodemailer.sendMessageEmail(info);
-          }
-          io.to(socket.data.TaskList).emit("created-task", {
-            task: newTask,
-            board: board,
-          });
+          var project = await Projects.findOne(
+            { slug: socket.data.TaskList },
+            async (err) => {
+              if (err) {
+                io.to(socket.id).emit("err", { err: err.message });
+                return;
+              }
+            }
+          );
+          var performerUser = await Users.findOne(
+            { username: crtTask.performer },
+            (err) => {
+              if (err) {
+                io.to(socket.id).emit("err", { err: err.message });
+                return;
+              }
+            }
+          );
+
+          await ToDoLists.findOne(
+            { projectSlug: socket.data.TaskList },
+            async (err, list) => {
+              if (err) {
+                io.to(socket.id).emit("err", { err: err.message });
+                return;
+              }
+              var taskExist = false;
+              // if (list.boards != null) {
+              //   list.boards.forEach((element) => {
+              //     element.items.forEach((arrayTask) => {
+              //       if (
+              //         arrayTask.text === crtTask.text &&
+              //         arrayTask.performer === crtTask.performer &&
+              //         arrayTask.description === crtTask.description &&
+              //         arrayTask.timeStartWork === crtTask.timeStartWork &&
+              //         arrayTask.timeEndWork === crtTask.timeEndWork
+              //       ) {
+              //         taskExist = true;
+              //       }
+              //     });
+              //   });
+              // }
+
+              if (taskExist) {
+                io.to(socket.id).emit("err", { err: "Задача уже существует" });
+                return;
+              }
+
+              var newTask = new Tasks();
+              newTask.text = crtTask.text;
+              newTask.performer = crtTask.performer;
+              newTask.description = crtTask.description;
+              newTask.timeStartWork = crtTask.timeStartWork;
+              newTask.timeEndWork = crtTask.timeEndWork;
+              await list.boards.id(board._id).items.push(newTask);
+              await list.save();
+              if (newTask.performer) {
+                console.log("send");
+                var info = {
+                  notificationID: -1,
+                  email: performerUser.email,
+                  // title: project.title,
+                  subject: "Создание задачи.",
+                  theme: "Создание задачи.",
+                  text:
+                    "Пользователь " +
+                    socket.data.username +
+                    " добавил вам задачу '" +
+                    crtTask.text +
+                    "'. В доске задач проекта '" +
+                    project.title +
+                    "'." +
+                    "<br>" +
+                    "Для перехода к доске задач проекта необходимо перейти в ваш " +
+                    "<div><a href =" +
+                    process.env.FRONT_URL +
+                    "profile/" +
+                    performerUser.username +
+                    ">профиль</a>." +
+                    " Затем найти нужную карточку проекта и нажать на стрелочку, которая находится в правом нижнем углу карточки.</div>",
+                };
+                nodemailer.sendMessageEmail(info);
+              }
+              io.to(socket.data.TaskList).emit("created-task", {
+                task: newTask,
+                board: board,
+              });
+            }
+          );
         }
       );
     });
@@ -665,7 +666,9 @@ module.exports = (io) => {
           var nbord2 = await list.boards.id(
             mongoose.Types.ObjectId(board._newBoardId)
           );
+
           if (nbord2.items.length >= 100) {
+            console.log("LIMIT UPDATE");
             io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
             return;
           }
@@ -813,6 +816,7 @@ module.exports = (io) => {
             mongoose.Types.ObjectId(newBoard._id)
           );
           if (nbord.items.length >= 100) {
+            console.log("LIMIT MOVE");
             io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
             return;
           }
