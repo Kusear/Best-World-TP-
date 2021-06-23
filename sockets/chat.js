@@ -127,6 +127,21 @@ module.exports = (io) => {
           return socket.disconnect();
         }
 
+        if (chat.blackList != 0) {
+          var blocked = false;
+          chat.blackList.forEach((blockedUser) => {
+            if (blockedUser.username === socket.data.username) {
+              blocked = true;
+            }
+          });
+          if (blocked == true) {
+            io.to(socket.id).emit("err", {
+              err: "You are blocked",
+            });
+            return;
+          }
+        }
+
         var message = new Messages();
         message.username = text.username;
         message.text = text.text;
