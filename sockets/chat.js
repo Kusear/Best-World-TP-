@@ -375,6 +375,20 @@ module.exports = (io) => {
         }
 
         var user = await chat.chatMembers.id(userID);
+        var blockUserExist = false;
+        chat.blackList.forEach((element) => {
+          if (element.username === user.username) {
+            blockUserExist = true;
+          }
+        });
+
+        if (blockUserExist == true) {
+          io.to(chat.chatRoom).emit("userBlocked", {
+            username: user.username,
+          });
+          return;
+        }
+
         await chat.blackList.push(user);
         await chat.save();
         io.to(chat.chatRoom).emit("userBlocked", {
@@ -397,8 +411,16 @@ module.exports = (io) => {
         }
 
         var user = await chat.chatMembers.id(userID);
-        await chat.blackList.pull(user);
-        await chat.save();
+
+        await Chat.findOneAndUpdate(
+          { chatRoom: socket.data.room },
+          {
+            $pull: { blackList: { username: user.username } },
+          }
+        );
+
+        // await chat.blackList.pull(user);
+        // await chat.save();
         io.to(chat.chatRoom).emit("userUnblocked", {
           username: user.username,
         });
