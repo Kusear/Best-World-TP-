@@ -698,6 +698,8 @@ exports.addProjectMember = async (req, res) => {
         .end();
     }
 
+    var user = await Users.findOne({ username: req.body.username });
+
     var newMember;
     if (req.body.helper && pr.needHelp) {
       newMember = new Members();
@@ -855,21 +857,18 @@ exports.addProjectMember = async (req, res) => {
       });
 
       pr.projectMembers.forEach(async (element) => {
-        await Users.findOne({ username: element.username }, (err, user) => {
-          if (err) {
-            return res.status().json({}).end();
-          }
-          if (user.projectNotify) {
+        await Users.findOne({ username: element.username }, (err, userBD) => {
+          if (userBD.projectNotify) {
             var info;
-            if (user.username != newMember.username) {
+            if (userBD.username != newMember.username) {
               info = {
                 notificationID: -1,
-                email: user.email,
+                email: userBD.email,
                 // title: project.title,
                 subject:
                   "Пользователь присоединился к одному из ваших проектов",
                 theme:
-                  user.username +
+                userBD.username +
                   " к вашему проекту присоединился пользователь",
                 text:
                   "<div><br>К вашему '" +
@@ -889,7 +888,7 @@ exports.addProjectMember = async (req, res) => {
                 email: user.email,
                 // title: project.title,
                 subject: "Приняте в проект",
-                theme: user.username + " вас приняли в проект",
+                theme: userBD.username + " вас приняли в проект",
                 text:
                   "<div><br>Вас приняли в '" +
                   pr.title +
