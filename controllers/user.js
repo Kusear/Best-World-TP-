@@ -525,7 +525,7 @@ exports.updateUser = async function (req, res) {
                   element.chatMembers[0].username +
                   " " +
                   element.chatMembers[1].username;
-                element.cahtName = newName;
+                element.chatName = newName;
                 element.chatRoom = await slugify(newName, {
                   replacement: "-",
                   remove: undefined,

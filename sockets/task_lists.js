@@ -174,19 +174,19 @@ module.exports = (io) => {
           }
         }
       );
-      try{
-      await ToDoLists.findOne(
-        { projectSlug: socket.data.TaskList },
-        (err, taskList) => {
-          if (err) {
-            io.to(socket.id).emit("err", { err: err.message });
-            return;
+      try {
+        await ToDoLists.findOne(
+          { projectSlug: socket.data.TaskList },
+          (err, taskList) => {
+            if (err) {
+              io.to(socket.id).emit("err", { err: err.message });
+              return;
+            }
+            if (taskList.boards.length >= 10) {
+              limit = true;
+            }
           }
-          if (taskList.boards.length >= 10) {
-            limit = true;
-          }
-        }
-      );
+        );
       } catch (ex) {
         console.log("EX: ", ex);
       }
@@ -931,9 +931,13 @@ module.exports = (io) => {
       io.to(socket.data.TaskList).emit("updated-files", filesInfo);
       return;
     });
+
+    socket.on("disconnectUser", () => {
+      return socket.disconnect();
+    });
   });
 };
-
+// TODO сделать проверку на количество тасков в борде в который перемещают
 var isProjectMember = async (username, slug) => {
   console.log("slug:", slug);
   console.log("username:", username);

@@ -11,6 +11,8 @@ const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
 
+const COUNT_OF_MEMBERS_LIMIT = 20;
+
 // TODO починить проверку на количество участников проекта (можно создать больше 100 пользователей)
 
 exports.projectData = async function (req, res) {
@@ -230,6 +232,16 @@ exports.createProject = async function (req, res) {
       return res.status(500).json({ message: "User banned" }).end();
     }
 
+    if (req.body.membersCount > COUNT_OF_MEMBERS_LIMIT) {
+      return res
+        .status(500)
+        .json({
+          message:
+            "Предполагаемое количество участников не может быть больше 20",
+        })
+        .end();
+    }
+
     if (!req.body.needHelp) {
       newProject = await new Projects({
         IDcreator: req.body.creatorid,
@@ -374,7 +386,7 @@ exports.updateProject = async function (req, res) {
     );
   } else {
     if (
-      req.body.userWhoUpdate.role === "Помощь в заполнении проекта" &&
+      req.body.userWhoUpdate.role === "Помощь в заполнении" &&
       req.body.userWhoUpdate.canChange == true
     ) {
       console.log("someone else");
@@ -1041,13 +1053,7 @@ exports.deleteRequest = async (req, res) => {
   }
   console.log("BODY: ", req.body);
   console.log("SLUG: ", req.body.projectSlug);
-  console.log("REQUEST ID: ", req.body.requestID);
-
-  var proj = await Projects.findOne({ slug: projectSlug });
-
-  var requestUser = proj.requests.id(
-    mongoose.Types.ObjectId(req.body.requestID)
-  );
+  console.log("username: ", req.body.username);
 
   await Chat.findOneAndUpdate(
     { chatRoom: projectSlug },
@@ -1055,10 +1061,8 @@ exports.deleteRequest = async (req, res) => {
   );
 
   await Projects.findOneAndUpdate(
-    { slug: projectSlug },
-    {
-      $pull: { requests: { _id: mongoose.Types.ObjectId(req.body.requestID) } },
-    }
+    { "requests.username": req.body.username },
+    { $pull: { requests: { username: req.body.username } } }
   );
   return res.status(200).json({ message: "success" }).end();
 };
