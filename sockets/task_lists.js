@@ -553,19 +553,21 @@ module.exports = (io) => {
             return;
           }
           var taskExist = false;
-          list.boards.forEach((element) => {
-            element.items.forEach((arrayTask) => {
-              if (
-                arrayTask.text === crtTask.text &&
-                arrayTask.performer === crtTask.performer &&
-                arrayTask.description === crtTask.description &&
-                arrayTask.timeStartWork === crtTask.timeStartWork &&
-                arrayTask.timeEndWork === crtTask.timeEndWork
-              ) {
-                taskExist = true;
-              }
-            });
-          });
+          // if (list.boards != null) {
+          //   list.boards.forEach((element) => {
+          //     element.items.forEach((arrayTask) => {
+          //       if (
+          //         arrayTask.text === crtTask.text &&
+          //         arrayTask.performer === crtTask.performer &&
+          //         arrayTask.description === crtTask.description &&
+          //         arrayTask.timeStartWork === crtTask.timeStartWork &&
+          //         arrayTask.timeEndWork === crtTask.timeEndWork
+          //       ) {
+          //         taskExist = true;
+          //       }
+          //     });
+          //   });
+          // }
 
           if (taskExist) {
             io.to(socket.id).emit("err", { err: "Задача уже существует" });
