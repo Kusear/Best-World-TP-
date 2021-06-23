@@ -1207,9 +1207,17 @@ exports.getProjectsByFilters = async (req, res) => {
   }
   if (req.body.dateEndPr) {
     dateEndPr = new Date(req.body.dateEndPr);
+  } else {
+    var date2 = new Date();
+    date2.setYear(date2.getFullYear() + 50);
+    dateEndPr = date2;
   }
   if (req.body.dateTeamGathEnd) {
     endTeamGathDate = new Date(req.body.dateTeamGathEnd);
+  } else {
+    var date3 = new Date();
+    date3.setYear(date3.getFullYear() + 50);
+    endTeamGathDate = date3;
   }
   if (req.body.countOfMembersMin) {
     countOfMembersMin = req.body.countOfMembersMin;
