@@ -347,6 +347,13 @@ exports.updateProject = async function (req, res) {
     }
   }
 
+  if (req.body.newProjectData.countOfMembers > 20) {
+    return res
+      .status(500)
+      .json({ message: "Количество участников не может быть выше 20" })
+      .end();
+  }
+
   var projectA = await Projects.findOne({ slug: projectToUpdate }, (err) => {
     if (err) {
       console.log("ERR: ", err.message);
