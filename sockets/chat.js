@@ -389,7 +389,7 @@ module.exports = (io) => {
         await chat.blackList.push(user);
         await chat.save();
         io.to(chat.chatRoom).emit("userBlocked", {
-          text: "User " + user.username + " are blocked",
+          username: user.username,
         });
       });
     });
@@ -411,7 +411,7 @@ module.exports = (io) => {
         await chat.blackList.pull(user);
         await chat.save();
         io.to(chat.chatRoom).emit("userUnblocked", {
-          text: "User " + user.username + " are unblocked",
+          username: user.username,
         });
       });
     });
