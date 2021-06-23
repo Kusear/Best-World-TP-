@@ -1061,9 +1061,10 @@ exports.deleteRequest = async (req, res) => {
   );
 
   await Projects.findOneAndUpdate(
-    { "requests.username": req.body.username },
+    { slug: projectSlug },
     { $pull: { requests: { username: req.body.username } } }
   );
+
   return res.status(200).json({ message: "success" }).end();
 };
 
