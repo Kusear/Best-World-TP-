@@ -11,6 +11,8 @@ const slugify = require("slugify");
 const ChatMembers = require("../models/chats_model").ChatMembers;
 const nodemailer = require("../config/nodemailer");
 
+// TODO починить проверку на количество участников проекта (можно создать больше 100 пользователей)
+
 exports.projectData = async function (req, res) {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {

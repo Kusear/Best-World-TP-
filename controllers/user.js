@@ -434,14 +434,15 @@ exports.updateUser = async function (req, res) {
 
         try {
           if (req.body.newData.username) {
+            // TODO переписать все функции потому что все пошло по пизде (обновляется с лютыми багами)
             await Projects.updateMany(
               { "projectMembers.username": userToUpdate },
               {
                 $set: {
-                  projectMembers: { username: req.body.newData.username },
+                  "projectMembers.$[elem].username": req.body.newData.username,
                 },
               },
-              { multi: true }
+              { arrayFilters: [{ "elem.username": userToUpdate }], multi: true }
             );
             await Projects.updateMany(
               { creatorName: userToUpdate },
@@ -458,10 +459,14 @@ exports.updateUser = async function (req, res) {
               { "boards.items.performer": user.username },
               {
                 $set: {
-                  boards: { items: { performer: req.body.newData.username } },
+                  "boards.$[boards].items.$[elem].performer":
+                    req.body.newData.username,
                 },
               },
-              { multi: true }
+              {
+                arrayFilters: [{ "boards.elem.performer": user.username }],
+                multi: true,
+              }
             );
             // var projectsTaskList = await Projects.find({
             //   "projectMembers.username": req.body.newData.username,
@@ -490,8 +495,8 @@ exports.updateUser = async function (req, res) {
             });
             await Chats.updateMany(
               { "messages.username": user.username },
-              { $set: { messages: { username: user.username } } },
-              { multi: true }
+              { $set: { "messages.$[elem].username": user.username } },
+              { arrayFilters: [{ "elem.username": userToUpdate }], multi: true }
             );
             // chatM.forEach((element) => {
             //   if (element.messages.length != 0) {
