@@ -1057,7 +1057,7 @@ exports.deleteRequest = async (req, res) => {
 
   await Chat.findOneAndUpdate(
     { chatRoom: projectSlug },
-    { $pull: { chatMembers: { username: requestUser.username } } }
+    { $pull: { chatMembers: { username: req.body.username } } }
   );
 
   await Projects.findOneAndUpdate(
