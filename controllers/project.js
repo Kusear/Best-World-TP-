@@ -353,9 +353,10 @@ exports.updateProject = async function (req, res) {
     }
   });
   console.log("A: ", projectA);
+
   if (
     req.body.userWhoUpdate.username === projectA.creatorName ||
-    req.body.userWhoUpdate.username === projectA.managerName
+    req.body.userWhoUpdate.role === "Менеджер"
   ) {
     console.log("creator");
     await Projects.findOneAndUpdate(
@@ -439,8 +440,8 @@ exports.updateProject = async function (req, res) {
           );
 
           project.slug = newSlug;
-          project.projectMembers.pull(req.body.userWhoUpdate);
-          project.save();
+          await project.projectMembers.pull(req.body.userWhoUpdate);
+          await project.save();
           return res
             .status(200)
             .json({
