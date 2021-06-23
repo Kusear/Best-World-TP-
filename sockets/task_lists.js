@@ -105,15 +105,27 @@ module.exports = (io) => {
                         user.image = "default";
                         membersList.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          socket.join(list.projectSlug);
-                          io.to(socket.id).emit("listData", {
-                            list: list,
-                            title: project.title,
-                            projectid: project._id,
-                            files: project.project.projectFiles,
-                            members: membersList,
-                          });
-                          return;
+                          if (project.project.projectFiles) {
+                            socket.join(list.projectSlug);
+                            io.to(socket.id).emit("listData", {
+                              list: list,
+                              title: project.title,
+                              projectid: project._id,
+                              files: project.project.projectFiles,
+                              members: membersList,
+                            });
+                            return;
+                          } else {
+                            socket.join(list.projectSlug);
+                            io.to(socket.id).emit("listData", {
+                              list: list,
+                              title: project.title,
+                              projectid: project._id,
+                              files: [],
+                              members: membersList,
+                            });
+                            return;
+                          }
                         }
                         i++;
                       })
