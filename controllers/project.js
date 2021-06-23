@@ -1401,6 +1401,9 @@ exports.getProjectsByFilters = async (req, res) => {
     })
       .skip(20 * req.body.page)
       .limit(20);
+    if (list.length == 0) {
+      return res.status(200).json({ list: [], hasNext: false }).end();
+    }
     list2 = await Projects.find({
       $and: [
         {
