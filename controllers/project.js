@@ -1238,10 +1238,10 @@ exports.getProjectsByFilters = async (req, res) => {
           ],
         },
         {
-          endProjectDate: { $gte: dateEndPr },
+          endProjectDate: { $lte: dateEndPr },
         },
         {
-          endTeamGathering: { $gte: endTeamGathDate },
+          endTeamGathering: { $lte: endTeamGathDate },
         },
         {
           countOfMembers: {
@@ -1276,10 +1276,10 @@ exports.getProjectsByFilters = async (req, res) => {
           ],
         },
         {
-          endProjectDate: { $gte: dateEndPr },
+          endProjectDate: { $lte: dateEndPr },
         },
         {
-          endTeamGathering: { $gte: endTeamGathDate },
+          endTeamGathering: { $lte: endTeamGathDate },
         },
         {
           countOfMembers: {
@@ -1481,10 +1481,10 @@ exports.getProjectsByFilters = async (req, res) => {
         ],
       },
       {
-        endProjectDate: { $gte: dateEndPr },
+        endProjectDate: { $lte: dateEndPr },
       },
       {
-        endTeamGathering: { $gte: endTeamGathDate },
+        endTeamGathering: { $lte: endTeamGathDate },
       },
       {
         requiredRoles: { $elemMatch: { role: reqRoles } },
@@ -1522,10 +1522,10 @@ exports.getProjectsByFilters = async (req, res) => {
         ],
       },
       {
-        endProjectDate: { $gte: dateEndPr },
+        endProjectDate: { $lte: dateEndPr },
       },
       {
-        endTeamGathering: { $gte: endTeamGathDate },
+        endTeamGathering: { $lte: endTeamGathDate },
       },
       {
         requiredRoles: { $elemMatch: { role: reqRoles } },
