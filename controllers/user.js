@@ -520,7 +520,7 @@ exports.updateUser = async function (req, res) {
               "chatMembers.username": req.body.newData.username,
             });
             chatName.forEach(async (element) => {
-              if (element.private == true) {
+              if (element.privateChat == true) {
                 var newName =
                   element.chatMembers[0].username +
                   " " +

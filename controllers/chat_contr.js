@@ -157,6 +157,9 @@ exports.getUsersInChat = async (req, res) => {
               console.log("ERR: ", err);
               user.image = "default";
               chatUsers.push(user);
+
+              console.log("e: ", i);
+
               if (i == chat.chatMembers.length - 1) {
                 return res
                   .status(200)
@@ -174,6 +177,9 @@ exports.getUsersInChat = async (req, res) => {
                 user.image = "default";
               }
               chatUsers.push(user);
+
+              console.log("c: ", i);
+              
               if (i == chat.chatMembers.length - 1) {
                 return res
                   .status(200)
@@ -188,6 +194,8 @@ exports.getUsersInChat = async (req, res) => {
       });
     });
   } else {
+    console.log("else: ", i);
+    
     return res
       .status(200)
       .json({
