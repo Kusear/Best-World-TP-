@@ -59,7 +59,7 @@ const storageFILE = new GridFsStorage({
 });
 const upload = multer({
   fileFilter: function (req, file, next) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|JPG|JPEG|PNG)$/)) {
       return next(null, false);
     }
     next(null, file.originalname);
