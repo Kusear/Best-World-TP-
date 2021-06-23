@@ -455,41 +455,40 @@ exports.updateUser = async function (req, res) {
               { multi: true }
             );
 
-            await TODOList.updateMany(
-              { "boards.items.performer": user.username },
-              {
-                $set: {
-                  "boards.$[boards].items.$[elem].performer":
-                    req.body.newData.username,
-                },
-              },
-              {
-                arrayFilters: [{ "boards.elem.performer": user.username }],
-                multi: true,
-              }
-            );
-            // var projectsTaskList = await Projects.find({
-            //   "projectMembers.username": req.body.newData.username,
-            // });
-            // projectsTaskList.forEach(async (element) => {
-            //   await TODOList.findOne(
-            //     { projectSlug: element.slug },
-            //     (err, list) => {
-            //       if (list) {
-            //         list.boards.forEach((board) => {
-            //           if (board.items.length != 0) {
-            //             board.items.forEach((task) => {
-            //               if (task.performer === userToUpdate) {
-            //                 task.performer = req.body.newData.username;
-            //               }
-            //             });
-            //           }
-            //         });
-            //       }
-            //       list.save();
-            //     }
-            //   );
-            // });
+            // await TODOList.updateMany(
+            //   { "boards.items.performer": user.username },
+            //   {
+            //     $set: {
+            //       "boards.items.$[elem].performer": req.body.newData.username,
+            //     },
+            //   },
+            //   {
+            //     arrayFilters: [{ "boards.elem.performer": user.username }],
+            //     multi: true,
+            //   }
+            // );
+            var projectsTaskList = await Projects.find({
+              "projectMembers.username": req.body.newData.username,
+            });
+            projectsTaskList.forEach(async (element) => {
+              await TODOList.findOne(
+                { projectSlug: element.slug },
+                (err, list) => {
+                  if (list) {
+                    list.boards.forEach((board) => {
+                      if (board.items.length != 0) {
+                        board.items.forEach((task) => {
+                          if (task.performer === userToUpdate) {
+                            task.performer = req.body.newData.username;
+                          }
+                        });
+                      }
+                    });
+                  }
+                  list.save();
+                }
+              );
+            });
             var chatM = await Chats.find({
               "chatMembers.username": userToUpdate,
             });
@@ -498,22 +497,22 @@ exports.updateUser = async function (req, res) {
               { $set: { "messages.$[elem].username": user.username } },
               { arrayFilters: [{ "elem.username": userToUpdate }], multi: true }
             );
-            // chatM.forEach((element) => {
-            //   if (element.messages.length != 0) {
-            //     var messages = element.messages;
-            //     console.log("Chat name: ", element.chatName);
-            //     messages.forEach((messageElement) => {
-            //       if (messageElement.username === userToUpdate) {
-            //         messageElement.username = req.body.newData.username;
-            //       }
-            //     });
-            //     element.save();
-            //   }
-            // });
+            chatM.forEach((element) => {
+              if (element.messages.length != 0) {
+                var messages = element.messages;
+                console.log("Chat name: ", element.chatName);
+                messages.forEach((messageElement) => {
+                  if (messageElement.username === userToUpdate) {
+                    messageElement.username = req.body.newData.username;
+                  }
+                });
+                element.save();
+              }
+            });
             await Chats.updateMany(
               { "chatMembers.username": userToUpdate },
               {
-                $set: { chatMembers: { username: req.body.newData.username } },
+                $set: { "chatMembers.$.username": req.body.newData.username },
               },
               { multi: true }
             );
