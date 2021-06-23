@@ -105,7 +105,7 @@ module.exports = (io) => {
                         user.image = "default";
                         membersList.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          if (project.project.projectFiles) {
+                          if (project.project.projectFiles != undefined) {
                             socket.join(list.projectSlug);
                             io.to(socket.id).emit("listData", {
                               list: list,
