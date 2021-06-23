@@ -105,17 +105,30 @@ module.exports = (io) => {
                         user.image = "default";
                         membersList.push(user);
                         if (i == project.projectMembers.length - 1) {
-                          if (project.project.projectFiles != undefined) {
-                            socket.join(list.projectSlug);
-                            io.to(socket.id).emit("listData", {
-                              list: list,
-                              title: project.title,
-                              projectid: project._id,
-                              files: project.project.projectFiles,
-                              members: membersList,
-                            });
-                            return;
-                          } else {
+                          try {
+                            if (project.project.projectFiles != undefined) {
+                              socket.join(list.projectSlug);
+                              io.to(socket.id).emit("listData", {
+                                list: list,
+                                title: project.title,
+                                projectid: project._id,
+                                files: project.project.projectFiles,
+                                members: membersList,
+                              });
+                              return;
+                            } else {
+                              socket.join(list.projectSlug);
+                              io.to(socket.id).emit("listData", {
+                                list: list,
+                                title: project.title,
+                                projectid: project._id,
+                                files: [],
+                                members: membersList,
+                              });
+                              return;
+                            }
+                          } catch (e) {
+                            console.log("PROJECTFILE - undefined ex: ", e);
                             socket.join(list.projectSlug);
                             io.to(socket.id).emit("listData", {
                               list: list,
