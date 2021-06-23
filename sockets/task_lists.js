@@ -507,6 +507,20 @@ module.exports = (io) => {
         }
       );
 
+      await ToDoLists.findOne(
+        { projectSlug: socket.data.TaskList },
+        async (err, taskList) => {
+          if (err) {
+            io.to(socket.id).emit("err", { err: err.message });
+            return;
+          }
+          var crtBoard = await taskList.boards.id(board._id);
+          if (crtBoard.items.length >= 100) {
+            limit = true;
+          }
+        }
+      );
+
       if (limit) {
         io.to(socket.id).emit("err", { err: "Limit of tasks" });
         return;
@@ -645,6 +659,15 @@ module.exports = (io) => {
             io.to(socket.id).emit("err", { err: err.message });
             return;
           }
+
+          var nbord2 = await list.boards.id(
+            mongoose.Types.ObjectId(board._newBoardId)
+          );
+          if (nbord2.items.length >= 100) {
+            io.to(socket.id).emit("limit-in-newBoard", { err: "limit" });
+            return;
+          }
+
           var additionText = "";
           var task = await list.boards
             .id(mongoose.Types.ObjectId(board._id))
