@@ -791,7 +791,7 @@ exports.addProjectMember = async (req, res) => {
         return res.status(200).json({ message: "No request" }).end();
       }
 
-      if (req.body.role != "Менеджер") {
+      if (req.body.role === "Менеджер") {
         newMember = new Members();
         newMember.username = req.body.username;
         newMember.role = req.body.role;
