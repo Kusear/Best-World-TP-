@@ -403,7 +403,7 @@ exports.updateProject = async function (req, res) {
     );
   } else {
     if (
-      req.body.userWhoUpdate.role === "Помощь в заполнении" &&
+      req.body.userWhoUpdate.role === "Помощь в заполнении проекта" &&
       req.body.userWhoUpdate.canChange == true
     ) {
       console.log("someone else");
@@ -868,7 +868,7 @@ exports.addProjectMember = async (req, res) => {
                 subject:
                   "Пользователь присоединился к одному из ваших проектов",
                 theme:
-                userBD.username +
+                  userBD.username +
                   " к вашему проекту присоединился пользователь",
                 text:
                   "<div><br>К вашему '" +
@@ -931,6 +931,12 @@ exports.deleteProjectMember = async (req, res) => {
     }
 
     var user = await project.projectMembers.id(req.body.memberID);
+
+    if (user.role === "Помощь в заполнении проекта") {
+      await project.projectMembers.pull(req.body.memberID);
+      await project.save();
+      return res.status(200).json({ message: "Helper user deleted" }).end();
+    }
 
     if (user.username === project.creatorName) {
       return res
