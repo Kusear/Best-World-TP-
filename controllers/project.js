@@ -207,15 +207,32 @@ exports.createProject = async function (req, res) {
   try {
     var newProject;
     var usNameTrim;
+    var descriptTrim;
     if (req.body.projectTitle) {
       usNameTrim = req.body.projectTitle.trim();
       if (usNameTrim.length < 4) {
         return res
           .status(500)
-          .json({ message: "Название проекта должно быть больше 4 символов" })
+          .json({
+            message: "Название проекта должно быть больше или равно 4 символов",
+          })
           .end();
       } else {
         req.body.projectTitle = usNameTrim;
+      }
+    }
+    if (req.body.projectDescription) {
+      descriptTrim = req.body.projectDescription.trim();
+      if (descriptTrim.length < 50) {
+        return res
+          .status(500)
+          .json({
+            message:
+              "Описание проекта должно быть больше или равно 50 символов",
+          })
+          .end();
+      } else {
+        req.body.projectDescription = descriptTrim;
       }
     }
 
