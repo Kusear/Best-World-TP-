@@ -250,6 +250,13 @@ app.post(
   midleware.roleCheck("user", "superadmin"),
   controllersProject.deleteRequest
 );
+app.post(
+  api_route + "/deleteAllRequest",
+  midleware.routeLog,
+  midleware.auth,
+  midleware.roleCheck("user", "superadmin"),
+  controllersProject.deleteAllRequest
+);
 
 // Project board routes
 app.get(
@@ -455,7 +462,7 @@ app.post(
           filename: filenameSlug,
           username: req.body.username,
           defaultFilename: req.body.filename,
-          fileID: newFile._id
+          fileID: newFile._id,
         })
         .end();
     });

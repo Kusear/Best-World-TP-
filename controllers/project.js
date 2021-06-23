@@ -709,6 +709,17 @@ exports.addProjectMember = async (req, res) => {
 
       await pr.projectMembers.push(newMember);
       await pr.save();
+
+      await Projects.findOneAndUpdate(
+        { slug: projectSlug },
+        { $pull: { requests: { username: newMember.username } } },
+        (err) => {
+          if (err) {
+            exeptionPullRequests = err.message;
+          }
+        }
+      );
+
       var info;
       if (user.username != newMember.username) {
         info = {
@@ -1069,6 +1080,28 @@ exports.addReqest = async (req, res) => {
 };
 
 exports.deleteRequest = async (req, res) => {
+  var projectSlug = req.body.projectSlug;
+  if (!projectSlug) {
+    return res.status(500).json({ err: "projectSlug are required" }).end();
+  }
+  console.log("BODY: ", req.body);
+  console.log("SLUG: ", req.body.projectSlug);
+  console.log("username: ", req.body.username);
+
+  await Projects.findOne({ slug: projectSlug }, async (err, project) => {
+    if (err) {
+      return res.status(500).json({ err: err.message }).end();
+    }
+    if (!project) {
+      return res.status(500).json({ err: "Проект не найден" }).end();
+    }
+    await project.requests.pull(req.body.requestID);
+    await project.save();
+    return res.status(200).json({ message: "success" }).end();
+  });
+};
+
+exports.deleteAllRequest = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
     return res.status(500).json({ err: "projectSlug are required" }).end();
