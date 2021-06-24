@@ -106,13 +106,13 @@ module.exports = (io) => {
                         membersList.push(user);
                         if (i == project.projectMembers.length - 1) {
                           try {
-                            if (project.project.projectFiles != undefined) {
+                            if (project.projectFiles != undefined) {
                               socket.join(list.projectSlug);
                               io.to(socket.id).emit("listData", {
                                 list: list,
                                 title: project.title,
                                 projectid: project._id,
-                                files: project.project.projectFiles,
+                                files: project.projectFiles,
                                 members: membersList,
                               });
                               return;
