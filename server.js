@@ -67,16 +67,37 @@ const upload = multer({
   storage: storageIMG,
 });
 const uploadFiles = multer({
+  // TODO сделать проверку на существующий файл в объекте проекта, а также проверку при удалении файла на наличие в объекте проекта
   fileFilter: async function (req, file, next) {
+    var fileExist = false;
     await Projects.findById(req.body.projectID, (err, pr) => {
       if (err) {
         return next(null, "err");
       }
-      if (pr.projectFiles.length <= 20) {
-        if (!file.originalname.match(/\.(DOC|DOCX|PDF|doc|docx|pdf)$/)) {
-          return next(null, false);
+      pr.projectFiles.forEach((element) => {
+        var str =
+          slugify(req.body.filename, {
+            replacement: "-",
+            remove: undefined,
+            lower: false,
+            strict: false,
+            locale: "ru",
+          }) +
+          "-FILE-" +
+          req.body.projectID;
+        if (element.filename === str) {
+          fileExist = true;
         }
-        next(null, file.originalname);
+      });
+      if (pr.projectFiles.length <= 20) {
+        if (fileExist != true) {
+          if (!file.originalname.match(/\.(DOC|DOCX|PDF|doc|docx|pdf)$/)) {
+            return next(null, false);
+          }
+          next(null, file.originalname);
+        } else {
+          return next(null, "fileExist");
+        }
       } else {
         return next(null, "limit");
       }
@@ -419,6 +440,11 @@ app.post(
       return res.status(500).json({ text: "db err", status: -300 }).end();
     } else if (req.file === "limit") {
       return res.status(500).json({ text: "limit", status: -400 }).end();
+    } else if (req.file === "fileExist") {
+      return res
+        .status(500)
+        .json({ text: "file with this name already exist", status: -600 })
+        .end();
     }
     var filenameSlug =
       (await slugify(req.body.filename, {

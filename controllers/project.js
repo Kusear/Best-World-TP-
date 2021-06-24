@@ -1150,9 +1150,23 @@ exports.deleteFile = async (req, res) => {
         return res.status(500).json({ err: "Проект не найден" }).end();
       }
       var file;
+      var fileExist = false;
+      project.projectFiles.forEach((element) => {
+        if (element.filename === req.body.filename) {
+          fileExist = true;
+        }
+      });
+
+      if (fileExist == true) {
+        return res
+          .status(500)
+          .json({ message: "File not exist in this project" })
+          .end();
+      }
 
       project.projectFiles.forEach(async (element) => {
         console.log(element);
+
         file = await gfs.find({ filename: req.body.filename }).toArray();
         console.log(file);
         if (file.length != 0) {
