@@ -1174,9 +1174,10 @@ exports.deleteFile = async (req, res) => {
             await Projects.findOneAndUpdate(
               { slug: req.body.projectSlug },
               {
-                $pull: { projectFiles: { filename: req.body.filename } },
+                $pull: { projectFiles: { _id: element._id } },
               }
             );
+            gfs.delete(file[0]._id);
             console.log("bruh");
             return res.status(200).json({ message: "success" }).end();
           }
