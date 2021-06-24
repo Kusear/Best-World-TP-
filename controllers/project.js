@@ -1151,6 +1151,7 @@ exports.deleteFile = async (req, res) => {
       }
       var file;
       var fileExist = false;
+
       await project.projectFiles.forEach((element) => {
         if (element.filename === req.body.filename) {
           fileExist = true;
@@ -1158,33 +1159,28 @@ exports.deleteFile = async (req, res) => {
       });
 
       if (fileExist == false) {
-        return res
-          .status(500)
-          .json({ message: "File not exist in this project" })
-          .end();
+        await Projects.findOneAndUpdate(
+          { slug: req.body.projectSlug },
+          {
+            $pull: { projectFiles: { _id: req.body.fileOjb } },
+          }
+        );
+        return res.status(500).json({ message: "File not exist" }).end();
       }
 
-      project.projectFiles.forEach(async (element) => {
-        console.log(element);
-
-        file = await gfs.find({ filename: req.body.filename }).toArray();
-        console.log(file);
-        if (file.length != 0) {
-          if (file[0].filename === element.filename) {
-            await Projects.findOneAndUpdate(
-              { slug: req.body.projectSlug },
-              {
-                $pull: { projectFiles: { _id: element._id } },
-              }
-            );
-            gfs.delete(file[0]._id);
-            console.log("bruh");
-            return res.status(200).json({ message: "success" }).end();
+      file = await gfs.find({ filename: req.body.filename }).toArray();
+      if (file.length != 0) {
+        await Projects.findOneAndUpdate(
+          { slug: req.body.projectSlug },
+          {
+            $pull: { projectFiles: { _id: req.body.fileOjb } },
           }
-        } else {
-          return res.status(500).json({ message: "No file" }).end();
-        }
-      });
+        );
+        gfs.delete(file[0]._id);
+        return res.status(200).json({ message: "success" }).end();
+      } else {
+        return res.status(500).json({ message: "No file" }).end();
+      }
     }
   );
 };
