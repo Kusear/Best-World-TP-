@@ -69,12 +69,12 @@ const upload = multer({
 const uploadFiles = multer({
   // TODO сделать проверку на существующий файл в объекте проекта, а также проверку при удалении файла на наличие в объекте проекта
   fileFilter: async function (req, file, next) {
-    var fileExist = false;
-    await Projects.findById(req.body.projectID, (err, pr) => {
+    await Projects.findById(req.body.projectID, async (err, pr) => {
+      var fileExist = false;
       if (err) {
         return next(null, "err");
       }
-      pr.projectFiles.forEach((element) => {
+      await pr.projectFiles.forEach((element) => {
         var str =
           slugify(req.body.filename, {
             replacement: "-",
@@ -85,10 +85,13 @@ const uploadFiles = multer({
           }) +
           "-FILE-" +
           req.body.projectID;
+        console.log("foreach");
         if (element.filename === str) {
+          console.log("if str");
           fileExist = true;
         }
       });
+      console.log("dft foreach");
       if (pr.projectFiles.length <= 20) {
         if (fileExist != true) {
           if (!file.originalname.match(/\.(DOC|DOCX|PDF|doc|docx|pdf)$/)) {
@@ -96,6 +99,7 @@ const uploadFiles = multer({
           }
           next(null, file.originalname);
         } else {
+          console.log("fileExist");
           return next(null, "fileExist");
         }
       } else {
@@ -431,7 +435,7 @@ app.post(
 );
 app.post(
   api_route + "/addFileToProject",
-  midleware.auth,
+  // midleware.auth,
   uploadFiles.single("file"),
   async (req, res) => {
     if (!req.file) {

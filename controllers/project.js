@@ -1151,13 +1151,13 @@ exports.deleteFile = async (req, res) => {
       }
       var file;
       var fileExist = false;
-      project.projectFiles.forEach((element) => {
+      await project.projectFiles.forEach((element) => {
         if (element.filename === req.body.filename) {
           fileExist = true;
         }
       });
 
-      if (fileExist == true) {
+      if (fileExist == false) {
         return res
           .status(500)
           .json({ message: "File not exist in this project" })
