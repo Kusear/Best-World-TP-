@@ -18,7 +18,7 @@ exports.createRoportProject = async (req, res) => {
   );
 
   if (report) {
-    return res.status(500).json({ message: "Report already exist" }).end();
+    return res.status(200).json({ message: "Report already exist" }).end();
   }
 
   var newReport = await new ReportedProjects({

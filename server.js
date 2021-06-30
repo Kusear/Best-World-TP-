@@ -67,7 +67,6 @@ const upload = multer({
   storage: storageIMG,
 });
 const uploadFiles = multer({
-  // TODO сделать проверку на существующий файл в объекте проекта, а также проверку при удалении файла на наличие в объекте проекта
   fileFilter: async function (req, file, next) {
     await Projects.findById(req.body.projectID, async (err, pr) => {
       var fileExist = false;

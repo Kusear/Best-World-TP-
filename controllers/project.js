@@ -13,8 +13,6 @@ const nodemailer = require("../config/nodemailer");
 
 const COUNT_OF_MEMBERS_LIMIT = 20;
 
-// TODO починить проверку на количество участников проекта (можно создать больше 100 пользователей)
-
 exports.projectData = async function (req, res) {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
@@ -347,12 +345,27 @@ exports.updateProject = async function (req, res) {
     }
   }
 
+  var descriptTrim;
+  if (req.body.newProjectData.description) {
+    descriptTrim = req.body.newProjectData.description.trim();
+    if (descriptTrim.length < 50) {
+      return res
+        .status(500)
+        .json({
+          message: "Описание проекта должно быть больше или равно 50 символов",
+        })
+        .end();
+    } else {
+      req.body.newProjectData.description = descriptTrim;
+    }
+  }
+
   if (req.body.newProjectData.countOfMembers > 20) {
     return res
       .status(500)
       .json({ message: "Количество участников не может быть выше 20" })
       .end();
-  }
+  } // TODO Поставить хэндл на повторяющиеся название проекта
 
   var projectA = await Projects.findOne({ slug: projectToUpdate }, (err) => {
     if (err) {
@@ -1005,9 +1018,6 @@ exports.deleteProjectMember = async (req, res) => {
 };
 
 exports.addReqest = async (req, res) => {
-  // req.body.projectSlug
-  // newRequest.username = req.body.username;
-  // newRequest.role = req.body.role;
 
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {

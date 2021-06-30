@@ -178,7 +178,7 @@ module.exports = (io) => {
       if (socket.data.canChange == false) {
         io.to(socket.id).emit("err", { err: "Not allowed" });
         return;
-      }
+      } 
 
       var limit = false;
       await ToDoLists.aggregate(
@@ -497,40 +497,6 @@ module.exports = (io) => {
       }
 
       var limit = false;
-      // await ToDoLists.aggregate(
-      //   [
-      //     {
-      //       $match: { projectSlug: socket.data.TaskList },
-      //     },
-      //     {
-      //       $project: {
-      //         boards: {
-      //           $map: {
-      //             input: "$boards",
-      //             as: "boardss",
-      //             in: {
-      //               id: "$$boardss._id",
-      //               items: {
-      //                 total: { $size: "$$boardss.items" },
-      //               },
-      //             },
-      //           },
-      //         },
-      //       },
-      //     },
-      //   ],
-      //   async (err, countOfDocs) => {
-      //     if (err) {
-      //       io.to(socket.id).emit("err", { err: err.message });
-      //       return;
-      //     }
-      //     await countOfDocs[0].boards.forEach((element) => {
-      //       if (element.id === board._id && element.items.total >= 100) {
-      //         limit = true;
-      //       }
-      //     });
-      //   }
-      // );
 
       await ToDoLists.findOne(
         { projectSlug: socket.data.TaskList },
@@ -644,7 +610,7 @@ module.exports = (io) => {
     });
 
     socket.on("update-task", async ({ board, updTask }) => {
-      // TODO в board приходит id нового борда рпи перемещении
+      
       if (!board) {
         io.to(socket.id).emit("err", { err: "Board are require" });
         return;
@@ -991,7 +957,7 @@ module.exports = (io) => {
     });
   });
 };
-// TODO сделать проверку на количество тасков в борде в который перемещают
+
 var isProjectMember = async (username, slug) => {
   console.log("slug:", slug);
   console.log("username:", username);
