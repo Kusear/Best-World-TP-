@@ -19,7 +19,7 @@ exports.getBannedUsers = async (req, res) => {
 
 exports.banUser = async (req, res) => {
   if (!req.body.banUser) {
-    return res.status(500).json({ err: "banser field are required!" }).end();
+    return res.status(400).json({ err: "banser field are required!" }).end();
   }
 
   await Users.findOneAndUpdate(
@@ -28,10 +28,10 @@ exports.banUser = async (req, res) => {
     { new: true },
     function (err, user) {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       if (!user) {
-        return res.status(500).json({ err: "User not found" }).end();
+        return res.status(400).json({ err: "User not found" }).end();
       }
 
       var info = {
@@ -54,7 +54,7 @@ exports.banUser = async (req, res) => {
 
 exports.unbanUser = async (req, res) => {
   if (!req.body.banUser) {
-    return res.status(500).json({ err: "banser field are required!" }).end();
+    return res.status(400).json({ err: "banser field are required!" }).end();
   }
 
   await Users.findOneAndUpdate(
@@ -63,10 +63,10 @@ exports.unbanUser = async (req, res) => {
     { new: true },
     function (err, user) {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       if (!user) {
-        return res.status(500).json({ err: "User not found" }).end();
+        return res.status(400).json({ err: "User not found" }).end();
       }
 
       var info = {

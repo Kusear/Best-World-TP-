@@ -6,13 +6,13 @@ const nodemailer = require("../config/nodemailer");
 
 exports.createRoportProject = async (req, res) => {
   if (!req.body.reportFrom) {
-    return res.status(500).json({ message: "reportFrom are required" }).end();
+    return res.status(400).json({ message: "reportFrom are required" }).end();
   }
   var report = await ReportedProjects.findOne(
     { slug: req.body.slug },
     (err) => {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
     }
   );
@@ -30,21 +30,20 @@ exports.createRoportProject = async (req, res) => {
 };
 
 exports.applyReport = async (req, res) => {
-
   if (!req.body.projectSlug) {
-    return res.status(500).json({ message: "projectSlug are required" }).end();
+    return res.status(400).json({ message: "projectSlug are required" }).end();
   }
   if (!req.body.reportID) {
-    return res.status(500).json({ message: "reportID are required" }).end();
+    return res.status(400).json({ message: "reportID are required" }).end();
   }
   await Projects.findOne(
     { slug: req.body.projectSlug },
     async (err, project) => {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       if (!project) {
-        return res.status(500).json({ message: "Project not exist" }).end();
+        return res.status(400).json({ message: "Project not exist" }).end();
       }
       project.needChanges = true;
       await project.save();
@@ -53,10 +52,10 @@ exports.applyReport = async (req, res) => {
       );
       await Users.findOne({ username: project.creatorName }, (err, user) => {
         if (err) {
-          return res.status(500).json({ err: err.message }).end();
+          return res.status(400).json({ err: err.message }).end();
         }
         if (!user) {
-          return res.status(500).json({ message: "User not found" }).end();
+          return res.status(400).json({ message: "User not found" }).end();
         }
 
         var info = {
@@ -99,14 +98,14 @@ exports.deleteReportProject = async function (req, res) {
   }
   await ReportedProjects.findById(reportProject, async function (err, report) {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!report) {
       return res.status(400).json({ message: "report not found" }).end();
     }
     await report.remove(function (err, doc) {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       return res.status(200).json({ message: "deleted" }).end();
     });

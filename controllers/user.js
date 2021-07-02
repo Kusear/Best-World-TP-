@@ -15,14 +15,14 @@ exports.userData = async function (req, res) {
   await Users.findOne({ username: req.query.username }, async (err, user) => {
     if (err) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: err.message, status: INTERNAL_ERROR })
         .end();
     }
 
     if (!user) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
         .end();
     }
@@ -319,14 +319,14 @@ exports.lightUserData = async (req, res) => {
   await Users.findOne({ username: req.query.username }, async (err, user) => {
     if (err) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: err.message, status: INTERNAL_ERROR })
         .end();
     }
 
     if (!user) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "User not found", status: STATUS_DBOBJECT_NOT_FOUND })
         .end();
     }
@@ -392,7 +392,7 @@ exports.updateUser = async function (req, res) {
     usNameTrim = req.body.newData.username.trim();
     if (usNameTrim.length < 4) {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "Никнейм должен быть больше 4 символов" })
         .end();
     } else {
@@ -404,7 +404,7 @@ exports.updateUser = async function (req, res) {
   await Users.findOne({ username: userToUpdate }, (err, user) => {
     if (err) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: err.message, status: INTERNAL_ERROR })
         .end();
     }
@@ -427,7 +427,7 @@ exports.updateUser = async function (req, res) {
       async (err, user) => {
         if (err) {
           return res
-            .status(500)
+            .status(400)
             .json({ err: err.message, status: INTERNAL_ERROR })
             .end();
         }
@@ -554,11 +554,11 @@ exports.updateUser = async function (req, res) {
   } catch (error) {
     if (error.code === 11000) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "Данный никнейм уже занят.", status: INTERNAL_ERROR })
         .end();
     } else {
-      return res.status(500).json({ err: "Something wrong" }).end();
+      return res.status(400).json({ err: "Something wrong" }).end();
     }
   }
 };
@@ -580,13 +580,13 @@ exports.deleteUser = async function (req, res) {
     async function (err, user) {
       if (err) {
         return res
-          .status(500)
+          .status(400)
           .json({ err: err.message, status: INTERNAL_ERROR })
           .end();
       }
       if (!user) {
         return res
-          .status(500)
+          .status(400)
           .json({ message: "User not found", status: INTERNAL_ERROR })
           .end();
       }
@@ -690,7 +690,7 @@ exports.deleteUser = async function (req, res) {
       await user.remove(function (err, doc) {
         if (err) {
           return res
-            .status(500)
+            .status(400)
             .json({ err: err.message, status: INTERNAL_ERROR })
             .end();
         }

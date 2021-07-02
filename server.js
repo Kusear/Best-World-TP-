@@ -380,7 +380,7 @@ app.post(
   upload.single("image"),
   async (req, res) => {
     if (!req.file) {
-      return res.status(500).json({ text: "bad file", status: -200 }).end();
+      return res.status(400).json({ text: "bad file", status: -200 }).end();
     }
     var objID = req.body.userID || req.body.projectID;
     var filenameSlug =
@@ -406,7 +406,7 @@ app.post(
         { new: true },
         (err) => {
           if (err) {
-            return res.status(500).json({ err: err.message }).end();
+            return res.status(400).json({ err: err.message }).end();
           }
           return res
             .status(200)
@@ -421,7 +421,7 @@ app.post(
         { new: true },
         (err) => {
           if (err) {
-            return res.status(500).json({ err: err.message }).end();
+            return res.status(400).json({ err: err.message }).end();
           }
           return res
             .status(200)
@@ -438,14 +438,14 @@ app.post(
   uploadFiles.single("file"),
   async (req, res) => {
     if (!req.file) {
-      return res.status(500).json({ text: "bad file", status: -200 }).end();
+      return res.status(400).json({ text: "bad file", status: -200 }).end();
     } else if (req.file === "err") {
-      return res.status(500).json({ text: "db err", status: -300 }).end();
+      return res.status(400).json({ text: "db err", status: -300 }).end();
     } else if (req.file === "limit") {
-      return res.status(500).json({ text: "limit", status: -400 }).end();
+      return res.status(400).json({ text: "limit", status: -400 }).end();
     } else if (req.file === "fileExist") {
       return res
-        .status(500)
+        .status(400)
         .json({ text: "file with this name already exist", status: -600 })
         .end();
     }
@@ -467,11 +467,11 @@ app.post(
     };
     await Project.findById(req.body.projectID, async (err, pr) => {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       if (!pr) {
         return res
-          .status(500)
+          .status(400)
           .json({ err: "Такого проекта не существует" })
           .end();
       }

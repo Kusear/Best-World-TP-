@@ -33,10 +33,10 @@ exports.checkProjectMember = async (req, res, next) => {
   console.log("slug:", projectSlug);
   await Projects.findOne({ slug: projectSlug }, async function (err, project) {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!project) {
-      return res.status(500).json({ err: "Project not found" }).end();
+      return res.status(400).json({ err: "Project not found" }).end();
     }
     var members = project.projectMembers;
     var member = false;
@@ -54,7 +54,7 @@ exports.checkProjectMember = async (req, res, next) => {
       return next();
     } else {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "User doesnt exist in this project" })
         .end();
     }
@@ -63,11 +63,11 @@ exports.checkProjectMember = async (req, res, next) => {
 
 exports.loginValidation = async (req, res, next) => {
   if (!validator.isEmail(req.body.email)) {
-    return res.status(500).json({ err: "Email не соответсвует шаблону" }).end();
+    return res.status(400).json({ err: "Email не соответсвует шаблону" }).end();
   }
   if (!validator.isLenght(req.body.password, { min: 8, max: 32 })) {
     return res
-      .status(500)
+      .status(400)
       .json({ err: "Пароль не содержит требуемое количество символов" })
       .end();
   }
@@ -76,11 +76,11 @@ exports.loginValidation = async (req, res, next) => {
 
 exports.registrationValidation = async (req, res, next) => {
   if (!validator.isEmail(req.body.email)) {
-    return res.status(500).json({ err: "Email не соответсвует шаблону" }).end();
+    return res.status(400).json({ err: "Email не соответсвует шаблону" }).end();
   }
   if (!validator.isLenght(req.body.password, { min: 8, max: 32 })) {
     return res
-      .status(500)
+      .status(400)
       .json({ err: "Пароль не содержит требуемое количество символов" })
       .end();
   }
@@ -93,13 +93,13 @@ exports.banCheck = async (req, res, next) => {
       { username: req.body.username || req.body.reportFrom },
       (err, user) => {
         if (err) {
-          return res.status(500).json({ err: err.message }).end();
+          return res.status(400).json({ err: err.message }).end();
         }
         if (!user) {
-          return res.status(500).json({ err: "User not found!" }).end();
+          return res.status(400).json({ err: "User not found!" }).end();
         }
         if (user.ban) {
-          return res.status(500).json({ message: "You'r banned!" }).end();
+          return res.status(400).json({ message: "You'r banned!" }).end();
         } else {
           next();
         }
@@ -108,13 +108,13 @@ exports.banCheck = async (req, res, next) => {
   } else if (req.body.creatorid) {
     await Users.findById(req.body.creatorid, (err, user) => {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       if (!user) {
-        return res.status(500).json({ err: "User not found!" }).end();
+        return res.status(400).json({ err: "User not found!" }).end();
       }
       if (user.ban) {
-        return res.status(500).json({ message: "You'r banned!" }).end();
+        return res.status(400).json({ message: "You'r banned!" }).end();
       } else {
         next();
       }
@@ -125,13 +125,13 @@ exports.banCheck = async (req, res, next) => {
 exports.countFilesCheck = async (req, res, next) => {
   await Projects.findOne({ slug: req.body.projectSlug }, (err, project) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!project) {
-      return res.status(500).json({ message: "Проект не найден" }).end();
+      return res.status(400).json({ message: "Проект не найден" }).end();
     }
     if (project.projectFiles.length == 20) {
-      return res.status(500).json({ message: "Достигнут лимит файлов" }).end();
+      return res.status(400).json({ message: "Достигнут лимит файлов" }).end();
     } else {
       next();
     }

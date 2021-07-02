@@ -16,11 +16,11 @@ const COUNT_OF_MEMBERS_LIMIT = 20;
 exports.projectData = async function (req, res) {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await Projects.findOne({ slug: projectSlug }, async function (err, project) {
     if (err) {
-      return res.status(500).json({ message: "Something Wrong" }).end();
+      return res.status(400).json({ message: "Something Wrong" }).end();
     }
     if (project) {
       console.log(project.description);
@@ -196,7 +196,7 @@ exports.projectData = async function (req, res) {
           });
         });
     } else {
-      return res.status(500).json("Project not found").end();
+      return res.status(400).json("Project not found").end();
     }
   });
 };
@@ -210,7 +210,7 @@ exports.createProject = async function (req, res) {
       usNameTrim = req.body.projectTitle.trim();
       if (usNameTrim.length < 4) {
         return res
-          .status(500)
+          .status(400)
           .json({
             message: "Название проекта должно быть больше или равно 4 символов",
           })
@@ -223,7 +223,7 @@ exports.createProject = async function (req, res) {
       descriptTrim = req.body.projectDescription.trim();
       if (descriptTrim.length < 50) {
         return res
-          .status(500)
+          .status(400)
           .json({
             message:
               "Описание проекта должно быть больше или равно 50 символов",
@@ -238,18 +238,18 @@ exports.createProject = async function (req, res) {
       { username: req.body.creatorUsername },
       (err) => {
         if (err) {
-          return res.status(500).json({ err: err.message }).end();
+          return res.status(400).json({ err: err.message }).end();
         }
       }
     );
 
     if (userBD.ban == true) {
-      return res.status(500).json({ message: "User banned" }).end();
+      return res.status(400).json({ message: "User banned" }).end();
     }
 
     if (req.body.membersCount > COUNT_OF_MEMBERS_LIMIT) {
       return res
-        .status(500)
+        .status(400)
         .json({
           message:
             "Предполагаемое количество участников не может быть больше 20",
@@ -321,7 +321,7 @@ exports.createProject = async function (req, res) {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
-    return res.status(500).json({ message: "Project already exist" }).end();
+    return res.status(400).json({ message: "Project already exist" }).end();
   }
 };
 
@@ -329,7 +329,7 @@ exports.updateProject = async function (req, res) {
   var projectToUpdate = req.body.projectSlug;
 
   if (!projectToUpdate) {
-    return res.status(500).json({ err: "no project to edit" }).end();
+    return res.status(400).json({ err: "no project to edit" }).end();
   }
 
   var usNameTrim;
@@ -337,7 +337,7 @@ exports.updateProject = async function (req, res) {
     usNameTrim = req.body.newProjectData.title.trim();
     if (usNameTrim.length < 4) {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "Название проекта должно быть больше 4 символов" })
         .end();
     } else {
@@ -350,7 +350,7 @@ exports.updateProject = async function (req, res) {
     descriptTrim = req.body.newProjectData.description.trim();
     if (descriptTrim.length < 50) {
       return res
-        .status(500)
+        .status(400)
         .json({
           message: "Описание проекта должно быть больше или равно 50 символов",
         })
@@ -362,7 +362,7 @@ exports.updateProject = async function (req, res) {
 
   if (req.body.newProjectData.countOfMembers > 20) {
     return res
-      .status(500)
+      .status(400)
       .json({ message: "Количество участников не может быть выше 20" })
       .end();
   } // TODO Поставить хэндл на повторяющиеся название проекта
@@ -385,7 +385,7 @@ exports.updateProject = async function (req, res) {
       { new: true },
       async (err, project) => {
         if (err) {
-          return res.status(500).json({ err: err.message }).end();
+          return res.status(400).json({ err: err.message }).end();
         }
         var newSlug =
           (await slugify(project.title, {
@@ -434,7 +434,7 @@ exports.updateProject = async function (req, res) {
         { new: true },
         async (err, project) => {
           if (err) {
-            return res.status(500).json({ err: err.message }).end();
+            return res.status(400).json({ err: err.message }).end();
           }
 
           var newSlug =
@@ -486,7 +486,7 @@ exports.deleteProject = async function (req, res) {
     chatStatus: "",
   };
   if (!projectToDelete) {
-    return res.status(500).json({ err: "no projectID to edit" }).end();
+    return res.status(400).json({ err: "no projectID to edit" }).end();
   }
 
   var project = await Projects.findOneAndDelete(
@@ -525,7 +525,7 @@ exports.deleteProject = async function (req, res) {
   ) {
     return res.status(200).json({ message: "deleted" }).end();
   } else {
-    return res.status(500).json({ message: responce }).end();
+    return res.status(400).json({ message: responce }).end();
   }
 };
 
@@ -702,19 +702,19 @@ exports.getArchivedProjects = async function (req, res) {
 exports.addProjectMember = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await Projects.findOne({ slug: projectSlug }, async (err, pr) => {
     if (err) {
       return res.status(520).json({ err: err.message }).end();
     }
     if (!pr) {
-      return res.status(500).json("Project not found").end();
+      return res.status(400).json("Project not found").end();
     }
 
     if (pr.endTeamGathering < new Date()) {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "Период сбора команды истек" })
         .end();
     }
@@ -790,7 +790,7 @@ exports.addProjectMember = async (req, res) => {
       var rolesReq = await pr.requiredRoles.id(req.body.roleID);
       if (req.body.alreadyEnter > rolesReq.count) {
         return res
-          .status(500)
+          .status(400)
           .json({ err: "Все места на эту роль заняты" })
           .end();
       }
@@ -955,7 +955,7 @@ exports.deleteProjectMember = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   console.log(req.body);
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await Projects.findOne({ slug: projectSlug }, async (err, project) => {
     if (err) {
@@ -976,7 +976,7 @@ exports.deleteProjectMember = async (req, res) => {
 
     if (user.username === project.creatorName) {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "Нельзя исключить создателя", status: -200 })
         .end();
     }
@@ -1001,7 +1001,7 @@ exports.deleteProjectMember = async (req, res) => {
     try {
       var reqRole = await project.requiredRoles.id(req.body.roleID);
       if (!reqRole) {
-        return res.status(500).json("Req role not found").end();
+        return res.status(400).json("Req role not found").end();
       }
       reqRole.alreadyEnter--;
       project.freePlaces++;
@@ -1018,10 +1018,9 @@ exports.deleteProjectMember = async (req, res) => {
 };
 
 exports.addReqest = async (req, res) => {
-
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
 
   await Projects.findOne({ slug: projectSlug }, async (err, pr) => {
@@ -1085,7 +1084,7 @@ exports.addReqest = async (req, res) => {
       try {
         var chat = Chat.findOne({ chatRoom: pr.slug });
         if (!chat) {
-          return res.status(500).json({ err: "Chat not found" }).end();
+          return res.status(400).json({ err: "Chat not found" }).end();
         }
         await chat.chatMembers.push(newRequest);
         await chat.save();
@@ -1096,7 +1095,7 @@ exports.addReqest = async (req, res) => {
       await pr.save();
       return res.status(200).json({ message: "success" }).end();
     } else {
-      return res.status(500).json("Request already sent").end();
+      return res.status(400).json("Request already sent").end();
     }
   });
 };
@@ -1104,7 +1103,7 @@ exports.addReqest = async (req, res) => {
 exports.deleteRequest = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   console.log("BODY: ", req.body);
   console.log("SLUG: ", req.body.projectSlug);
@@ -1112,10 +1111,10 @@ exports.deleteRequest = async (req, res) => {
 
   await Projects.findOne({ slug: projectSlug }, async (err, project) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!project) {
-      return res.status(500).json({ err: "Проект не найден" }).end();
+      return res.status(400).json({ err: "Проект не найден" }).end();
     }
     await project.requests.pull(req.body.requestID);
     await project.save();
@@ -1126,7 +1125,7 @@ exports.deleteRequest = async (req, res) => {
 exports.deleteAllRequest = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   console.log("BODY: ", req.body);
   console.log("SLUG: ", req.body.projectSlug);
@@ -1154,10 +1153,10 @@ exports.deleteFile = async (req, res) => {
     { slug: req.body.projectSlug },
     async (err, project) => {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       if (!project) {
-        return res.status(500).json({ err: "Проект не найден" }).end();
+        return res.status(400).json({ err: "Проект не найден" }).end();
       }
       var file;
       var fileExist = false;
@@ -1175,7 +1174,7 @@ exports.deleteFile = async (req, res) => {
             $pull: { projectFiles: { _id: req.body.fileOjb } },
           }
         );
-        return res.status(500).json({ message: "File not exist" }).end();
+        return res.status(400).json({ message: "File not exist" }).end();
       }
 
       file = await gfs.find({ filename: req.body.filename }).toArray();
@@ -1189,7 +1188,7 @@ exports.deleteFile = async (req, res) => {
         gfs.delete(file[0]._id);
         return res.status(200).json({ message: "success" }).end();
       } else {
-        return res.status(500).json({ message: "No file" }).end();
+        return res.status(400).json({ message: "No file" }).end();
       }
     }
   );

@@ -17,13 +17,13 @@ exports.createChat = async (req, res) => {
 
     if (!user1) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "Пользователя " + str[0] + " не существует" })
         .end();
     }
     if (!user2) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "Пользователя " + str[1] + " не существует" })
         .end();
     }
@@ -37,7 +37,7 @@ exports.createChat = async (req, res) => {
     });
     if (chat) {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
         .end();
     }
@@ -50,7 +50,7 @@ exports.createChat = async (req, res) => {
     });
     if (chat) {
       return res
-        .status(500)
+        .status(400)
         .json({ message: "Chat already exist", chatSlug: chat.chatRoom })
         .end();
     }
@@ -79,7 +79,7 @@ exports.createChat = async (req, res) => {
     return res.status(200).json({ chat: newChat }).end();
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(500).json({ message: "Chat already exist" }).end();
+      return res.status(400).json({ message: "Chat already exist" }).end();
     } else {
       return res.status(520).json({ err: err.message }).end();
     }
@@ -97,7 +97,7 @@ exports.getChats = async (req, res) => {
     }
   );
   if (!userChats) {
-    return res.status(500).json({ err: "No chat with this user" }).end();
+    return res.status(400).json({ err: "No chat with this user" }).end();
   } else {
     return res.status(200).json({ chats: userChats }).end();
   }
@@ -110,7 +110,7 @@ exports.deleteChat = async (req, res) => {
     }
   });
   if (!userChat) {
-    return res.status(500).json({ err: "Chat not found" }).end();
+    return res.status(400).json({ err: "Chat not found" }).end();
   }
   await userChat.remove();
   return res.status(200).json({ message: "success" }).end();
@@ -118,7 +118,7 @@ exports.deleteChat = async (req, res) => {
 
 exports.getUsersInChat = async (req, res) => {
   if (!req.body.chatRoom) {
-    return res.status(500).json({ message: "chatRoom are requiared" }).end();
+    return res.status(400).json({ message: "chatRoom are requiared" }).end();
   }
 
   var chat = await Chat.findOne({ chatRoom: req.body.chatRoom }, (err) => {
@@ -128,7 +128,7 @@ exports.getUsersInChat = async (req, res) => {
   });
 
   if (!chat) {
-    return res.status(500).json({ err: "Chat not found" }).end();
+    return res.status(400).json({ err: "Chat not found" }).end();
   }
 
   var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
@@ -179,7 +179,7 @@ exports.getUsersInChat = async (req, res) => {
               chatUsers.push(user);
 
               console.log("c: ", i);
-              
+
               if (i == chat.chatMembers.length - 1) {
                 return res
                   .status(200)
@@ -195,7 +195,7 @@ exports.getUsersInChat = async (req, res) => {
     });
   } else {
     console.log("else: ", i);
-    
+
     return res
       .status(200)
       .json({

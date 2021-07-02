@@ -11,7 +11,7 @@ exports.login = async (req, res) => {
   await Users.findOne({ email: req.body.email }, async function (err, user) {
     if (!user) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "Такого профиля не существует" })
         .end();
     }
@@ -74,7 +74,7 @@ exports.login = async (req, res) => {
             .end();
         });
     } else {
-      return res.status(500).json({ emailConfirm: user.emailConfirm }).end();
+      return res.status(400).json({ emailConfirm: user.emailConfirm }).end();
     }
   });
 };
@@ -92,7 +92,10 @@ exports.registration = async function (req, res) {
     var usName = req.body.username;
     var usNameTrim = usName.trim();
     if (usNameTrim.length < 4) {
-      return res.status(500).json({message: "Никнейм должен быть больше 4 символов" }).end();
+      return res
+        .status(400)
+        .json({ message: "Никнейм должен быть больше 4 символов" })
+        .end();
     }
     var newUser = await new Users({
       username: usNameTrim,
@@ -138,7 +141,7 @@ exports.registration = async function (req, res) {
   } catch (err) {
     if (err.code === 11000) {
       return res
-        .status(500)
+        .status(400)
         .json({ err: "Пользователь уже зарегистрирован" })
         .end();
     }
@@ -152,7 +155,7 @@ exports.emailAuth = async function (req, res) {
       return res.status(520).json({ err: err.message }).end();
     }
     if (!user) {
-      return res.status(500).json("User not found").end();
+      return res.status(400).json("User not found").end();
     }
     user.emailConfirm = true;
     user.save((err) => {
@@ -167,11 +170,11 @@ exports.emailAuth = async function (req, res) {
 exports.sendRecoveryEmail = async (req, res) => {
   var user = await Users.findOne({ email: req.body.email }, (err) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
   });
   if (!user) {
-    return res.status(500).json({ err: "Пользователь не найден" }).end();
+    return res.status(400).json({ err: "Пользователь не найден" }).end();
   }
   var url = process.env.FRONT_URL + "passwordrecovery/" + user._id;
   var info = {
@@ -203,11 +206,11 @@ exports.recoveryPassword = async (req, res) => {
     { userID: req.body.userID },
     async (error, link) => {
       if (error) {
-        return res.status(500).json({ err: error.message }).end();
+        return res.status(400).json({ err: error.message }).end();
       }
       if (!link) {
         return res
-          .status(500)
+          .status(400)
           .json({ err: "Срок действия ссылки истек" })
           .end();
       }
@@ -221,7 +224,7 @@ exports.recoveryPassword = async (req, res) => {
         { new: true },
         (err, result) => {
           if (err) {
-            return res.status(500).json({ err: err.message }).end();
+            return res.status(400).json({ err: err.message }).end();
           }
           return res.status(200).json({ message: "изменено" }).end();
         }
@@ -243,12 +246,12 @@ exports.getFiles = async function (req, res) {
     .on("error", function (err) {
       console.log("ERR: ", err);
       return res
-        .status(500)
+        .status(400)
         .json({ base64Image: "No image found with that title" })
         .end();
     })
     .on("close", () => {
-       return res.status(200).json({ base64Image: endSTR }).end();
+      return res.status(200).json({ base64Image: endSTR }).end();
     });
 };
 
@@ -258,7 +261,8 @@ exports.downloadFile = async (req, res) => {
 
   res.set({
     "Accept-Ranges": "bytes",
-    "Content-Disposition": `attachment; filename=${req.query.filename}`+`.${req.query.fileType}`,
+    "Content-Disposition":
+      `attachment; filename=${req.query.filename}` + `.${req.query.fileType}`,
   });
 
   gfs
@@ -270,7 +274,6 @@ exports.downloadFile = async (req, res) => {
     .on("error", function (err) {
       console.log("ERR: ", err);
     })
-    .on("close", () => {
-    })
+    .on("close", () => {})
     .pipe(res);
 };

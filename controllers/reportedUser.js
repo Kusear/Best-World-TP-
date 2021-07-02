@@ -5,13 +5,13 @@ const nodemailer = require("../config/nodemailer");
 
 exports.createReportUser = async (req, res) => {
   if (!req.body.reportFrom) {
-    return res.status(500).json({ message: "reportFrom are required" }).end();
+    return res.status(400).json({ message: "reportFrom are required" }).end();
   }
   var report = await ReportedUsers.findOne(
     { username: req.body.username },
     (err) => {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
     }
   );
@@ -29,17 +29,17 @@ exports.createReportUser = async (req, res) => {
 
 exports.applyReport = async (req, res) => {
   if (!req.body.username) {
-    return res.status(500).json({ message: "username are required" }).end();
+    return res.status(400).json({ message: "username are required" }).end();
   }
   if (!req.body.reportID) {
-    return res.status(500).json({ message: "reportID are required" }).end();
+    return res.status(400).json({ message: "reportID are required" }).end();
   }
   await Users.findOne({ username: req.body.username }, async (err, user) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!user) {
-      return res.status(500).json({ message: "User not found" }).end();
+      return res.status(400).json({ message: "User not found" }).end();
     }
     user.needChanges = true;
     await user.save();
@@ -79,14 +79,14 @@ exports.deleteUserReport = async function (req, res) {
   }
   await ReportedUsers.findById(reportToDelete, async function (err, report) {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!report) {
       return res.status(400).json({ message: "Report not found" }).end();
     }
     await report.remove(function (err, doc) {
       if (err) {
-        return res.status(500).json({ err: err.message }).end();
+        return res.status(400).json({ err: err.message }).end();
       }
       return res.status(200).json({ message: "deleted" }).end();
     });

@@ -7,28 +7,25 @@ const Users = require("../models/user_model").User;
 const mongodb = require("mongodb");
 const mongoose = require("mongoose");
 
-exports.getProjectTODOList = async (req, res) => { 
+exports.getProjectTODOList = async (req, res) => {
   // req.query.projectSlug
 
   var projectSlug = req.query.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
-  var project = await Projects.findOne(
-    { slug: projectSlug },
-    function (err) {
-      if (err) {
-        return res.status(500).json({ message: "Something Wrong" }).end();
-      }
+  var project = await Projects.findOne({ slug: projectSlug }, function (err) {
+    if (err) {
+      return res.status(400).json({ message: "Something Wrong" }).end();
     }
-  );
+  });
   await ToDoLists.findOne({ projectSlug: projectSlug }, (err, list) => {
     if (err) {
       console.log("asdfasdasdf");
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     if (!list) {
-      return res.status(500).json({ message: "list not found" }).end();
+      return res.status(400).json({ message: "list not found" }).end();
     }
     return res
       .status(200)
@@ -40,25 +37,25 @@ exports.getProjectTODOList = async (req, res) => {
 exports.createToDoList = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
 
   var board = await ToDoLists.findOne({ projectSlug: projectSlug }, (err) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
   });
   if (board) {
-    return res.status(500).json({ message: "Board already exist" }).end();
+    return res.status(400).json({ message: "Board already exist" }).end();
   }
 
   var project = await Projects.findOne({ slug: projectSlug }, (err) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
   });
   if (!project) {
-    return res.status(500).json({ message: "Project doesnt exist" }).end();
+    return res.status(400).json({ message: "Project doesnt exist" }).end();
   }
 
   const List = await new ToDoLists({
@@ -77,16 +74,16 @@ exports.updeteToDoList = async (req, res) => {
   var projectSlug = req.body.projectSlug;
 
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   var List = await ToDoLists.findOne({ projectSlug: projectSlug }, (err) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
   });
 
   if (!List) {
-    return res.status(500).json({ message: "List not found" }).end();
+    return res.status(400).json({ message: "List not found" }).end();
   }
   var newList = {
     color: req.body.color,
@@ -95,7 +92,7 @@ exports.updeteToDoList = async (req, res) => {
 
   List.updateOne(newList, (err) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     return res.status(200).json({ message: "seccess" }).end();
   });
@@ -109,7 +106,7 @@ exports.createBoard = async (req, res) => {
 
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   console.log(projectSlug);
   var limit = false;
@@ -130,12 +127,12 @@ exports.createBoard = async (req, res) => {
   );
 
   if (limit) {
-    return res.status(500).json("Limit of boards").end();
+    return res.status(400).json("Limit of boards").end();
   }
 
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     var newBoard = new Boards();
     newBoard.name = req.body.name;
@@ -153,11 +150,11 @@ exports.createBoard = async (req, res) => {
 exports.updateBoard = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     var board = list.boards.id(req.body.boardID);
     if (req.body.name) {
@@ -178,11 +175,11 @@ exports.updateBoard = async (req, res) => {
 exports.deleteBoard = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     list.boards.pull(req.body.boardID);
     await list.save();
@@ -193,7 +190,7 @@ exports.deleteBoard = async (req, res) => {
 exports.createTask = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
 
   var limit = false;
@@ -235,12 +232,12 @@ exports.createTask = async (req, res) => {
   //console.log("A: ", a); //
 
   if (limit) {
-    return res.status(500).json("Limit of boards").end();
+    return res.status(400).json("Limit of boards").end();
   }
 
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
 
     var newTask = new Tasks();
@@ -259,11 +256,11 @@ exports.createTask = async (req, res) => {
 exports.updateTask = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     var task = list.boards.id(req.body.boardID).items.id(req.body.taskID);
     if (req.body.text) {
@@ -287,11 +284,11 @@ exports.updateTask = async (req, res) => {
 exports.moveTask = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     var task = await list.boards
       .id(req.body.oldBoard)
@@ -311,11 +308,11 @@ exports.moveTask = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   var projectSlug = req.body.projectSlug;
   if (!projectSlug) {
-    return res.status(500).json({ err: "projectSlug are required" }).end();
+    return res.status(400).json({ err: "projectSlug are required" }).end();
   }
   await ToDoLists.findOne({ projectSlug: projectSlug }, async (err, list) => {
     if (err) {
-      return res.status(500).json({ err: err.message }).end();
+      return res.status(400).json({ err: err.message }).end();
     }
     await list.boards.id(req.body.boardID).items.pull(req.body.taskID);
     await list.save();
@@ -325,15 +322,12 @@ exports.deleteTask = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   if (!req.body.projectSlug) {
-    return res.status(500).json({message: "projectSlug are required"}).end();
+    return res.status(400).json({ message: "projectSlug are required" }).end();
   }
 
   await Projects.findOne({ slug: req.body.projectSlug }, (err, project) => {
     var endSTR = "";
-    var gfs = new mongodb.GridFSBucket(
-      mongoose.connection.db,
-      mongoose.mongo
-    );
+    var gfs = new mongodb.GridFSBucket(mongoose.connection.db, mongoose.mongo);
     var membersList = [];
     var i = 0;
     project.projectMembers.forEach(async (element) => {
@@ -343,36 +337,33 @@ exports.getUsers = async (req, res) => {
         image: "",
       };
 
-      await Users.findOne(
-        { username: element.username },
-        (err, userBD) => {
-          gfs
-            .openDownloadStreamByName(userBD.image, { revision: -1 })
-            .on("data", (chunk) => {
-              console.log("CHUNK: ", chunk);
-              endSTR += Buffer.from(chunk, "hex").toString("base64");
-            })
-            .on("error", function (err) {
-              console.log("ERR: ", err);
-              user.image = "default";
-              membersList.push(user);
-              if (i == project.projectMembers.length - 1) {
-                return res.status(200).json({users: membersList}).end();
-              }
-              i++;
-            })
-            .on("close", () => {
-              if (userBD.image !== "default") {
-                user.image = endSTR;
-              }
-              membersList.push(user);
-              if (i == project.projectMembers.length - 1) {
-                return res.status(200).json({users: membersList}).end();
-              }
-              i++;
-            });
-        }
-      );
+      await Users.findOne({ username: element.username }, (err, userBD) => {
+        gfs
+          .openDownloadStreamByName(userBD.image, { revision: -1 })
+          .on("data", (chunk) => {
+            console.log("CHUNK: ", chunk);
+            endSTR += Buffer.from(chunk, "hex").toString("base64");
+          })
+          .on("error", function (err) {
+            console.log("ERR: ", err);
+            user.image = "default";
+            membersList.push(user);
+            if (i == project.projectMembers.length - 1) {
+              return res.status(200).json({ users: membersList }).end();
+            }
+            i++;
+          })
+          .on("close", () => {
+            if (userBD.image !== "default") {
+              user.image = endSTR;
+            }
+            membersList.push(user);
+            if (i == project.projectMembers.length - 1) {
+              return res.status(200).json({ users: membersList }).end();
+            }
+            i++;
+          });
+      });
     });
   });
 };
